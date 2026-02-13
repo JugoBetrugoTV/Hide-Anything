@@ -1,4 +1,4 @@
-## Interface: 110100
+## Interface: 110002
 ## Title: |cff00cc66Hide|r |cffffffffAnything|r
 ## Notes: Hide any UI element with a single click. Modular, profile-based, with audio & visual feedback.
 ## Notes-deDE: Verstecke jedes UI-Element mit einem Klick. Modular, profilbasiert, mit Audio- & visuellem Feedback.

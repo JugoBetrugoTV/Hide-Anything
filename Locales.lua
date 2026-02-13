@@ -6,6 +6,14 @@
 
 local AddonName, HA = ...
 
+-- Startup diagnostic: proves this file loaded (visible in chat after login)
+HA._loaded = true
+C_Timer.After(3, function()
+    if HA._loaded and not HA._initDone then
+        print("|cffff8800[HideAnything]|r Addon files loaded but initialization failed! Check /console scriptErrors 1")
+    end
+end)
+
 HA.L = {}
 local L = HA.L
 

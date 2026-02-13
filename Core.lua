@@ -59,23 +59,31 @@ end)
 -- Initialize addon
 ---------------------------------------------------------------------------
 function HA:OnInitialize()
-    local L = self.L
+    local ok, err = pcall(function()
+        local L = self.L
 
-    -- Initialize saved variables / database
-    self:InitDB()
+        -- Initialize saved variables / database
+        self:InitDB()
 
-    -- Initialize minimap button
-    if self.InitMinimap then
-        self:InitMinimap()
+        -- Initialize minimap button
+        if self.InitMinimap then
+            self:InitMinimap()
+        end
+
+        -- Initialize floating button
+        if self.InitFloatingButton then
+            self:InitFloatingButton()
+        end
+
+        -- Mark init as done (for startup diagnostic in Locales.lua)
+        self._initDone = true
+
+        -- Print loaded message
+        self:Print(L["ADDON_LOADED"]:format(self.version))
+    end)
+    if not ok then
+        print("|cffff0000[HideAnything] INIT ERROR:|r " .. tostring(err))
     end
-
-    -- Initialize floating button
-    if self.InitFloatingButton then
-        self:InitFloatingButton()
-    end
-
-    -- Print loaded message
-    self:Print(L["ADDON_LOADED"]:format(self.version))
 end
 
 ---------------------------------------------------------------------------
