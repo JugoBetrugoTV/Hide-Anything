@@ -33,18 +33,18 @@ HA.DEFAULTS = {
         soundPickerEnabled  = true,
         soundLockEnabled    = true,
 
-        -- Sound file IDs (Blizzard sound kit IDs)
+        -- Sound file IDs (raw numeric IDs - safe at parse time)
         sounds = {
-            hide        = SOUNDKIT.IG_ABILITY_ICON_DROP        or 12936,
-            show        = SOUNDKIT.IG_ABILITY_ICON_PICKUP      or 12938,
-            error       = SOUNDKIT.IG_QUEST_LOG_ABANDON_QUEST  or 7355,
-            success     = SOUNDKIT.IG_PLAYER_INVITE            or 7241,
-            pickerStart = SOUNDKIT.IG_MAINMENU_OPEN            or 7355,
-            pickerStop  = SOUNDKIT.IG_MAINMENU_CLOSE           or 7356,
-            lock        = SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON  or 8624,
-            unlock      = SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_OFF or 8625,
-            profileLoad = SOUNDKIT.IG_CHARACTER_INFO_TAB       or 7352,
-            reset       = SOUNDKIT.IG_MAINMENU_LOGOUT          or 850,
+            hide        = 12936,  -- IG_ABILITY_ICON_DROP
+            show        = 12938,  -- IG_ABILITY_ICON_PICKUP
+            error       = 7355,   -- IG_QUEST_LOG_ABANDON_QUEST
+            success     = 7241,   -- IG_PLAYER_INVITE
+            pickerStart = 7355,   -- IG_MAINMENU_OPEN
+            pickerStop  = 7356,   -- IG_MAINMENU_CLOSE
+            lock        = 8624,   -- IG_MAINMENU_OPTION_CHECKBOX_ON
+            unlock      = 8625,   -- IG_MAINMENU_OPTION_CHECKBOX_OFF
+            profileLoad = 7352,   -- IG_CHARACTER_INFO_TAB
+            reset       = 850,    -- IG_MAINMENU_LOGOUT
         },
     },
 

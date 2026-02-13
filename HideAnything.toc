@@ -20,6 +20,7 @@ Core.lua
 FrameSelector.lua
 Tooltips.lua
 Minimap.lua
+FloatingButton.lua
 UI.lua
 SlashCommands.lua
 Profiles.lua

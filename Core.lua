@@ -7,9 +7,21 @@
 local AddonName, HA = ...
 
 ---------------------------------------------------------------------------
--- Addon version (read from TOC at load)
+-- Addon version (read from TOC at load, safe for all WoW versions)
 ---------------------------------------------------------------------------
-HA.version = C_AddOns and C_AddOns.GetAddOnMetadata(AddonName, "Version") or GetAddOnMetadata(AddonName, "Version") or "1.0.0"
+local function SafeGetVersion()
+    local ok, ver
+    if C_AddOns and C_AddOns.GetAddOnMetadata then
+        ok, ver = pcall(C_AddOns.GetAddOnMetadata, AddonName, "Version")
+    end
+    if not ok or not ver then
+        if GetAddOnMetadata then
+            ok, ver = pcall(GetAddOnMetadata, AddonName, "Version")
+        end
+    end
+    return (ok and ver) or "1.0.0"
+end
+HA.version = SafeGetVersion()
 
 ---------------------------------------------------------------------------
 -- Event frame
@@ -51,6 +63,16 @@ function HA:OnInitialize()
 
     -- Initialize saved variables / database
     self:InitDB()
+
+    -- Initialize minimap button
+    if self.InitMinimap then
+        self:InitMinimap()
+    end
+
+    -- Initialize floating button
+    if self.InitFloatingButton then
+        self:InitFloatingButton()
+    end
 
     -- Print loaded message
     self:Print(L["ADDON_LOADED"]:format(self.version))

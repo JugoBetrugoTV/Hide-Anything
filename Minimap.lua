@@ -159,11 +159,4 @@ function HA:HideMinimapButton()
     minimapButton:Hide()
 end
 
----------------------------------------------------------------------------
--- Hook into initialization
----------------------------------------------------------------------------
-local origInit = HA.OnInitialize
-function HA:OnInitialize()
-    origInit(self)
-    self:InitMinimap()
-end
+-- InitMinimap is called from Core.lua OnInitialize directly
