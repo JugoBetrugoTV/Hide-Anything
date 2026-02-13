@@ -25,6 +25,14 @@ HA.DEFAULTS = {
         screenEnabled   = true,
         errorSpeech     = true,
 
+        -- Per-action sound toggles
+        soundHideEnabled    = true,
+        soundShowEnabled    = true,
+        soundErrorEnabled   = true,
+        soundSuccessEnabled = true,
+        soundPickerEnabled  = true,
+        soundLockEnabled    = true,
+
         -- Sound file IDs (Blizzard sound kit IDs)
         sounds = {
             hide        = SOUNDKIT.IG_ABILITY_ICON_DROP        or 12936,

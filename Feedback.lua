@@ -27,11 +27,45 @@ function HA:ChatMsg(msg)
 end
 
 ---------------------------------------------------------------------------
+-- Per-action sound toggle map: soundKey -> settingKey
+---------------------------------------------------------------------------
+local SOUND_TOGGLE_MAP = {
+    hide        = "soundHideEnabled",
+    show        = "soundShowEnabled",
+    error       = "soundErrorEnabled",
+    success     = "soundSuccessEnabled",
+    pickerStart = "soundPickerEnabled",
+    pickerStop  = "soundPickerEnabled",
+    lock        = "soundLockEnabled",
+    unlock      = "soundLockEnabled",
+    profileLoad = "soundSuccessEnabled",
+    reset       = "soundErrorEnabled",
+}
+
+---------------------------------------------------------------------------
 -- Play a sound by key name (e.g. "hide", "show", "error")
+-- Respects both master toggle and per-action toggle
 ---------------------------------------------------------------------------
 function HA:PlayFeedbackSound(soundKey)
     if not self:GetSetting("soundEnabled") then return end
 
+    -- Check per-action toggle
+    local toggleKey = SOUND_TOGGLE_MAP[soundKey]
+    if toggleKey and self:GetSetting(toggleKey) == false then return end
+
+    local sounds = self.db and self.db.settings and self.db.settings.sounds
+    if not sounds then return end
+
+    local soundID = sounds[soundKey]
+    if soundID then
+        PlaySound(soundID, "Master")
+    end
+end
+
+---------------------------------------------------------------------------
+-- Force-play a sound (ignores toggles, for UI preview/test)
+---------------------------------------------------------------------------
+function HA:ForcePlaySound(soundKey)
     local sounds = self.db and self.db.settings and self.db.settings.sounds
     if not sounds then return end
 
