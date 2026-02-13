@@ -159,4 +159,40 @@ function HA:HideMinimapButton()
     minimapButton:Hide()
 end
 
+---------------------------------------------------------------------------
+-- Addon Compartment (WoW 11.x minimap dropdown list)
+-- Global functions referenced by ## AddonCompartmentFunc in TOC
+---------------------------------------------------------------------------
+function HideAnything_OnAddonCompartmentClick(addonName, button)
+    if button == "RightButton" then
+        HA:StartPicker()
+    else
+        HA:ToggleOptionsPanel()
+    end
+end
+
+function HideAnything_OnAddonCompartmentEnter(addonName, menuButton)
+    -- menuButton is the actual frame from the dropdown menu
+    if menuButton and type(menuButton) == "table" and menuButton.GetObjectType then
+        GameTooltip:SetOwner(menuButton, "ANCHOR_RIGHT")
+    else
+        GameTooltip:SetOwner(Minimap, "ANCHOR_BOTTOMLEFT")
+    end
+    GameTooltip:ClearLines()
+    GameTooltip:AddLine(HA.L["MINIMAP_TOOLTIP_TITLE"])
+    GameTooltip:AddLine(" ")
+    GameTooltip:AddLine(HA.L["MINIMAP_TOOLTIP_LEFT"], 1, 1, 1)
+    GameTooltip:AddLine(HA.L["MINIMAP_TOOLTIP_RIGHT"], 1, 1, 1)
+    local count = HA:GetHiddenCount()
+    if count > 0 then
+        GameTooltip:AddLine(" ")
+        GameTooltip:AddLine(HA.L["STATUS_HIDDEN_COUNT"]:format(count), 1, 0.82, 0)
+    end
+    GameTooltip:Show()
+end
+
+function HideAnything_OnAddonCompartmentLeave(addonName, menuButton)
+    GameTooltip:Hide()
+end
+
 -- InitMinimap is called from Core.lua OnInitialize directly

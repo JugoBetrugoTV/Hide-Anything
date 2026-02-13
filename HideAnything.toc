@@ -7,6 +7,9 @@
 ## SavedVariables: HideAnythingDB
 ## DefaultState: enabled
 ## IconTexture: Interface\Icons\INV_Misc_Eye_02
+## AddonCompartmentFunc: HideAnything_OnAddonCompartmentClick
+## AddonCompartmentFuncOnEnter: HideAnything_OnAddonCompartmentEnter
+## AddonCompartmentFuncOnLeave: HideAnything_OnAddonCompartmentLeave
 
 # Localization
 Locales.lua
