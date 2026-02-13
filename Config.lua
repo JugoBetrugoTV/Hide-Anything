@@ -12,6 +12,9 @@ HA.DEFAULTS = {
     -- Hidden frames: { ["FrameName"] = true, ... }
     hiddenFrames = {},
 
+    -- Hidden CVars: { ["cvarName"] = true, ... }
+    hiddenCVars = {},
+
     -- Settings
     settings = {
         locked      = false,
@@ -58,27 +61,93 @@ HA.PROTECTED_FRAMES = {
 -- Curated frame catalog: frames available for toggling in the UI
 ---------------------------------------------------------------------------
 HA.FRAME_CATALOG = {
+    ---------------------------------------------------------------------------
+    -- Unit Frames
+    ---------------------------------------------------------------------------
+    { section = true, label = "Unit Frames",            labelDE = "Einheiten-Frames" },
     { name = "PlayerFrame",               label = "Player Frame",               labelDE = "Spieler-Frame" },
     { name = "TargetFrame",               label = "Target Frame",               labelDE = "Ziel-Frame" },
+    { name = "TargetFrameToT",            label = "Target of Target",           labelDE = "Ziel des Ziels" },
     { name = "FocusFrame",                label = "Focus Frame",                labelDE = "Fokus-Frame" },
     { name = "PetFrame",                  label = "Pet Frame",                  labelDE = "Begleiter-Frame" },
-    { name = "MinimapCluster",            label = "Minimap",                    labelDE = "Minimap" },
-    { name = "BuffFrame",                 label = "Buffs",                      labelDE = "Buffs" },
-    { name = "DebuffFrame",              label = "Debuffs",                    labelDE = "Debuffs" },
-    { name = "ObjectiveTrackerFrame",     label = "Quest / Objective Tracker",  labelDE = "Quest-Tracker" },
-    { name = "PlayerCastingBarFrame",     label = "Cast Bar",                   labelDE = "Zauberleiste" },
-    { name = "MicroButtonAndBagsBar",     label = "Micro Menu & Bags",          labelDE = "Mikromenü & Taschen" },
-    { name = "StatusTrackingBarManager",  label = "XP / Rep Bar",              labelDE = "EP / Ruf-Leiste" },
+    { name = "PartyFrame",               label = "Party Frames",               labelDE = "Gruppen-Frames" },
     { name = "CompactRaidFrameContainer", label = "Raid Frames",               labelDE = "Raid-Frames" },
-    { name = "BossBanner",               label = "Boss Banner",                labelDE = "Boss-Banner" },
-    { name = "ZoneTextFrame",            label = "Zone Text",                  labelDE = "Zonentext" },
-    { name = "SubZoneTextFrame",         label = "Sub Zone Text",              labelDE = "Unterzonentext" },
-    { name = "DurabilityFrame",          label = "Durability",                 labelDE = "Haltbarkeit" },
-    { name = "VehicleSeatIndicator",     label = "Vehicle Seat",               labelDE = "Fahrzeugsitz" },
-    { name = "TalkingHeadFrame",         label = "Talking Head",               labelDE = "Sprechender Kopf" },
-    { name = "AlertFrame",               label = "Achievement Alerts",         labelDE = "Erfolgs-Meldungen" },
-    { name = "TotemFrame",               label = "Totems",                     labelDE = "Totems" },
-    { name = "GameTimeFrame",            label = "Calendar Button",            labelDE = "Kalender-Button" },
+
+    ---------------------------------------------------------------------------
+    -- Action Bars
+    ---------------------------------------------------------------------------
+    { section = true, label = "Action Bars",            labelDE = "Aktionsleisten" },
+    { name = "MainMenuBar",              label = "Main Action Bar",            labelDE = "Hauptaktionsleiste" },
+    { name = "MultiBarBottomLeft",       label = "Action Bar 2",              labelDE = "Aktionsleiste 2" },
+    { name = "MultiBarBottomRight",      label = "Action Bar 3",              labelDE = "Aktionsleiste 3" },
+    { name = "MultiBarRight",            label = "Right Action Bar",          labelDE = "Rechte Aktionsleiste" },
+    { name = "MultiBarLeft",             label = "Right Action Bar 2",        labelDE = "Rechte Aktionsleiste 2" },
+    { name = "StanceBar",                label = "Stance / Form Bar",         labelDE = "Haltungsleiste" },
+    { name = "PetActionBar",             label = "Pet Action Bar",            labelDE = "Begleiter-Aktionsleiste" },
+    { name = "ExtraAbilityContainer",    label = "Extra Action Button",       labelDE = "Extra-Aktionsknopf" },
+    { name = "EncounterBar",             label = "Encounter Bar",             labelDE = "Begegnungsleiste" },
+
+    ---------------------------------------------------------------------------
+    -- Bars & Menus
+    ---------------------------------------------------------------------------
+    { section = true, label = "Bars & Menus",           labelDE = "Leisten & Menüs" },
+    { name = "MicroButtonAndBagsBar",    label = "Micro Menu & Bags",         labelDE = "Mikromenü & Taschen" },
+    { name = "StatusTrackingBarManager", label = "XP / Rep Bar",              labelDE = "EP / Ruf-Leiste" },
+    { name = "PlayerCastingBarFrame",    label = "Cast Bar",                  labelDE = "Zauberleiste" },
+
+    ---------------------------------------------------------------------------
+    -- Buffs & Auras
+    ---------------------------------------------------------------------------
+    { section = true, label = "Buffs & Auras",          labelDE = "Buffs & Auren" },
+    { name = "BuffFrame",                label = "Buffs",                     labelDE = "Buffs" },
+    { name = "DebuffFrame",              label = "Debuffs",                   labelDE = "Debuffs" },
+    { name = "TotemFrame",               label = "Totems",                    labelDE = "Totems" },
+
+    ---------------------------------------------------------------------------
+    -- Combat Text (CVar-based)
+    ---------------------------------------------------------------------------
+    { section = true, label = "Combat Text",            labelDE = "Kampftext" },
+    { cvar = "floatingCombatTextCombatDamage",  label = "Damage Numbers",     labelDE = "Schadenszahlen" },
+    { cvar = "floatingCombatTextCombatHealing", label = "Healing Numbers",    labelDE = "Heilungszahlen" },
+    { cvar = "enableFloatingCombatText",        label = "Incoming Combat Text", labelDE = "Eingehender Kampftext" },
+
+    ---------------------------------------------------------------------------
+    -- Chat
+    ---------------------------------------------------------------------------
+    { section = true, label = "Chat",                   labelDE = "Chat" },
+    { name = "GeneralDockManager",       label = "Chat Tab Bar",              labelDE = "Chat-Tab-Leiste" },
+    { name = "ChatFrameMenuButton",      label = "Chat Menu Button",          labelDE = "Chat-Menü-Button" },
+    { name = "QuickJoinToastButton",     label = "Quick Join Button",         labelDE = "Schnellbeitritt-Button" },
+
+    ---------------------------------------------------------------------------
+    -- Map & Navigation
+    ---------------------------------------------------------------------------
+    { section = true, label = "Map & Navigation",       labelDE = "Karte & Navigation" },
+    { name = "MinimapCluster",           label = "Minimap",                   labelDE = "Minimap" },
+    { name = "GameTimeFrame",            label = "Calendar Button",           labelDE = "Kalender-Button" },
+    { name = "ObjectiveTrackerFrame",    label = "Quest / Objective Tracker", labelDE = "Quest-Tracker" },
+
+    ---------------------------------------------------------------------------
+    -- Alerts & Notifications
+    ---------------------------------------------------------------------------
+    { section = true, label = "Alerts & Info",          labelDE = "Meldungen & Info" },
+    { name = "BossBanner",               label = "Boss Banner",               labelDE = "Boss-Banner" },
+    { name = "AlertFrame",               label = "Achievement Alerts",        labelDE = "Erfolgs-Meldungen" },
+    { name = "TalkingHeadFrame",         label = "Talking Head",              labelDE = "Sprechender Kopf" },
+    { name = "ZoneTextFrame",            label = "Zone Text",                 labelDE = "Zonentext" },
+    { name = "SubZoneTextFrame",         label = "Sub Zone Text",             labelDE = "Unterzonentext" },
+    { name = "LossOfControlFrame",       label = "Loss of Control",           labelDE = "Kontrollverlust" },
+    { name = "GroupLootContainer",       label = "Loot Rolls",                labelDE = "Beutewürfe" },
+
+    ---------------------------------------------------------------------------
+    -- Widgets & Misc
+    ---------------------------------------------------------------------------
+    { section = true, label = "Widgets & Misc",         labelDE = "Widgets & Sonstiges" },
+    { name = "UIWidgetTopCenterContainerFrame",    label = "Top Center Widgets",  labelDE = "Obere Widgets" },
+    { name = "UIWidgetBelowMinimapContainerFrame", label = "Minimap Widgets",     labelDE = "Minimap-Widgets" },
+    { name = "DurabilityFrame",          label = "Durability",                labelDE = "Haltbarkeit" },
+    { name = "VehicleSeatIndicator",     label = "Vehicle Seat",              labelDE = "Fahrzeugsitz" },
+    { name = "QueueStatusButton",        label = "Queue Status Eye",          labelDE = "Warteschlangen-Auge" },
 }
 
 ---------------------------------------------------------------------------
@@ -105,6 +174,9 @@ function HA:InitDB()
     if type(db.settings) ~= "table" then
         self:Print(L["ERROR_DB_CORRUPT"])
         db.settings = self:DeepCopy(self.DEFAULTS.settings)
+    end
+    if type(db.hiddenCVars) ~= "table" then
+        db.hiddenCVars = {}
     end
     if type(db.profiles) ~= "table" then
         db.profiles = {}

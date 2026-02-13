@@ -46,9 +46,10 @@ HA.eventFrame:SetScript("OnEvent", function(self, event, ...)
             self:UnregisterEvent("ADDON_LOADED")
         end
     elseif event == "PLAYER_ENTERING_WORLD" then
-        -- Always reapply hidden frames on login/reload
+        -- Always reapply hidden frames and CVars on login/reload
         C_Timer.After(0.5, function()
             HA:ReapplyHiddenFrames()
+            HA:ReapplyHiddenCVars()
         end)
     elseif event == "PLAYER_REGEN_DISABLED" then
         HA.inCombat = true
@@ -239,6 +240,73 @@ function HA:ShowFrame(frameName)
 end
 
 ---------------------------------------------------------------------------
+-- Hide a CVar (set to 0)
+---------------------------------------------------------------------------
+function HA:HideCVar(cvarName)
+    if not cvarName or cvarName == "" then return false end
+
+    if self.db.hiddenCVars[cvarName] then return false end
+
+    local ok = pcall(SetCVar, cvarName, "0")
+    if not ok then
+        self:FeedbackError("ERROR_CVAR_FAILED", cvarName)
+        return false
+    end
+
+    self.db.hiddenCVars[cvarName] = true
+
+    local displayName = cvarName
+    for _, entry in ipairs(self.FRAME_CATALOG) do
+        if entry.cvar == cvarName then
+            displayName = self:GetCatalogLabel(entry)
+            break
+        end
+    end
+    self:FeedbackHide(displayName)
+
+    if self.RefreshFrameList then
+        self:RefreshFrameList()
+    end
+    return true
+end
+
+---------------------------------------------------------------------------
+-- Show a CVar (set to 1)
+---------------------------------------------------------------------------
+function HA:ShowCVar(cvarName)
+    if not cvarName or cvarName == "" then return false end
+
+    if not self.db.hiddenCVars[cvarName] then return false end
+
+    pcall(SetCVar, cvarName, "1")
+    self.db.hiddenCVars[cvarName] = nil
+
+    local displayName = cvarName
+    for _, entry in ipairs(self.FRAME_CATALOG) do
+        if entry.cvar == cvarName then
+            displayName = self:GetCatalogLabel(entry)
+            break
+        end
+    end
+    self:FeedbackShow(displayName)
+
+    if self.RefreshFrameList then
+        self:RefreshFrameList()
+    end
+    return true
+end
+
+---------------------------------------------------------------------------
+-- Reapply hidden CVars (after login/reload)
+---------------------------------------------------------------------------
+function HA:ReapplyHiddenCVars()
+    if not self.db or not self.db.hiddenCVars then return end
+    for cvarName, _ in pairs(self.db.hiddenCVars) do
+        pcall(SetCVar, cvarName, "0")
+    end
+end
+
+---------------------------------------------------------------------------
 -- Show all hidden frames
 ---------------------------------------------------------------------------
 function HA:ShowAllFrames()
@@ -264,6 +332,16 @@ function HA:ShowAllFrames()
     end
 
     wipe(self.db.hiddenFrames)
+
+    -- Also restore all hidden CVars
+    if self.db.hiddenCVars then
+        for cvarName, _ in pairs(self.db.hiddenCVars) do
+            pcall(SetCVar, cvarName, "1")
+            count = count + 1
+        end
+        wipe(self.db.hiddenCVars)
+    end
+
     self:FeedbackShowAll(count)
 
     if self.RefreshFrameList then

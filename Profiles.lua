@@ -25,6 +25,7 @@ function HA:SaveProfile(name, overwrite)
     -- Save profile
     self.db.profiles[name] = {
         hiddenFrames = self:DeepCopy(self.db.hiddenFrames),
+        hiddenCVars  = self:DeepCopy(self.db.hiddenCVars or {}),
         settings     = self:DeepCopy(self.db.settings),
     }
 
@@ -68,8 +69,16 @@ function HA:LoadProfile(name)
         end
     end
 
-    -- Apply profile hidden frames
+    -- Restore currently hidden CVars
+    if self.db.hiddenCVars then
+        for cvarName, _ in pairs(self.db.hiddenCVars) do
+            pcall(SetCVar, cvarName, "1")
+        end
+    end
+
+    -- Apply profile hidden frames and CVars
     self.db.hiddenFrames = self:DeepCopy(profile.hiddenFrames or {})
+    self.db.hiddenCVars  = self:DeepCopy(profile.hiddenCVars or {})
 
     -- Apply profile settings (merge, don't overwrite completely)
     if profile.settings then
@@ -80,8 +89,9 @@ function HA:LoadProfile(name)
 
     self.db.activeProfile = name
 
-    -- Re-hide all frames from the loaded profile
+    -- Re-hide all frames and CVars from the loaded profile
     self:ReapplyHiddenFrames()
+    self:ReapplyHiddenCVars()
 
     local count = self:GetHiddenCount()
     self:FeedbackProfileLoaded(name, count)

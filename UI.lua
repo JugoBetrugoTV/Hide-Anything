@@ -303,109 +303,211 @@ function HA:RefreshFrameList()
     y = CreateSectionHeader(parent, y, L["CFG_HEADER_FRAMES"])
     y = y - 4
 
-    for i, entry in ipairs(self.FRAME_CATALOG) do
-        local frameName = entry.name
-        local displayLabel = self:GetCatalogLabel(entry)
-        local isHidden = self.db.hiddenFrames[frameName] == true
-        local frameExists = self:GetFrameByName(frameName) ~= nil
+    local rowIndex = 0
+    for _, entry in ipairs(self.FRAME_CATALOG) do
 
-        local row = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-        row:SetSize(parent:GetWidth(), ROW_HEIGHT)
-        row:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, y)
+        -- Section header entry
+        if entry.section then
+            y = y - 6
+            local sectionLabel = self:GetCatalogLabel(entry)
+            local secHeader = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            secHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 8, y)
+            secHeader:SetText("|cff88bbaa" .. sectionLabel .. "|r")
 
-        if i % 2 == 0 then
-            row:SetBackdrop({ bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background" })
-            row:SetBackdropColor(0.15, 0.15, 0.15, 0.3)
-        end
+            local secLine = parent:CreateTexture(nil, "ARTWORK")
+            secLine:SetHeight(1)
+            secLine:SetPoint("TOPLEFT", secHeader, "BOTTOMLEFT", 0, -1)
+            secLine:SetPoint("RIGHT", parent, "RIGHT", -4, 0)
+            secLine:SetColorTexture(0.4, 0.7, 0.5, 0.3)
 
-        -- Label
-        local lbl = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        lbl:SetPoint("LEFT", row, "LEFT", 8, 0)
-        if not frameExists then
-            lbl:SetText("|cff666666" .. displayLabel .. "|r")
-        else
+            -- Wrap in a frame so we can hide on refresh
+            local secRow = CreateFrame("Frame", nil, parent)
+            secRow:SetSize(1, 1)
+            secRow:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, y)
+            table.insert(tc.rows, secRow)
+            y = y - 16
+
+        -- CVar-based toggle entry
+        elseif entry.cvar then
+            local cvarName = entry.cvar
+            local displayLabel = self:GetCatalogLabel(entry)
+            local isHidden = self.db.hiddenCVars[cvarName] == true
+            rowIndex = rowIndex + 1
+
+            local row = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+            row:SetSize(parent:GetWidth(), ROW_HEIGHT)
+            row:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, y)
+
+            if rowIndex % 2 == 0 then
+                row:SetBackdrop({ bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background" })
+                row:SetBackdropColor(0.15, 0.15, 0.15, 0.3)
+            end
+
+            local lbl = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            lbl:SetPoint("LEFT", row, "LEFT", 8, 0)
             lbl:SetText(displayLabel)
-        end
-        lbl:SetWidth(parent:GetWidth() * 0.45)
-        lbl:SetJustifyH("LEFT")
+            lbl:SetWidth(parent:GetWidth() * 0.45)
+            lbl:SetJustifyH("LEFT")
 
-        -- Technical name
-        local techName = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        techName:SetPoint("LEFT", lbl, "RIGHT", 4, 0)
-        techName:SetText("|cff888888" .. frameName .. "|r")
-        techName:SetWidth(parent:GetWidth() * 0.3)
-        techName:SetJustifyH("LEFT")
+            local techName = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            techName:SetPoint("LEFT", lbl, "RIGHT", 4, 0)
+            techName:SetText("|cff888888CVar|r")
+            techName:SetWidth(parent:GetWidth() * 0.3)
+            techName:SetJustifyH("LEFT")
 
-        -- Toggle button
-        local toggleBg = CreateFrame("Button", nil, row, "BackdropTemplate")
-        toggleBg:SetSize(TOGGLE_W, TOGGLE_H)
-        toggleBg:SetPoint("RIGHT", row, "RIGHT", -8, 0)
-        toggleBg:SetBackdrop({
-            bgFile   = "Interface\\Buttons\\WHITE8X8",
-            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-            edgeSize = 8,
-            insets   = { left = 2, right = 2, top = 2, bottom = 2 },
-        })
+            local toggleBg = CreateFrame("Button", nil, row, "BackdropTemplate")
+            toggleBg:SetSize(TOGGLE_W, TOGGLE_H)
+            toggleBg:SetPoint("RIGHT", row, "RIGHT", -8, 0)
+            toggleBg:SetBackdrop({
+                bgFile   = "Interface\\Buttons\\WHITE8X8",
+                edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+                edgeSize = 8,
+                insets   = { left = 2, right = 2, top = 2, bottom = 2 },
+            })
+            local knob = toggleBg:CreateTexture(nil, "OVERLAY")
+            knob:SetSize(TOGGLE_H - 4, TOGGLE_H - 4)
+            knob:SetTexture("Interface\\Buttons\\WHITE8X8")
 
-        local knob = toggleBg:CreateTexture(nil, "OVERLAY")
-        knob:SetSize(TOGGLE_H - 4, TOGGLE_H - 4)
-        knob:SetTexture("Interface\\Buttons\\WHITE8X8")
+            if isHidden then
+                toggleBg:SetBackdropColor(0.35, 0.1, 0.1, 1.0)
+                toggleBg:SetBackdropBorderColor(0.6, 0.15, 0.15, 0.8)
+                knob:ClearAllPoints()
+                knob:SetPoint("LEFT", toggleBg, "LEFT", 2, 0)
+                knob:SetColorTexture(0.7, 0.7, 0.7, 0.9)
+            else
+                toggleBg:SetBackdropColor(0.0, 0.65, 0.3, 1.0)
+                toggleBg:SetBackdropBorderColor(0.0, 0.8, 0.4, 0.8)
+                knob:ClearAllPoints()
+                knob:SetPoint("RIGHT", toggleBg, "RIGHT", -2, 0)
+                knob:SetColorTexture(1, 1, 1, 0.95)
+            end
 
-        -- Visual: visible = green (toggle right), hidden = red (toggle left)
-        if isHidden then
-            toggleBg:SetBackdropColor(0.35, 0.1, 0.1, 1.0)
-            toggleBg:SetBackdropBorderColor(0.6, 0.15, 0.15, 0.8)
-            knob:ClearAllPoints()
-            knob:SetPoint("LEFT", toggleBg, "LEFT", 2, 0)
-            knob:SetColorTexture(0.7, 0.7, 0.7, 0.9)
-        else
-            toggleBg:SetBackdropColor(0.0, 0.65, 0.3, 1.0)
-            toggleBg:SetBackdropBorderColor(0.0, 0.8, 0.4, 0.8)
-            knob:ClearAllPoints()
-            knob:SetPoint("RIGHT", toggleBg, "RIGHT", -2, 0)
-            knob:SetColorTexture(1, 1, 1, 0.95)
-        end
-
-        if frameExists then
             toggleBg:SetScript("OnClick", function()
                 if isHidden then
-                    HA:ShowFrame(frameName)
+                    HA:ShowCVar(cvarName)
                 else
-                    HA:HideFrame(frameName)
+                    HA:HideCVar(cvarName)
                 end
             end)
-        else
-            toggleBg:SetBackdropColor(0.2, 0.2, 0.2, 0.5)
-            toggleBg:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.5)
-            knob:SetColorTexture(0.4, 0.4, 0.4, 0.5)
-        end
 
-        -- Tooltip
-        row:EnableMouse(true)
-        row:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:AddLine(displayLabel, 0, 0.8, 0.4)
-            GameTooltip:AddLine(frameName, 0.5, 0.5, 0.5)
-            if not frameExists then
-                GameTooltip:AddLine(L["FRAME_NOT_LOADED"], 1, 0.5, 0)
-            elseif isHidden then
-                GameTooltip:AddLine(L["FRAME_STATE_HIDDEN"], 1, 0.3, 0.3)
-            else
-                GameTooltip:AddLine(L["FRAME_STATE_VISIBLE"], 0, 1, 0)
+            row:EnableMouse(true)
+            row:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:AddLine(displayLabel, 0, 0.8, 0.4)
+                GameTooltip:AddLine("CVar: " .. cvarName, 0.5, 0.5, 0.5)
+                if isHidden then
+                    GameTooltip:AddLine(L["FRAME_STATE_HIDDEN"], 1, 0.3, 0.3)
+                else
+                    GameTooltip:AddLine(L["FRAME_STATE_VISIBLE"], 0, 1, 0)
+                end
+                GameTooltip:Show()
+            end)
+            row:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+            table.insert(tc.rows, row)
+            y = y - (ROW_HEIGHT + 1)
+
+        -- Frame-based toggle entry
+        elseif entry.name then
+            local frameName = entry.name
+            local displayLabel = self:GetCatalogLabel(entry)
+            local isHidden = self.db.hiddenFrames[frameName] == true
+            local frameExists = self:GetFrameByName(frameName) ~= nil
+            rowIndex = rowIndex + 1
+
+            local row = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+            row:SetSize(parent:GetWidth(), ROW_HEIGHT)
+            row:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, y)
+
+            if rowIndex % 2 == 0 then
+                row:SetBackdrop({ bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background" })
+                row:SetBackdropColor(0.15, 0.15, 0.15, 0.3)
             end
-            GameTooltip:Show()
-        end)
-        row:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-        table.insert(tc.rows, row)
-        y = y - (ROW_HEIGHT + 1)
+            local lbl = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            lbl:SetPoint("LEFT", row, "LEFT", 8, 0)
+            if not frameExists then
+                lbl:SetText("|cff666666" .. displayLabel .. "|r")
+            else
+                lbl:SetText(displayLabel)
+            end
+            lbl:SetWidth(parent:GetWidth() * 0.45)
+            lbl:SetJustifyH("LEFT")
+
+            local techName = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            techName:SetPoint("LEFT", lbl, "RIGHT", 4, 0)
+            techName:SetText("|cff888888" .. frameName .. "|r")
+            techName:SetWidth(parent:GetWidth() * 0.3)
+            techName:SetJustifyH("LEFT")
+
+            local toggleBg = CreateFrame("Button", nil, row, "BackdropTemplate")
+            toggleBg:SetSize(TOGGLE_W, TOGGLE_H)
+            toggleBg:SetPoint("RIGHT", row, "RIGHT", -8, 0)
+            toggleBg:SetBackdrop({
+                bgFile   = "Interface\\Buttons\\WHITE8X8",
+                edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+                edgeSize = 8,
+                insets   = { left = 2, right = 2, top = 2, bottom = 2 },
+            })
+
+            local knob = toggleBg:CreateTexture(nil, "OVERLAY")
+            knob:SetSize(TOGGLE_H - 4, TOGGLE_H - 4)
+            knob:SetTexture("Interface\\Buttons\\WHITE8X8")
+
+            if isHidden then
+                toggleBg:SetBackdropColor(0.35, 0.1, 0.1, 1.0)
+                toggleBg:SetBackdropBorderColor(0.6, 0.15, 0.15, 0.8)
+                knob:ClearAllPoints()
+                knob:SetPoint("LEFT", toggleBg, "LEFT", 2, 0)
+                knob:SetColorTexture(0.7, 0.7, 0.7, 0.9)
+            else
+                toggleBg:SetBackdropColor(0.0, 0.65, 0.3, 1.0)
+                toggleBg:SetBackdropBorderColor(0.0, 0.8, 0.4, 0.8)
+                knob:ClearAllPoints()
+                knob:SetPoint("RIGHT", toggleBg, "RIGHT", -2, 0)
+                knob:SetColorTexture(1, 1, 1, 0.95)
+            end
+
+            if frameExists then
+                toggleBg:SetScript("OnClick", function()
+                    if isHidden then
+                        HA:ShowFrame(frameName)
+                    else
+                        HA:HideFrame(frameName)
+                    end
+                end)
+            else
+                toggleBg:SetBackdropColor(0.2, 0.2, 0.2, 0.5)
+                toggleBg:SetBackdropBorderColor(0.3, 0.3, 0.3, 0.5)
+                knob:SetColorTexture(0.4, 0.4, 0.4, 0.5)
+            end
+
+            row:EnableMouse(true)
+            row:SetScript("OnEnter", function(self)
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:AddLine(displayLabel, 0, 0.8, 0.4)
+                GameTooltip:AddLine(frameName, 0.5, 0.5, 0.5)
+                if not frameExists then
+                    GameTooltip:AddLine(L["FRAME_NOT_LOADED"], 1, 0.5, 0)
+                elseif isHidden then
+                    GameTooltip:AddLine(L["FRAME_STATE_HIDDEN"], 1, 0.3, 0.3)
+                else
+                    GameTooltip:AddLine(L["FRAME_STATE_VISIBLE"], 0, 1, 0)
+                end
+                GameTooltip:Show()
+            end)
+            row:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+            table.insert(tc.rows, row)
+            y = y - (ROW_HEIGHT + 1)
+        end
     end
 
     -- Custom hidden frames (not in catalog)
     local customHidden = {}
     local catalogNames = {}
     for _, entry in ipairs(self.FRAME_CATALOG) do
-        catalogNames[entry.name] = true
+        if entry.name then catalogNames[entry.name] = true end
     end
     for frameName, _ in pairs(self.db.hiddenFrames) do
         if not catalogNames[frameName] then
