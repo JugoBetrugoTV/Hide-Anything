@@ -220,14 +220,15 @@ function HA:ShowFrame(frameName)
         return false
     end
 
-    -- Find the frame
+    -- Remove from DB FIRST (before showing, so the re-hide hook doesn't trigger)
+    self.db.hiddenFrames[frameName] = nil
+
+    -- Find the frame and show it
     local frame = self:GetFrameByName(frameName)
     if frame then
         self:SecureShowFrame(frame, frameName)
     end
 
-    -- Remove from DB regardless (frame might have been destroyed)
-    self.db.hiddenFrames[frameName] = nil
     self:FeedbackShow(frameName)
 
     if self.RefreshFrameList then

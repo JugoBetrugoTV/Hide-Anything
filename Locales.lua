@@ -132,10 +132,6 @@ L["UI_CONFIRM_RESET"]        = "Reset ALL settings?\nAll hidden frames will be s
 L["UI_CONFIRM_YES"]          = "Yes, Reset"
 L["UI_CONFIRM_NO"]           = "Cancel"
 
--- Confirm hide dialog
-L["CONFIRM_HIDE_TITLE"]      = "Hide Frame?"
-L["CONFIRM_HIDE_TEXT"]        = "Do you want to hide this frame?"
-
 -- Config UI section headers
 L["CFG_HEADER_SETTINGS"]     = "Settings"
 L["CFG_HEADER_FRAMES"]       = "UI Frames"
@@ -260,9 +256,6 @@ if locale == "deDE" then
     L["UI_CONFIRM_RESET"]        = "ALLE Einstellungen zurücksetzen?\nAlle versteckten Frames werden angezeigt und alle Profile gelöscht."
     L["UI_CONFIRM_YES"]          = "Ja, zurücksetzen"
     L["UI_CONFIRM_NO"]           = "Abbrechen"
-
-    L["CONFIRM_HIDE_TITLE"]      = "Frame verstecken?"
-    L["CONFIRM_HIDE_TEXT"]        = "Möchtest du diesen Frame verstecken?"
 
     L["CFG_HEADER_SETTINGS"]     = "Einstellungen"
     L["CFG_HEADER_FRAMES"]       = "UI-Frames"

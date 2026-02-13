@@ -1,6 +1,6 @@
 --[[
     HideAnything - UI.lua
-    Config UI with frame catalog toggles, confirmation dialog,
+    Config UI with frame catalog toggles,
     profile management, and settings.
     3 tabs: Frames, Profiles, About
 ]]
@@ -149,83 +149,6 @@ local function CreateButton(parent, xOff, yOff, width, text, onClick)
     btn:SetText(text)
     btn:SetScript("OnClick", onClick)
     return btn
-end
-
----------------------------------------------------------------------------
--- Confirmation dialog for hiding a frame
----------------------------------------------------------------------------
-local confirmDialog = CreateFrame("Frame", "HideAnythingConfirmDialog", UIParent, "BackdropTemplate")
-confirmDialog:SetSize(360, 160)
-confirmDialog:SetPoint("CENTER")
-confirmDialog:SetFrameStrata("FULLSCREEN_DIALOG")
-confirmDialog:SetFrameLevel(200)
-confirmDialog:SetMovable(true)
-confirmDialog:EnableMouse(true)
-confirmDialog:SetClampedToScreen(true)
-confirmDialog:Hide()
-
-confirmDialog:SetBackdrop({
-    bgFile   = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark",
-    edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-    tile     = true, tileSize = 32, edgeSize = 32,
-    insets   = { left = 8, right = 8, top = 8, bottom = 8 },
-})
-
-local confirmTitle = confirmDialog:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-confirmTitle:SetPoint("TOP", 0, -20)
-
-local confirmText = confirmDialog:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-confirmText:SetPoint("TOP", 0, -50)
-confirmText:SetWidth(300)
-confirmText:SetJustifyH("CENTER")
-
-local confirmFrameName = confirmDialog:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-confirmFrameName:SetPoint("TOP", 0, -75)
-confirmFrameName:SetWidth(300)
-confirmFrameName:SetJustifyH("CENTER")
-
-local confirmYes = CreateFrame("Button", nil, confirmDialog, "UIPanelButtonTemplate")
-confirmYes:SetSize(120, 28)
-confirmYes:SetPoint("BOTTOMLEFT", 40, 16)
-
-local confirmNo = CreateFrame("Button", nil, confirmDialog, "UIPanelButtonTemplate")
-confirmNo:SetSize(120, 28)
-confirmNo:SetPoint("BOTTOMRIGHT", -40, 16)
-confirmNo:SetScript("OnClick", function() confirmDialog:Hide() end)
-
--- Draggable
-local confirmDrag = CreateFrame("Frame", nil, confirmDialog)
-confirmDrag:SetHeight(30)
-confirmDrag:SetPoint("TOPLEFT", 0, 0)
-confirmDrag:SetPoint("TOPRIGHT", 0, 0)
-confirmDrag:EnableMouse(true)
-confirmDrag:RegisterForDrag("LeftButton")
-confirmDrag:SetScript("OnDragStart", function() confirmDialog:StartMoving() end)
-confirmDrag:SetScript("OnDragStop",  function() confirmDialog:StopMovingOrSizing() end)
-
--- ESC to close confirm dialog
-confirmDialog:SetScript("OnKeyDown", function(self, key)
-    if key == "ESCAPE" then
-        self:Hide()
-        self:SetPropagateKeyboardInput(false)
-    else
-        self:SetPropagateKeyboardInput(true)
-    end
-end)
-
-function HA:ShowConfirmHideDialog(frameName, displayLabel, onConfirm)
-    local L = self.L
-    confirmTitle:SetText(L["CONFIRM_HIDE_TITLE"])
-    confirmText:SetText(L["CONFIRM_HIDE_TEXT"])
-    confirmFrameName:SetText("|cffff8800" .. displayLabel .. "|r |cff888888(" .. frameName .. ")|r")
-    confirmYes:SetText(L["UI_CONFIRM_YES"])
-    confirmNo:SetText(L["UI_CONFIRM_NO"])
-    confirmYes:SetScript("OnClick", function()
-        confirmDialog:Hide()
-        if onConfirm then onConfirm() end
-    end)
-    confirmDialog:Show()
-    confirmDialog:EnableKeyboard(true)
 end
 
 ---------------------------------------------------------------------------
@@ -448,13 +371,7 @@ function HA:RefreshFrameList()
                 if isHidden then
                     HA:ShowFrame(frameName)
                 else
-                    if HA:GetSetting("confirmHide") then
-                        HA:ShowConfirmHideDialog(frameName, displayLabel, function()
-                            HA:HideFrame(frameName)
-                        end)
-                    else
-                        HA:HideFrame(frameName)
-                    end
+                    HA:HideFrame(frameName)
                 end
             end)
         else
@@ -554,15 +471,8 @@ function HA:RefreshFrameList()
     hideBtn:SetScript("OnClick", function()
         local name = inputBox:GetText()
         if name and name ~= "" then
-            if HA:GetSetting("confirmHide") then
-                HA:ShowConfirmHideDialog(name, name, function()
-                    HA:HideFrame(name)
-                    inputBox:SetText("")
-                end)
-            else
-                HA:HideFrame(name)
-                inputBox:SetText("")
-            end
+            HA:HideFrame(name)
+            inputBox:SetText("")
         end
     end)
 

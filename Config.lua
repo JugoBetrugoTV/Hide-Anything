@@ -17,7 +17,6 @@ HA.DEFAULTS = {
         locked      = false,
         showMinimap = true,
         chatEnabled = true,
-        confirmHide = true,
     },
 
     -- Profiles
