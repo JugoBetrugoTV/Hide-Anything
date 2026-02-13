@@ -204,9 +204,9 @@ local function CreateToggle(parent, yOff, label, tooltipText, settingKey, onChan
 
         -- Play a click sound as immediate feedback
         if newVal then
-            PlaySound(8624, "Master") -- IG_MAINMENU_OPTION_CHECKBOX_ON
+            PlaySound(856, "Master") -- SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON
         else
-            PlaySound(8625, "Master") -- IG_MAINMENU_OPTION_CHECKBOX_OFF
+            PlaySound(857, "Master") -- SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_OFF
         end
 
         -- Notify change in chat

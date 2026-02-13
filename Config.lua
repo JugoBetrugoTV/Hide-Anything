@@ -33,18 +33,18 @@ HA.DEFAULTS = {
         soundPickerEnabled  = true,
         soundLockEnabled    = true,
 
-        -- Sound file IDs (raw numeric IDs - safe at parse time)
+        -- Sound file IDs (SOUNDKIT numeric IDs)
         sounds = {
-            hide        = 12936,  -- IG_ABILITY_ICON_DROP
-            show        = 12938,  -- IG_ABILITY_ICON_PICKUP
-            error       = 7355,   -- IG_QUEST_LOG_ABANDON_QUEST
-            success     = 7241,   -- IG_PLAYER_INVITE
-            pickerStart = 7355,   -- IG_MAINMENU_OPEN
-            pickerStop  = 7356,   -- IG_MAINMENU_CLOSE
-            lock        = 8624,   -- IG_MAINMENU_OPTION_CHECKBOX_ON
-            unlock      = 8625,   -- IG_MAINMENU_OPTION_CHECKBOX_OFF
-            profileLoad = 7352,   -- IG_CHARACTER_INFO_TAB
-            reset       = 850,    -- IG_MAINMENU_LOGOUT
+            hide        = 838,    -- SOUNDKIT.IG_ABILITY_ICON_DROP
+            show        = 839,    -- SOUNDKIT.IG_CHARACTER_INFO_OPEN
+            error       = 846,    -- SOUNDKIT.IG_QUEST_LOG_ABANDON_QUEST
+            success     = 880,    -- SOUNDKIT.IG_PLAYER_INVITE
+            pickerStart = 850,    -- SOUNDKIT.IG_MAINMENU_OPEN
+            pickerStop  = 851,    -- SOUNDKIT.IG_MAINMENU_CLOSE
+            lock        = 856,    -- SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON
+            unlock      = 857,    -- SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_OFF
+            profileLoad = 841,    -- SOUNDKIT.IG_CHARACTER_INFO_TAB
+            reset       = 853,    -- SOUNDKIT.IG_MAINMENU_LOGOUT
         },
     },
 
