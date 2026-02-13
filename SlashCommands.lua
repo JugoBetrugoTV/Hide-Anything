@@ -14,21 +14,16 @@ SLASH_HIDEANYTHING2 = "/hideanything"
 SlashCmdList["HIDEANYTHING"] = function(msg)
     local L = HA.L
 
-    -- Parse command and arguments
     msg = msg and strtrim(msg) or ""
     local cmd, args = strsplit(" ", msg, 2)
     cmd = strlower(cmd or "")
     args = args and strtrim(args) or ""
 
-    -- Command dispatch
     if cmd == "" or cmd == "help" then
         HA:PrintHelp()
 
     elseif cmd == "toggle" or cmd == "options" or cmd == "config" or cmd == "opt" then
         HA:ToggleOptionsPanel()
-
-    elseif cmd == "pick" or cmd == "picker" or cmd == "select" then
-        HA:StartPicker()
 
     elseif cmd == "hide" then
         if args == "" then
@@ -67,48 +62,31 @@ SlashCmdList["HIDEANYTHING"] = function(msg)
         if args == "" then
             HA:Print(L["HELP_PROFILE"])
         else
-            -- Sub-commands: save, load, delete, overwrite
             local subCmd, profileName = strsplit(" ", args, 2)
             subCmd = strlower(subCmd or "")
             profileName = profileName and strtrim(profileName) or ""
 
             if subCmd == "save" then
-                if profileName ~= "" then
-                    HA:SaveProfile(profileName)
-                else
-                    HA:Print(L["PROFILE_NAME_REQUIRED"])
-                end
+                if profileName ~= "" then HA:SaveProfile(profileName)
+                else HA:Print(L["PROFILE_NAME_REQUIRED"]) end
 
             elseif subCmd == "load" then
-                if profileName ~= "" then
-                    HA:LoadProfile(profileName)
-                else
-                    HA:Print(L["PROFILE_NAME_REQUIRED"])
-                end
+                if profileName ~= "" then HA:LoadProfile(profileName)
+                else HA:Print(L["PROFILE_NAME_REQUIRED"]) end
 
             elseif subCmd == "delete" or subCmd == "del" or subCmd == "remove" then
-                if profileName ~= "" then
-                    HA:DeleteProfile(profileName)
-                else
-                    HA:Print(L["PROFILE_NAME_REQUIRED"])
-                end
+                if profileName ~= "" then HA:DeleteProfile(profileName)
+                else HA:Print(L["PROFILE_NAME_REQUIRED"]) end
 
             elseif subCmd == "overwrite" then
-                if profileName ~= "" then
-                    HA:SaveProfile(profileName, true)
-                else
-                    HA:Print(L["PROFILE_NAME_REQUIRED"])
-                end
+                if profileName ~= "" then HA:SaveProfile(profileName, true)
+                else HA:Print(L["PROFILE_NAME_REQUIRED"]) end
 
             elseif subCmd == "export" then
-                if profileName ~= "" then
-                    HA:ExportProfile(profileName)
-                else
-                    HA:Print(L["PROFILE_NAME_REQUIRED"])
-                end
+                if profileName ~= "" then HA:ExportProfile(profileName)
+                else HA:Print(L["PROFILE_NAME_REQUIRED"]) end
 
             else
-                -- Treat the whole args as a profile name to load
                 HA:LoadProfile(args)
             end
         end
@@ -134,7 +112,6 @@ function HA:PrintHelp()
     local L = self.L
     self:Print(L["HELP_HEADER"])
     self:Print(L["HELP_TOGGLE"])
-    self:Print(L["HELP_PICK"])
     self:Print(L["HELP_SHOW_ALL"])
     self:Print(L["HELP_HIDE"])
     self:Print(L["HELP_SHOW"])
@@ -167,8 +144,4 @@ function HA:PrintStatus()
 
     local minimapOn = self.db and self.db.minimap and not self.db.minimap.hide
     self:Print(L["STATUS_MINIMAP"]:format(minimapOn and L["STATUS_ON"] or L["STATUS_OFF"]))
-
-    self:Print(L["STATUS_FEEDBACK_SOUND"]:format(self:GetSetting("soundEnabled") and L["STATUS_ON"] or L["STATUS_OFF"]))
-    self:Print(L["STATUS_FEEDBACK_CHAT"]:format(self:GetSetting("chatEnabled") and L["STATUS_ON"] or L["STATUS_OFF"]))
-    self:Print(L["STATUS_FEEDBACK_SCREEN"]:format(self:GetSetting("screenEnabled") and L["STATUS_ON"] or L["STATUS_OFF"]))
 end

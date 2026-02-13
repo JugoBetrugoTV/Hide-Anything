@@ -1,6 +1,6 @@
 --[[
     HideAnything - Config.lua
-    Saved variables, defaults, database initialization
+    Saved variables, defaults, database initialization, frame catalog
 ]]
 
 local AddonName, HA = ...
@@ -14,38 +14,10 @@ HA.DEFAULTS = {
 
     -- Settings
     settings = {
-        locked          = false,
-        autoHide        = true,
-        confirmHide     = false,
-        showMinimap     = true,
-
-        -- Feedback toggles
-        soundEnabled    = true,
-        chatEnabled     = true,
-        screenEnabled   = true,
-        errorSpeech     = true,
-
-        -- Per-action sound toggles
-        soundHideEnabled    = true,
-        soundShowEnabled    = true,
-        soundErrorEnabled   = true,
-        soundSuccessEnabled = true,
-        soundPickerEnabled  = true,
-        soundLockEnabled    = true,
-
-        -- Sound file IDs (SOUNDKIT numeric IDs)
-        sounds = {
-            hide        = 838,    -- SOUNDKIT.IG_ABILITY_ICON_DROP
-            show        = 839,    -- SOUNDKIT.IG_CHARACTER_INFO_OPEN
-            error       = 846,    -- SOUNDKIT.IG_QUEST_LOG_ABANDON_QUEST
-            success     = 880,    -- SOUNDKIT.IG_PLAYER_INVITE
-            pickerStart = 850,    -- SOUNDKIT.IG_MAINMENU_OPEN
-            pickerStop  = 851,    -- SOUNDKIT.IG_MAINMENU_CLOSE
-            lock        = 856,    -- SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON
-            unlock      = 857,    -- SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_OFF
-            profileLoad = 841,    -- SOUNDKIT.IG_CHARACTER_INFO_TAB
-            reset       = 853,    -- SOUNDKIT.IG_MAINMENU_LOGOUT
-        },
+        locked      = false,
+        showMinimap = true,
+        chatEnabled = true,
+        confirmHide = true,
     },
 
     -- Profiles
@@ -81,6 +53,33 @@ HA.PROTECTED_FRAMES = {
     ["MerchantFrame"]        = true,
     ["LootFrame"]            = true,
     ["HideAnythingOptionsFrame"] = true,
+}
+
+---------------------------------------------------------------------------
+-- Curated frame catalog: frames available for toggling in the UI
+---------------------------------------------------------------------------
+HA.FRAME_CATALOG = {
+    { name = "PlayerFrame",               label = "Player Frame",               labelDE = "Spieler-Frame" },
+    { name = "TargetFrame",               label = "Target Frame",               labelDE = "Ziel-Frame" },
+    { name = "FocusFrame",                label = "Focus Frame",                labelDE = "Fokus-Frame" },
+    { name = "PetFrame",                  label = "Pet Frame",                  labelDE = "Begleiter-Frame" },
+    { name = "MinimapCluster",            label = "Minimap",                    labelDE = "Minimap" },
+    { name = "BuffFrame",                 label = "Buffs",                      labelDE = "Buffs" },
+    { name = "DebuffFrame",              label = "Debuffs",                    labelDE = "Debuffs" },
+    { name = "ObjectiveTrackerFrame",     label = "Quest / Objective Tracker",  labelDE = "Quest-Tracker" },
+    { name = "PlayerCastingBarFrame",     label = "Cast Bar",                   labelDE = "Zauberleiste" },
+    { name = "MicroButtonAndBagsBar",     label = "Micro Menu & Bags",          labelDE = "Mikromenü & Taschen" },
+    { name = "StatusTrackingBarManager",  label = "XP / Rep Bar",              labelDE = "EP / Ruf-Leiste" },
+    { name = "CompactRaidFrameContainer", label = "Raid Frames",               labelDE = "Raid-Frames" },
+    { name = "BossBanner",               label = "Boss Banner",                labelDE = "Boss-Banner" },
+    { name = "ZoneTextFrame",            label = "Zone Text",                  labelDE = "Zonentext" },
+    { name = "SubZoneTextFrame",         label = "Sub Zone Text",              labelDE = "Unterzonentext" },
+    { name = "DurabilityFrame",          label = "Durability",                 labelDE = "Haltbarkeit" },
+    { name = "VehicleSeatIndicator",     label = "Vehicle Seat",               labelDE = "Fahrzeugsitz" },
+    { name = "TalkingHeadFrame",         label = "Talking Head",               labelDE = "Sprechender Kopf" },
+    { name = "AlertFrame",               label = "Achievement Alerts",         labelDE = "Erfolgs-Meldungen" },
+    { name = "TotemFrame",               label = "Totems",                     labelDE = "Totems" },
+    { name = "GameTimeFrame",            label = "Calendar Button",            labelDE = "Kalender-Button" },
 }
 
 ---------------------------------------------------------------------------
@@ -170,4 +169,14 @@ function HA:SetSetting(key, value)
     if self.db and self.db.settings then
         self.db.settings[key] = value
     end
+end
+
+---------------------------------------------------------------------------
+-- Get localized catalog label
+---------------------------------------------------------------------------
+function HA:GetCatalogLabel(entry)
+    if GetLocale() == "deDE" and entry.labelDE then
+        return entry.labelDE
+    end
+    return entry.label
 end

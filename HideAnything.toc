@@ -1,7 +1,7 @@
 ## Interface: 120001
 ## Title: |cff00cc66Hide|r |cffffffffAnything|r
-## Notes: Hide any UI element with a single click. Modular, profile-based, with audio & visual feedback.
-## Notes-deDE: Verstecke jedes UI-Element mit einem Klick. Modular, profilbasiert, mit Audio- & visuellem Feedback.
+## Notes: Hide any UI element with a simple toggle. Frame list, profiles, combat protection.
+## Notes-deDE: Verstecke jedes UI-Element per einfachem Toggle. Frame-Liste, Profile, Kampfschutz.
 ## Author: JugoBetrugoTV
 ## Version: 1.0.0
 ## SavedVariables: HideAnythingDB
@@ -17,7 +17,6 @@ Config.lua
 Feedback.lua
 Core.lua
 
-FrameSelector.lua
 Tooltips.lua
 Minimap.lua
 FloatingButton.lua

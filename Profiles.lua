@@ -30,7 +30,6 @@ function HA:SaveProfile(name, overwrite)
 
     local count = self:GetHiddenCount()
     self:Print(L["PROFILE_SAVED"]:format(name, count))
-    self:PlayFeedbackSound("success")
 
     -- Refresh UI if open
     if self.RefreshProfileList then
@@ -52,7 +51,6 @@ function HA:LoadProfile(name)
     local profile = self.db.profiles[name]
     if not profile then
         self:Print(L["PROFILE_NOT_FOUND"]:format(name))
-        self:PlayFeedbackSound("error")
         return
     end
 
@@ -110,7 +108,6 @@ function HA:DeleteProfile(name)
 
     if not self.db.profiles[name] then
         self:Print(L["PROFILE_NOT_FOUND"]:format(name))
-        self:PlayFeedbackSound("error")
         return
     end
 
@@ -121,7 +118,6 @@ function HA:DeleteProfile(name)
     end
 
     self:Print(L["PROFILE_DELETED"]:format(name))
-    self:PlayFeedbackSound("success")
 
     -- Refresh UI if open
     if self.RefreshProfileList then
@@ -176,11 +172,9 @@ function HA:ExportProfile(name)
     local profile = self.db.profiles[name]
     if not profile then
         self:Print(L["PROFILE_NOT_FOUND"]:format(name))
-        self:PlayFeedbackSound("error")
         return
     end
 
-    -- Simple serialization: name|frame1,frame2,frame3,...
     local frames = {}
     if profile.hiddenFrames then
         for frameName, _ in pairs(profile.hiddenFrames) do
@@ -190,10 +184,8 @@ function HA:ExportProfile(name)
 
     local data = "HA1:" .. name .. "|" .. table.concat(frames, ",")
 
-    -- Base64-like encoding isn't available, so we'll just show the raw data
     self:ShowExportDialog(data)
     self:Print(L["PROFILE_EXPORTED"]:format(name))
-    self:PlayFeedbackSound("success")
 end
 
 ---------------------------------------------------------------------------
@@ -204,7 +196,6 @@ function HA:ImportProfile(data)
 
     if not data or data == "" then
         self:Print(L["PROFILE_IMPORT_ERROR"])
-        self:PlayFeedbackSound("error")
         return
     end
 
@@ -212,14 +203,12 @@ function HA:ImportProfile(data)
     local prefix, rest = strsplit(":", data, 2)
     if prefix ~= "HA1" or not rest then
         self:Print(L["ERROR_IMPORT_PARSE"])
-        self:PlayFeedbackSound("error")
         return
     end
 
     local name, frameList = strsplit("|", rest, 2)
     if not name or name == "" then
         self:Print(L["ERROR_IMPORT_PARSE"])
-        self:PlayFeedbackSound("error")
         return
     end
 
@@ -246,7 +235,6 @@ function HA:ImportProfile(data)
     }
 
     self:Print(L["PROFILE_IMPORTED"]:format(name, frameCount))
-    self:PlayFeedbackSound("success")
 
     -- Refresh UI if open
     if self.RefreshProfileList then

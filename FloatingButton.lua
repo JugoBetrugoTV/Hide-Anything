@@ -47,7 +47,6 @@ btn:SetScript("OnEnter", function(self)
     GameTooltip:AddLine("|cff00cc66Hide|rAnything", 1, 1, 1)
     GameTooltip:AddLine(" ")
     GameTooltip:AddLine(L["MINIMAP_TOOLTIP_LEFT"], 1, 1, 1)
-    GameTooltip:AddLine(L["MINIMAP_TOOLTIP_RIGHT"], 1, 1, 1)
     GameTooltip:AddLine(L["MINIMAP_TOOLTIP_SHIFT"], 1, 1, 1)
     GameTooltip:AddLine("|cff888888Drag|r to move", 1, 1, 1)
 
@@ -96,8 +95,6 @@ btn:SetScript("OnClick", function(self, button)
         else
             HA:ToggleOptionsPanel()
         end
-    elseif button == "RightButton" then
-        HA:StartPicker()
     end
 end)
 

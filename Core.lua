@@ -46,7 +46,10 @@ HA.eventFrame:SetScript("OnEvent", function(self, event, ...)
             self:UnregisterEvent("ADDON_LOADED")
         end
     elseif event == "PLAYER_ENTERING_WORLD" then
-        HA:OnPlayerEnteringWorld()
+        -- Always reapply hidden frames on login/reload
+        C_Timer.After(0.5, function()
+            HA:ReapplyHiddenFrames()
+        end)
     elseif event == "PLAYER_REGEN_DISABLED" then
         HA.inCombat = true
     elseif event == "PLAYER_REGEN_ENABLED" then
@@ -83,17 +86,6 @@ function HA:OnInitialize()
     end)
     if not ok then
         print("|cffff0000[HideAnything] INIT ERROR:|r " .. tostring(err))
-    end
-end
-
----------------------------------------------------------------------------
--- Player entering world: re-hide all frames
----------------------------------------------------------------------------
-function HA:OnPlayerEnteringWorld()
-    if self.db and self.db.settings and self.db.settings.autoHide then
-        C_Timer.After(0.5, function()
-            self:ReapplyHiddenFrames()
-        end)
     end
 end
 
@@ -135,7 +127,6 @@ function HA:GetFrameName(frame)
     if name and name ~= "" then
         return name
     end
-    -- Anonymous frame: try to build a descriptive name
     local parent = frame:GetParent()
     local parentName = parent and parent:GetName() or "UIParent"
     local objType = frame:GetObjectType() or "Frame"
@@ -191,9 +182,8 @@ function HA:HideFrame(frameName)
     if success then
         self.db.hiddenFrames[frameName] = true
         self:FeedbackHide(frameName)
-        -- Update UI if open
-        if self.RefreshHiddenList then
-            self:RefreshHiddenList()
+        if self.RefreshFrameList then
+            self:RefreshFrameList()
         end
     end
 
@@ -227,7 +217,6 @@ function HA:ShowFrame(frameName)
     -- Lock check
     if self:GetSetting("locked") then
         self:Print(L["FRAMES_LOCKED"])
-        self:PlayFeedbackSound("error")
         return false
     end
 
@@ -241,9 +230,8 @@ function HA:ShowFrame(frameName)
     self.db.hiddenFrames[frameName] = nil
     self:FeedbackShow(frameName)
 
-    -- Update UI if open
-    if self.RefreshHiddenList then
-        self:RefreshHiddenList()
+    if self.RefreshFrameList then
+        self:RefreshFrameList()
     end
 
     return true
@@ -274,13 +262,11 @@ function HA:ShowAllFrames()
         return
     end
 
-    -- Clear the hidden frames table
     wipe(self.db.hiddenFrames)
     self:FeedbackShowAll(count)
 
-    -- Update UI if open
-    if self.RefreshHiddenList then
-        self:RefreshHiddenList()
+    if self.RefreshFrameList then
+        self:RefreshFrameList()
     end
 end
 
@@ -296,7 +282,6 @@ function HA:ReapplyHiddenFrames()
         if frame then
             self:SecureHideFrame(frame, frameName)
         else
-            -- Frame doesn't exist yet, try again later
             table.insert(failed, frameName)
         end
     end
@@ -343,7 +328,6 @@ function HA:SecureHideFrame(frame, frameName)
                     end
                 end
             end)
-            -- Also hook SetShown
             hooksecurefunc(frame, "SetShown", function(f, shown)
                 if shown and HA.db and HA.db.hiddenFrames and HA.db.hiddenFrames[frameName] then
                     if not InCombatLockdown() then
@@ -382,7 +366,6 @@ end
 function HA:ProcessPendingQueue()
     if #pendingQueue == 0 then return end
 
-    local L = self.L
     for _, entry in ipairs(pendingQueue) do
         if entry.action == "hide" then
             self:HideFrame(entry.name)
@@ -439,9 +422,6 @@ function HA:UnlockFrames()
     self:FeedbackUnlock()
 end
 
----------------------------------------------------------------------------
--- Toggle lock
----------------------------------------------------------------------------
 function HA:ToggleLock()
     if self:GetSetting("locked") then
         self:UnlockFrames()
@@ -458,7 +438,6 @@ HA.resetPending = false
 function HA:RequestReset()
     local L = self.L
     if self.resetPending then
-        -- Confirmed
         self:ShowAllFrames()
         self:ResetDB()
         self:FeedbackReset()
@@ -466,7 +445,6 @@ function HA:RequestReset()
     else
         self:Print(L["RESET_CONFIRM"])
         self.resetPending = true
-        -- Auto-cancel after 15 seconds
         C_Timer.After(15, function()
             HA.resetPending = false
         end)

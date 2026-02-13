@@ -84,8 +84,6 @@ minimapButton:SetScript("OnClick", function(self, button)
         else
             HA:ToggleOptionsPanel()
         end
-    elseif button == "RightButton" then
-        HA:StartPicker()
     end
 end)
 
@@ -100,7 +98,6 @@ minimapButton:SetScript("OnEnter", function(self)
     GameTooltip:AddLine(L["MINIMAP_TOOLTIP_TITLE"])
     GameTooltip:AddLine(" ")
     GameTooltip:AddLine(L["MINIMAP_TOOLTIP_LEFT"], 1, 1, 1)
-    GameTooltip:AddLine(L["MINIMAP_TOOLTIP_RIGHT"], 1, 1, 1)
     GameTooltip:AddLine(L["MINIMAP_TOOLTIP_SHIFT"], 1, 1, 1)
     GameTooltip:AddLine(L["MINIMAP_TOOLTIP_DRAG"], 1, 1, 1)
 
@@ -164,15 +161,10 @@ end
 -- Global functions referenced by ## AddonCompartmentFunc in TOC
 ---------------------------------------------------------------------------
 function HideAnything_OnAddonCompartmentClick(addonName, button)
-    if button == "RightButton" then
-        HA:StartPicker()
-    else
-        HA:ToggleOptionsPanel()
-    end
+    HA:ToggleOptionsPanel()
 end
 
 function HideAnything_OnAddonCompartmentEnter(addonName, menuButton)
-    -- menuButton is the actual frame from the dropdown menu
     if menuButton and type(menuButton) == "table" and menuButton.GetObjectType then
         GameTooltip:SetOwner(menuButton, "ANCHOR_RIGHT")
     else
@@ -182,7 +174,6 @@ function HideAnything_OnAddonCompartmentEnter(addonName, menuButton)
     GameTooltip:AddLine(HA.L["MINIMAP_TOOLTIP_TITLE"])
     GameTooltip:AddLine(" ")
     GameTooltip:AddLine(HA.L["MINIMAP_TOOLTIP_LEFT"], 1, 1, 1)
-    GameTooltip:AddLine(HA.L["MINIMAP_TOOLTIP_RIGHT"], 1, 1, 1)
     local count = HA:GetHiddenCount()
     if count > 0 then
         GameTooltip:AddLine(" ")
