@@ -69,9 +69,13 @@ HA.FRAME_CATALOG = {
     { name = "TargetFrame",               label = "Target Frame",               labelDE = "Ziel-Frame" },
     { name = "TargetFrameToT",            label = "Target of Target",           labelDE = "Ziel des Ziels" },
     { name = "FocusFrame",                label = "Focus Frame",                labelDE = "Fokus-Frame" },
+    { name = "FocusFrameToT",             label = "Focus Target of Target",     labelDE = "Fokusziel des Ziels" },
     { name = "PetFrame",                  label = "Pet Frame",                  labelDE = "Begleiter-Frame" },
     { name = "PartyFrame",               label = "Party Frames",               labelDE = "Gruppen-Frames" },
     { name = "CompactRaidFrameContainer", label = "Raid Frames",               labelDE = "Raid-Frames" },
+    { name = "CompactRaidFrameManager",   label = "Raid Frame Manager",         labelDE = "Raid-Frame Manager" },
+    { name = "BossTargetFrameContainer",  label = "Boss Frames",               labelDE = "Boss-Frames" },
+    { name = "ArenaEnemyFramesContainer", label = "Arena Enemy Frames",         labelDE = "Arena-Gegner-Frames" },
 
     ---------------------------------------------------------------------------
     -- Action Bars
@@ -86,6 +90,7 @@ HA.FRAME_CATALOG = {
     { name = "PetActionBar",             label = "Pet Action Bar",            labelDE = "Begleiter-Aktionsleiste" },
     { name = "ExtraAbilityContainer",    label = "Extra Action Button",       labelDE = "Extra-Aktionsknopf" },
     { name = "EncounterBar",             label = "Encounter Bar",             labelDE = "Begegnungsleiste" },
+    { name = "OverrideActionBar",        label = "Override / Vehicle Bar",    labelDE = "Override-/Fahrzeugleiste" },
 
     ---------------------------------------------------------------------------
     -- Bars & Menus
@@ -107,17 +112,42 @@ HA.FRAME_CATALOG = {
     -- Combat Text (CVar-based)
     ---------------------------------------------------------------------------
     { section = true, label = "Combat Text",            labelDE = "Kampftext" },
-    { cvar = "floatingCombatTextCombatDamage",  label = "Damage Numbers",     labelDE = "Schadenszahlen" },
-    { cvar = "floatingCombatTextCombatHealing", label = "Healing Numbers",    labelDE = "Heilungszahlen" },
-    { cvar = "enableFloatingCombatText",        label = "Incoming Combat Text", labelDE = "Eingehender Kampftext" },
+    { cvar = "floatingCombatTextCombatDamage",    label = "Damage Numbers",          labelDE = "Schadenszahlen" },
+    { cvar = "floatingCombatTextCombatHealing",   label = "Healing Numbers",         labelDE = "Heilungszahlen" },
+    { cvar = "enableFloatingCombatText",          label = "Incoming Combat Text",    labelDE = "Eingehender Kampftext" },
+    { cvar = "floatingCombatTextDodgeParryMiss",  label = "Dodge / Parry / Miss",    labelDE = "Ausweichen / Parieren / Verfehlt" },
+    { cvar = "floatingCombatTextComboPoints",     label = "Combo Points",            labelDE = "Kombopunkte" },
+    { cvar = "floatingCombatTextEnergyGains",     label = "Energy / Mana / Rage",    labelDE = "Energie / Mana / Wut" },
+    { cvar = "floatingCombatTextRepChanges",      label = "Reputation Changes",      labelDE = "Ruf-Änderungen" },
+    { cvar = "floatingCombatTextHonorGains",      label = "Honor Gains",             labelDE = "Ehre-Gewinn" },
+    { cvar = "floatingCombatTextReactives",       label = "Reactive Abilities",      labelDE = "Reaktive Fähigkeiten" },
+    { cvar = "floatingCombatTextAuras",           label = "Buff / Debuff Gain",      labelDE = "Buff-/Debuff-Gewinn" },
+    { cvar = "floatingCombatTextLowManaHealth",   label = "Low Health / Mana Warn",  labelDE = "Wenig Leben/Mana Warnung" },
+    { cvar = "floatingCombatTextCombatState",     label = "Enter / Leave Combat",    labelDE = "Kampf betreten/verlassen" },
+    { cvar = "floatingCombatTextFriendlyHealers", label = "Healer Names",            labelDE = "Heiler-Namen" },
+
+    ---------------------------------------------------------------------------
+    -- Nameplates (CVar-based)
+    ---------------------------------------------------------------------------
+    { section = true, label = "Nameplates",             labelDE = "Namensplaketten" },
+    { cvar = "nameplateShowAll",          label = "All Nameplates",            labelDE = "Alle Namensplaketten" },
+    { cvar = "nameplateShowFriends",      label = "Friendly Nameplates",       labelDE = "Freundliche Namensplaketten" },
+    { cvar = "nameplateShowEnemies",      label = "Enemy Nameplates",          labelDE = "Feindliche Namensplaketten" },
+
+    ---------------------------------------------------------------------------
+    -- Sound (CVar-based)
+    ---------------------------------------------------------------------------
+    { section = true, label = "Sound",                  labelDE = "Sound" },
+    { cvar = "Sound_EnableErrorSpeech",   label = "Error Speech",              labelDE = "Fehler-Stimme" },
 
     ---------------------------------------------------------------------------
     -- Chat
     ---------------------------------------------------------------------------
     { section = true, label = "Chat",                   labelDE = "Chat" },
-    { name = "GeneralDockManager",       label = "Chat Tab Bar",              labelDE = "Chat-Tab-Leiste" },
-    { name = "ChatFrameMenuButton",      label = "Chat Menu Button",          labelDE = "Chat-Menü-Button" },
-    { name = "QuickJoinToastButton",     label = "Quick Join Button",         labelDE = "Schnellbeitritt-Button" },
+    { name = "GeneralDockManager",           label = "Chat Tab Bar",              labelDE = "Chat-Tab-Leiste" },
+    { name = "ChatFrameMenuButton",          label = "Chat Menu Button",          labelDE = "Chat-Menü-Button" },
+    { name = "QuickJoinToastButton",         label = "Quick Join Button",         labelDE = "Schnellbeitritt-Button" },
+    { name = "CombatLogQuickButtonFrame",    label = "Combat Log Buttons",        labelDE = "Kampflog-Buttons" },
 
     ---------------------------------------------------------------------------
     -- Map & Navigation
@@ -125,6 +155,7 @@ HA.FRAME_CATALOG = {
     { section = true, label = "Map & Navigation",       labelDE = "Karte & Navigation" },
     { name = "MinimapCluster",           label = "Minimap",                   labelDE = "Minimap" },
     { name = "GameTimeFrame",            label = "Calendar Button",           labelDE = "Kalender-Button" },
+    { name = "TimeManagerClockButton",   label = "Clock",                     labelDE = "Uhr" },
     { name = "ObjectiveTrackerFrame",    label = "Quest / Objective Tracker", labelDE = "Quest-Tracker" },
 
     ---------------------------------------------------------------------------
@@ -138,6 +169,10 @@ HA.FRAME_CATALOG = {
     { name = "SubZoneTextFrame",         label = "Sub Zone Text",             labelDE = "Unterzonentext" },
     { name = "LossOfControlFrame",       label = "Loss of Control",           labelDE = "Kontrollverlust" },
     { name = "GroupLootContainer",       label = "Loot Rolls",                labelDE = "Beutewürfe" },
+    { name = "SpellActivationOverlayFrame", label = "Spell Proc Overlays",    labelDE = "Zauber-Proc-Overlays" },
+    { name = "GhostFrame",              label = "Spirit Release",             labelDE = "Geistfreilassung" },
+    { name = "TimerTracker",             label = "BG / Arena Timer",          labelDE = "BG-/Arena-Timer" },
+    { name = "MirrorTimerContainer",     label = "Breath / Fatigue Timer",    labelDE = "Atem-/Ermüdungs-Timer" },
 
     ---------------------------------------------------------------------------
     -- Widgets & Misc
@@ -148,6 +183,7 @@ HA.FRAME_CATALOG = {
     { name = "DurabilityFrame",          label = "Durability",                labelDE = "Haltbarkeit" },
     { name = "VehicleSeatIndicator",     label = "Vehicle Seat",              labelDE = "Fahrzeugsitz" },
     { name = "QueueStatusButton",        label = "Queue Status Eye",          labelDE = "Warteschlangen-Auge" },
+    { name = "OrderHallCommandBar",      label = "Order Hall Bar",            labelDE = "Ordenshallen-Leiste" },
 }
 
 ---------------------------------------------------------------------------
