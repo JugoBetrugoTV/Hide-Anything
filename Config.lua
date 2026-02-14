@@ -103,9 +103,15 @@ HA.FRAME_CATALOG = {
     -- Bars & Menus
     ---------------------------------------------------------------------------
     { section = true, label = "Bars & Menus",           labelDE = "Leisten & Menüs" },
-    { name = "MicroButtonAndBagsBar",    label = "Micro Menu & Bags",         labelDE = "Mikromenü & Taschen" },
+    { name = "MicroButtonAndBagsBar",    label = "Micro Menu & Bags (Classic)",   labelDE = "Mikromenü & Taschen (Classic)" },
+    { name = "MicroMenuContainer",       label = "Micro Menu (Retail)",           labelDE = "Mikromenü (Retail)" },
+    { name = "BagBar",                   label = "Bag Bar (Retail)",              labelDE = "Taschenleiste (Retail)" },
+    { name = "BagsBar",                  label = "Bags Bar (Retail alt)",         labelDE = "Taschenleiste (Retail alt)" },
+    { name = "BackpackBar",             label = "Backpack Bar",                   labelDE = "Rucksack-Leiste" },
+    { name = "MainMenuBarBackpackButton",label = "Backpack Button",              labelDE = "Rucksack-Button" },
     { name = "StatusTrackingBarManager", label = "XP / Rep Bar",              labelDE = "EP / Ruf-Leiste" },
     { name = "PlayerCastingBarFrame",    label = "Cast Bar",                  labelDE = "Zauberleiste" },
+    { name = "EditModeManagerFrame",     label = "Edit Mode Bar",              labelDE = "Bearbeitungsmodus-Leiste" },
 
     ---------------------------------------------------------------------------
     -- Buffs & Auras
@@ -208,12 +214,22 @@ HA.FRAME_CATALOG = {
     { name = "PlayerPowerBarAlt",        label = "Alternate Power Bar",       labelDE = "Alternative Energieleiste" },
     { name = "OrderHallCommandBar",      label = "Order Hall Bar",            labelDE = "Ordenshallen-Leiste" },
     { name = "UIWidgetCenterScreenContainerFrame", label = "Center Screen Widgets", labelDE = "Bildschirmmitte-Widgets" },
+    { name = "ExpansionLandingPageMinimapButton",  label = "Expansion Landing Button", labelDE = "Erweiterungs-Landungstaste" },
 
     ---------------------------------------------------------------------------
     -- Tutorials (CVar-based)
     ---------------------------------------------------------------------------
     { section = true, label = "Tutorials",              labelDE = "Tutorials" },
     { cvar = "showTutorials",            label = "Tutorial Popups",           labelDE = "Tutorial-Popups" },
+
+    ---------------------------------------------------------------------------
+    -- HUD Misc (CVar-based)
+    ---------------------------------------------------------------------------
+    { section = true, label = "HUD Options",            labelDE = "HUD-Optionen" },
+    { cvar = "showTargetCastbar",        label = "Target Cast Bar",           labelDE = "Ziel-Zauberleiste" },
+    { cvar = "showVKeyCastbar",          label = "Focus Cast Bar",            labelDE = "Fokus-Zauberleiste" },
+    { cvar = "showTargetOfTarget",       label = "Target of Target",          labelDE = "Ziel des Ziels" },
+    { cvar = "doNotFlashLowHealthWarning", label = "Low Health Flash",        labelDE = "Warnung: Wenig Leben" },
 }
 
 ---------------------------------------------------------------------------

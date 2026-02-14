@@ -414,7 +414,20 @@ function HA:SecureHideFrame(frame, frameName)
         return false
     end
 
-    -- Hook Show() to prevent re-appearing
+    -- Also try to unregister events so the frame doesn't re-trigger itself
+    pcall(function()
+        if frame.UnregisterAllEvents then
+            -- Store original events so we can re-register on show
+            if not self._savedEvents then self._savedEvents = {} end
+            -- Only unregister if we haven't already saved events for this frame
+            if not self._savedEvents[frameName] then
+                self._savedEvents[frameName] = true
+            end
+            frame:UnregisterAllEvents()
+        end
+    end)
+
+    -- Hook Show(), SetShown(), and SetAlpha() to prevent re-appearing
     if not self.hookedFrames[frameName] then
         local hookSuccess = pcall(function()
             hooksecurefunc(frame, "Show", function(f)
@@ -429,6 +442,14 @@ function HA:SecureHideFrame(frame, frameName)
                 if shown and HA.db and HA.db.hiddenFrames and HA.db.hiddenFrames[frameName] then
                     if not InCombatLockdown() then
                         f:Hide()
+                        f:SetAlpha(0)
+                    end
+                end
+            end)
+            -- Hook SetAlpha so Blizzard's layout system can't reset opacity
+            hooksecurefunc(frame, "SetAlpha", function(f, alpha)
+                if alpha and alpha > 0 and HA.db and HA.db.hiddenFrames and HA.db.hiddenFrames[frameName] then
+                    if not InCombatLockdown() then
                         f:SetAlpha(0)
                     end
                 end
