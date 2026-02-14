@@ -156,8 +156,8 @@ function HA:PrintStatus()
         self:Print(L["STATUS_UNLOCKED"])
     end
 
-    local profile = self.db and self.db.activeProfile or "none"
-    self:Print(L["STATUS_PROFILE"]:format(profile or "none"))
+    local profile = (self.db and self.db.activeProfile) or "none"
+    self:Print(L["STATUS_PROFILE"]:format(profile))
 
     local minimapOn = self.db and self.db.minimap and not self.db.minimap.hide
     self:Print(L["STATUS_MINIMAP"]:format(minimapOn and L["STATUS_ON"] or L["STATUS_OFF"]))

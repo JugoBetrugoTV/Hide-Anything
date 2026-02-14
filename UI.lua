@@ -591,7 +591,6 @@ end
 ---------------------------------------------------------------------------
 -- Settings rows (created once, never pooled)
 ---------------------------------------------------------------------------
-local settingsFrame = nil
 local searchBox = nil
 local searchIcon = nil
 

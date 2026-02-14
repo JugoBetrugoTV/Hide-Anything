@@ -45,7 +45,6 @@ HA.DEFAULTS = {
 HA.PROTECTED_FRAMES = {
     ["UIParent"]             = true,
     ["WorldFrame"]           = true,
-    ["UIErrorsFrame"]        = true,
     ["StaticPopup1"]         = true,
     ["StaticPopup2"]         = true,
     ["StaticPopup3"]         = true,

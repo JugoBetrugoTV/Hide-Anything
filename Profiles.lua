@@ -112,8 +112,8 @@ function HA:LoadProfile(name)
     self:FeedbackProfileLoaded(name, count)
 
     -- Refresh UI if open
-    if self.RefreshHiddenList then
-        self:RefreshHiddenList()
+    if self.RefreshFrameList then
+        self:RefreshFrameList()
     end
     if self.RefreshProfileList then
         self:RefreshProfileList()

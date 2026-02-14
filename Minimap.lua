@@ -37,6 +37,9 @@ function HA:ToggleMinimapButton()
 
     self.db.minimap.hide = not self.db.minimap.hide
 
+    -- Keep settings.showMinimap in sync (used by UI toggle)
+    self:SetSetting("showMinimap", not self.db.minimap.hide)
+
     local LDBIcon = LibStub and LibStub("LibDBIcon-1.0", true)
     if LDBIcon and LDBIcon:IsRegistered("HideAnything") then
         if self.db.minimap.hide then
