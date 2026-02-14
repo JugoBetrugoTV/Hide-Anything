@@ -46,6 +46,12 @@ function HA:HighlightFrame(frameName)
         return
     end
 
+    -- Respect the global highlight setting
+    if not self:GetSetting("highlightEnabled") then
+        self:UnhighlightFrame()
+        return
+    end
+
     local frame = self:GetFrameByName(frameName)
     if not frame or not frame.GetCenter or not frame:IsShown() then
         -- If frame is hidden, show a faint outline at its position if possible

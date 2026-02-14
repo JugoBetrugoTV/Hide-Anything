@@ -160,6 +160,11 @@ L["CFG_LOCK_MODE"]           = "Lock Mode"
 L["CFG_LOCK_MODE_TT"]        = "When locked, hidden frames cannot be restored. Only the config panel or /ha unlock can restore them."
 L["CFG_HIGHLIGHT"]           = "Highlight Frames"
 L["CFG_HIGHLIGHT_TT"]        = "Highlight the actual game frame when hovering over a catalog row."
+L["CFG_HIGHLIGHT_ENABLED"]   = "Frame Highlighting"
+L["CFG_HIGHLIGHT_ENABLED_TT"]= "Enable the eye button to highlight frames on screen. When disabled, the eye button is hidden."
+L["CFG_CHAT_FEEDBACK"]       = "Chat Feedback"
+L["CFG_CHAT_FEEDBACK_TT"]    = "Show messages in chat when hiding or showing frames."
+L["CFG_EDITION_LABEL"]       = "Edition"
 
 -- About
 L["ABOUT_DESC"]              = "lets you hide any UI element with a simple toggle."
@@ -298,6 +303,11 @@ if locale == "deDE" then
     L["CFG_LOCK_MODE_TT"]        = "Wenn gesperrt, können versteckte Frames nicht wiederhergestellt werden."
     L["CFG_HIGHLIGHT"]           = "Frames hervorheben"
     L["CFG_HIGHLIGHT_TT"]        = "Hebt den tatsächlichen Frame hervor, wenn du mit der Maus über einen Katalogeintrag fährst."
+    L["CFG_HIGHLIGHT_ENABLED"]   = "Frame-Hervorhebung"
+    L["CFG_HIGHLIGHT_ENABLED_TT"]= "Aktiviert den Augen-Button zum Hervorheben von Frames. Wenn deaktiviert, wird der Augen-Button ausgeblendet."
+    L["CFG_CHAT_FEEDBACK"]       = "Chat-Rückmeldung"
+    L["CFG_CHAT_FEEDBACK_TT"]    = "Zeigt Nachrichten im Chat beim Verstecken oder Anzeigen von Frames."
+    L["CFG_EDITION_LABEL"]       = "Edition"
 
     L["ABOUT_DESC"]              = "versteckt beliebige UI-Elemente per einfachem Toggle."
     L["ABOUT_FEATURES"]          = "Funktionen:"

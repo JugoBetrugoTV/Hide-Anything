@@ -544,11 +544,14 @@ local function MatchesFilter(entry, filter)
 end
 
 local function SectionHasVisibleChildren(catalog, sectionIndex, filter)
-    if filter == "" then return true end
     for i = sectionIndex + 1, #catalog do
         local entry = catalog[i]
         if entry.section then break end
-        if MatchesFilter(entry, filter) then return true end
+        if not HA:IsEntryAvailable(entry) then
+            -- skip entries not for this edition
+        elseif filter == "" or MatchesFilter(entry, filter) then
+            return true
+        end
     end
     return false
 end
@@ -599,33 +602,56 @@ local function CreateSettingsBlock(parent)
     local block = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     block:SetWidth(parent:GetWidth())
     block:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
-    block:SetBackdrop(BD_SECTION)
-    block:SetBackdropColor(0.10, 0.10, 0.12, 0.5)
+    block:SetBackdrop(BD_CARD)
+    block:SetBackdropColor(0.09, 0.09, 0.11, 0.7)
+    block:SetBackdropBorderColor(0.20, 0.20, 0.23, 0.6)
 
-    local y = -8
+    -- Accent stripe at top of card
+    local stripe = block:CreateTexture(nil, "OVERLAY")
+    stripe:SetHeight(2)
+    stripe:SetPoint("TOPLEFT", block, "TOPLEFT", 3, -3)
+    stripe:SetPoint("TOPRIGHT", block, "TOPRIGHT", -3, -3)
+    stripe:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 0.6)
 
-    -- Settings header with icon
-    local hdr = block:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    hdr:SetPoint("TOPLEFT", block, "TOPLEFT", 10, y)
+    local y = -12
+
+    -- Settings header
+    local hdr = block:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    hdr:SetPoint("TOPLEFT", block, "TOPLEFT", 12, y)
     hdr:SetText("|cff00c761" .. L["CFG_HEADER_SETTINGS"] .. "|r")
-    y = y - 6
+
+    -- Edition badge next to header
+    local edName = HA.EDITION_NAMES[HA.edition] or "Unknown"
+    local edColor = HA.EDITION_COLORS[HA.edition] or "888888"
+    local edBadge = block:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    edBadge:SetPoint("LEFT", hdr, "RIGHT", 10, 0)
+    edBadge:SetText("|cff" .. edColor .. edName .. "|r")
+
+    y = y - 8
     local hdrLine = block:CreateTexture(nil, "ARTWORK")
     hdrLine:SetHeight(1)
-    hdrLine:SetPoint("TOPLEFT", hdr, "BOTTOMLEFT", 0, -3)
-    hdrLine:SetPoint("RIGHT", block, "RIGHT", -10, 0)
-    hdrLine:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 0.3)
-    y = y - 22
+    hdrLine:SetPoint("TOPLEFT", hdr, "BOTTOMLEFT", 0, -4)
+    hdrLine:SetPoint("RIGHT", block, "RIGHT", -12, 0)
+    hdrLine:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 0.25)
+    y = y - 20
 
-    -- Settings toggle factory
-    local function MakeSettingsToggle(yPos, labelText, ttTitle, ttDesc, getSetting, toggleFunc)
+    -- Settings toggle factory with description text
+    local function MakeSettingsToggle(yPos, labelText, descText, getSetting, toggleFunc)
+        local rowHeight = 38
         local row = CreateFrame("Frame", nil, block)
-        row:SetSize(block:GetWidth() - 16, ROW_HEIGHT)
-        row:SetPoint("TOPLEFT", block, "TOPLEFT", 8, yPos)
+        row:SetSize(block:GetWidth() - 20, rowHeight)
+        row:SetPoint("TOPLEFT", block, "TOPLEFT", 10, yPos)
 
         local lbl = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        lbl:SetPoint("LEFT", row, "LEFT", 6, 0)
+        lbl:SetPoint("TOPLEFT", row, "TOPLEFT", 6, -4)
         lbl:SetText(labelText)
-        lbl:SetTextColor(0.85, 0.85, 0.88)
+        lbl:SetTextColor(0.9, 0.9, 0.92)
+
+        local desc = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        desc:SetPoint("TOPLEFT", lbl, "BOTTOMLEFT", 0, -2)
+        desc:SetText("|cff555560" .. descText .. "|r")
+        desc:SetWidth(row:GetWidth() - TOGGLE_W - 30)
+        desc:SetJustifyH("LEFT")
 
         local toggleBg = CreateFrame("Button", nil, row, "BackdropTemplate")
         toggleBg:SetSize(TOGGLE_W, TOGGLE_H)
@@ -643,21 +669,21 @@ local function CreateSettingsBlock(parent)
         toggleBg:SetScript("OnClick", function()
             toggleFunc()
             Refresh()
+            -- Refresh frame list if highlight setting changed
+            if HA.RefreshFrameList then HA:RefreshFrameList() end
         end)
 
-        row:EnableMouse(true)
-        row:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:AddLine(ttTitle, ACCENT_R, ACCENT_G, ACCENT_B)
-            GameTooltip:AddLine(ttDesc, 1, 1, 1, true)
-            GameTooltip:Show()
-        end)
-        row:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        -- Separator line
+        local sep = row:CreateTexture(nil, "ARTWORK")
+        sep:SetHeight(1)
+        sep:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 0, 0)
+        sep:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", 0, 0)
+        sep:SetColorTexture(0.18, 0.18, 0.20, 0.5)
 
-        return yPos - 32
+        return yPos - rowHeight
     end
 
-    y = MakeSettingsToggle(y, L["CFG_MINIMAP_BTN"], L["CFG_MINIMAP_BTN"], L["CFG_MINIMAP_BTN_TT"],
+    y = MakeSettingsToggle(y, L["CFG_MINIMAP_BTN"], L["CFG_MINIMAP_BTN_TT"],
         function() return HA:GetSetting("showMinimap") end,
         function()
             local val = not HA:GetSetting("showMinimap")
@@ -665,16 +691,24 @@ local function CreateSettingsBlock(parent)
             if val then HA:ShowMinimapButton() else HA:HideMinimapButton() end
         end)
 
-    y = MakeSettingsToggle(y, L["CFG_LOCK_MODE"], L["CFG_LOCK_MODE"], L["CFG_LOCK_MODE_TT"],
+    y = MakeSettingsToggle(y, L["CFG_LOCK_MODE"], L["CFG_LOCK_MODE_TT"],
         function() return HA:GetSetting("locked") end,
         function() HA:SetSetting("locked", not HA:GetSetting("locked")) end)
+
+    y = MakeSettingsToggle(y, L["CFG_HIGHLIGHT_ENABLED"], L["CFG_HIGHLIGHT_ENABLED_TT"],
+        function() return HA:GetSetting("highlightEnabled") end,
+        function() HA:SetSetting("highlightEnabled", not HA:GetSetting("highlightEnabled")) end)
+
+    y = MakeSettingsToggle(y, L["CFG_CHAT_FEEDBACK"], L["CFG_CHAT_FEEDBACK_TT"],
+        function() return HA:GetSetting("chatEnabled") end,
+        function() HA:SetSetting("chatEnabled", not HA:GetSetting("chatEnabled")) end)
 
     -- Search bar with styled background
     y = y - 6
     local searchBg = CreateFrame("Frame", nil, block, "BackdropTemplate")
     searchBg:SetHeight(28)
-    searchBg:SetPoint("TOPLEFT", block, "TOPLEFT", 8, y)
-    searchBg:SetPoint("RIGHT", block, "RIGHT", -8, 0)
+    searchBg:SetPoint("TOPLEFT", block, "TOPLEFT", 10, y)
+    searchBg:SetPoint("RIGHT", block, "RIGHT", -10, 0)
     searchBg:SetBackdrop(BD_SEARCH)
     searchBg:SetBackdropColor(0.06, 0.06, 0.08, 0.9)
     searchBg:SetBackdropBorderColor(0.22, 0.22, 0.25, 0.8)
@@ -714,7 +748,6 @@ local function CreateSettingsBlock(parent)
     end)
     searchBox:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
 
-    -- Focus highlight on search
     searchBox:SetScript("OnEditFocusGained", function()
         searchBg:SetBackdropBorderColor(ACCENT_R, ACCENT_G, ACCENT_B, 0.6)
     end)
@@ -722,7 +755,7 @@ local function CreateSettingsBlock(parent)
         searchBg:SetBackdropBorderColor(0.22, 0.22, 0.25, 0.8)
     end)
 
-    y = y - 36
+    y = y - 38
 
     block:SetHeight(math.abs(y) + 4)
     return block, y
@@ -767,15 +800,20 @@ function HA:RefreshFrameList()
     y = y - 26
 
     local rowIndex = 0
+    local hlEnabled = self:GetSetting("highlightEnabled")
+
     for catIndex, entry in ipairs(self.FRAME_CATALOG) do
 
+        -- Skip entries not available in current edition
+        if not entry.section and not self:IsEntryAvailable(entry) then
+            -- skip
+
         -- Section header
-        if entry.section then
+        elseif entry.section then
             if SectionHasVisibleChildren(self.FRAME_CATALOG, catIndex, searchFilter) then
                 y = y - 8
                 local sectionLabel = self:GetCatalogLabel(entry)
 
-                -- Section header background
                 local secBg = AcquireMiscFrame(parent)
                 secBg:SetSize(parent:GetWidth(), 20)
                 secBg:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, y)
@@ -812,7 +850,13 @@ function HA:RefreshFrameList()
                 row._label:SetTextColor(0.85, 0.85, 0.88)
                 row._label:SetWidth(parent:GetWidth() * 0.42)
 
-                row._techName:SetText("|cff555560CVar|r")
+                -- Edition tag + CVar badge
+                local edTag, edColor = self:GetEditionTag(entry)
+                local techStr = "|cff555560CVar|r"
+                if edTag then
+                    techStr = "|cff" .. edColor .. edTag .. "|r |cff555560CVar|r"
+                end
+                row._techName:SetText(techStr)
                 row._techName:SetWidth(parent:GetWidth() * 0.25)
 
                 row._eyeBtn:Hide()
@@ -835,6 +879,9 @@ function HA:RefreshFrameList()
                     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                     GameTooltip:AddLine(displayLabel, ACCENT_R, ACCENT_G, ACCENT_B)
                     GameTooltip:AddLine("CVar: " .. cvarName, 0.5, 0.5, 0.5)
+                    if edTag then
+                        GameTooltip:AddLine(edTag, 0.5, 0.5, 0.5)
+                    end
                     if isHidden then
                         GameTooltip:AddLine(L["FRAME_STATE_HIDDEN"], 1, 0.3, 0.3)
                     else
@@ -873,33 +920,43 @@ function HA:RefreshFrameList()
                 end
                 row._label:SetWidth(parent:GetWidth() * 0.33)
 
-                row._techName:SetText("|cff555560" .. frameName .. "|r")
+                -- Edition tag + frame name
+                local edTag, edColor = self:GetEditionTag(entry)
+                local techStr = "|cff555560" .. frameName .. "|r"
+                if edTag then
+                    techStr = "|cff" .. edColor .. edTag .. "|r " .. techStr
+                end
+                row._techName:SetText(techStr)
                 row._techName:SetWidth(parent:GetWidth() * 0.18)
 
-                -- Eye button (highlight toggle)
-                row._eyeBtn:Show()
-                local isHighlighted = (HA._highlightedFrame == frameName)
-                if isHighlighted then
-                    row._eyeBtn._text:SetText("|cff00ff66@|r")
-                else
-                    row._eyeBtn._text:SetText("|cff555560@|r")
-                end
-                row._eyeBtn:SetScript("OnClick", function()
-                    if HA._highlightedFrame == frameName then
-                        HA:UnhighlightFrame()
-                        HA:RefreshFrameList()
+                -- Eye button (highlight toggle) - only if setting enabled
+                if hlEnabled then
+                    row._eyeBtn:Show()
+                    local isHighlighted = (HA._highlightedFrame == frameName)
+                    if isHighlighted then
+                        row._eyeBtn._text:SetText("|cff00ff66@|r")
                     else
-                        HA:HighlightFrame(frameName)
-                        HA:RefreshFrameList()
+                        row._eyeBtn._text:SetText("|cff555560@|r")
                     end
-                end)
-                row._eyeBtn:SetScript("OnEnter", function(self)
-                    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                    GameTooltip:AddLine(L["CFG_HIGHLIGHT"], ACCENT_R, ACCENT_G, ACCENT_B)
-                    GameTooltip:AddLine(L["CFG_HIGHLIGHT_TT"], 1, 1, 1, true)
-                    GameTooltip:Show()
-                end)
-                row._eyeBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+                    row._eyeBtn:SetScript("OnClick", function()
+                        if HA._highlightedFrame == frameName then
+                            HA:UnhighlightFrame()
+                            HA:RefreshFrameList()
+                        else
+                            HA:HighlightFrame(frameName)
+                            HA:RefreshFrameList()
+                        end
+                    end)
+                    row._eyeBtn:SetScript("OnEnter", function(self)
+                        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                        GameTooltip:AddLine(L["CFG_HIGHLIGHT"], ACCENT_R, ACCENT_G, ACCENT_B)
+                        GameTooltip:AddLine(L["CFG_HIGHLIGHT_TT"], 1, 1, 1, true)
+                        GameTooltip:Show()
+                    end)
+                    row._eyeBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+                else
+                    row._eyeBtn:Hide()
+                end
 
                 -- Alpha button
                 local alphaPct = math.floor(frameAlpha * 100 + 0.5)
@@ -961,6 +1018,9 @@ function HA:RefreshFrameList()
                     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                     GameTooltip:AddLine(displayLabel, ACCENT_R, ACCENT_G, ACCENT_B)
                     GameTooltip:AddLine(frameName, 0.5, 0.5, 0.5)
+                    if edTag then
+                        GameTooltip:AddLine(edTag, 0.5, 0.5, 0.5)
+                    end
                     if not frameExists then
                         GameTooltip:AddLine(L["FRAME_NOT_LOADED"], 1, 0.5, 0)
                     elseif isHidden then
