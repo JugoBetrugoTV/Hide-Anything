@@ -1,7 +1,8 @@
 --[[
     HideAnything - Highlight.lua
     Frame highlight system: shows a glowing border around
-    the actual game frame when hovering over a catalog row
+    the actual game frame. Activated per-row via eye button.
+    Does NOT intercept mouse events.
 ]]
 
 local AddonName, HA = ...
@@ -12,6 +13,8 @@ local AddonName, HA = ...
 local highlighter = CreateFrame("Frame", "HideAnythingHighlighter", UIParent, "BackdropTemplate")
 highlighter:SetFrameStrata("TOOLTIP")
 highlighter:SetFrameLevel(999)
+highlighter:EnableMouse(false)       -- NEVER block clicks
+highlighter:SetMouseClickEnabled(false)
 highlighter:SetBackdrop({
     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
     edgeSize = 16,
@@ -30,6 +33,9 @@ glow:SetColorTexture(0, 0.8, 0.4, 0.15)
 local nameLabel = highlighter:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 nameLabel:SetPoint("TOP", highlighter, "BOTTOM", 0, -2)
 nameLabel:SetTextColor(0, 0.8, 0.4, 1)
+
+-- Track which frame name is currently highlighted (nil = none)
+HA._highlightedFrame = nil
 
 ---------------------------------------------------------------------------
 -- Show highlight around a game frame
@@ -53,6 +59,7 @@ function HA:HighlightFrame(frameName)
                 glow:SetColorTexture(1, 0.3, 0.1, 0.1)
                 nameLabel:SetText("|cffff6633" .. frameName .. " (hidden)|r")
                 highlighter:Show()
+                self._highlightedFrame = frameName
                 return
             end
         end
@@ -73,6 +80,7 @@ function HA:HighlightFrame(frameName)
     glow:SetColorTexture(0, 0.8, 0.4, 0.15)
     nameLabel:SetText("|cff00cc66" .. frameName .. "|r")
     highlighter:Show()
+    self._highlightedFrame = frameName
 end
 
 ---------------------------------------------------------------------------
@@ -80,4 +88,5 @@ end
 ---------------------------------------------------------------------------
 function HA:UnhighlightFrame()
     highlighter:Hide()
+    self._highlightedFrame = nil
 end

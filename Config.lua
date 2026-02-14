@@ -23,7 +23,7 @@ HA.DEFAULTS = {
         locked      = false,
         showMinimap = true,
         chatEnabled = true,
-        highlight   = true,
+        -- highlight setting removed: now per-row via eye button
     },
 
     -- Profiles
