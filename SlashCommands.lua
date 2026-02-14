@@ -1,6 +1,6 @@
 --[[
     HideAnything - SlashCommands.lua
-    All slash commands: /ha, /hideanything
+    All slash commands: /hide, /hideanything
 ]]
 
 local AddonName, HA = ...
@@ -8,7 +8,7 @@ local AddonName, HA = ...
 ---------------------------------------------------------------------------
 -- Register slash commands
 ---------------------------------------------------------------------------
-SLASH_HIDEANYTHING1 = "/ha"
+SLASH_HIDEANYTHING1 = "/hide"
 SLASH_HIDEANYTHING2 = "/hideanything"
 
 SlashCmdList["HIDEANYTHING"] = function(msg)

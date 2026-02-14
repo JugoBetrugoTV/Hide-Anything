@@ -1525,8 +1525,8 @@ local function BuildAboutTab(parent)
         "  |cff70a890-|r " .. L["ABOUT_F7"] .. "\n" ..
         "  |cff70a890-|r " .. L["ABOUT_F8"] .. "\n" ..
         "  |cff70a890-|r " .. L["ABOUT_F9"] .. "\n\n" ..
-        "|cff70a890Commands:|r |cff00c761/ha|r or |cff00c761/hideanything|r\n" ..
-        "|cff70a890Config:|r   |cff00c761/ha toggle|r\n\n" ..
+        "|cff70a890" .. L["ABOUT_COMMANDS_LABEL"] .. "|r |cff00c761/hide|r or |cff00c761/hideanything|r\n" ..
+        "|cff70a890" .. L["ABOUT_CONFIG_LABEL"] .. "|r   |cff00c761/hide toggle|r\n\n" ..
         "|cff70a890Edition:|r  |cff" .. (HA.EDITION_COLORS[HA.edition] or "ffffff") .. (HA.EDITION_NAMES[HA.edition] or "Unknown") .. "|r"
     )
 
