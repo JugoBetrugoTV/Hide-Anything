@@ -55,8 +55,10 @@ HA.eventFrame:SetScript("OnEvent", function(self, event, ...)
         end)
     elseif event == "PLAYER_REGEN_DISABLED" then
         HA.inCombat = true
+        HA:ApplyCombatHides()
     elseif event == "PLAYER_REGEN_ENABLED" then
         HA.inCombat = false
+        HA:RevertCombatHides()
         HA:ProcessPendingQueue()
     end
 end)
@@ -545,6 +547,47 @@ function HA:ReapplyFrameAlphas()
             end
         end
     end
+end
+
+---------------------------------------------------------------------------
+-- Combat auto-hide: hide tagged frames on combat start
+---------------------------------------------------------------------------
+HA._combatHiddenNow = nil
+
+function HA:ApplyCombatHides()
+    if not self.db or not self.db.combatHideFrames then return end
+    self._combatHiddenNow = {}
+    for frameName, _ in pairs(self.db.combatHideFrames) do
+        -- Only hide frames that are currently visible and not already hidden by the user
+        if not self.db.hiddenFrames[frameName] then
+            local frame = self:GetFrameByName(frameName)
+            if frame and frame:IsShown() then
+                pcall(function() frame:Hide() end)
+                self._combatHiddenNow[frameName] = true
+            end
+        end
+    end
+end
+
+---------------------------------------------------------------------------
+-- Combat auto-hide: restore frames after combat ends
+---------------------------------------------------------------------------
+function HA:RevertCombatHides()
+    if not self._combatHiddenNow then return end
+    for frameName, _ in pairs(self._combatHiddenNow) do
+        -- Only restore if the user didn't manually hide it during combat
+        if not self.db.hiddenFrames[frameName] then
+            local frame = self:GetFrameByName(frameName)
+            if frame then
+                local alpha = self:GetFrameAlpha(frameName)
+                pcall(function()
+                    frame:SetAlpha(alpha)
+                    frame:Show()
+                end)
+            end
+        end
+    end
+    self._combatHiddenNow = nil
 end
 
 ---------------------------------------------------------------------------

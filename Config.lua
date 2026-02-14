@@ -2,6 +2,9 @@
     HideAnything - Config.lua
     Saved variables, defaults, database initialization, frame catalog
     Edition detection and cross-version compatibility
+
+    Supported editions:
+      Retail (Midnight)  |  Classic Era  |  TBC Anniversary  |  MoP Classic
 ]]
 
 local AddonName, HA = ...
@@ -14,15 +17,12 @@ local function DetectEdition()
     if pid then
         if pid == (WOW_PROJECT_MAINLINE or 1) then return "retail", 1 end
         if pid == (WOW_PROJECT_CLASSIC or 2) then return "classic", 2 end
-        if pid == 5 then return "tbc", 4 end
-        if pid == (WOW_PROJECT_WRATH_CLASSIC or 11) then return "wrath", 8 end
-        if pid == 14 then return "cata", 16 end
+        if pid == 5 then return "tbc", 4 end  -- TBC Anniversary
     end
+    -- Fallback: interface version
     local _, _, _, tocVer = GetBuildInfo()
     tocVer = tocVer or 0
-    if tocVer >= 50000 and tocVer < 60000 then return "mop", 32 end
-    if tocVer >= 40000 and tocVer < 50000 then return "cata", 16 end
-    if tocVer >= 30000 and tocVer < 40000 then return "wrath", 8 end
+    if tocVer >= 50000 and tocVer < 60000 then return "mop", 8 end
     if tocVer >= 20000 and tocVer < 30000 then return "tbc", 4 end
     if tocVer >= 10000 and tocVer < 20000 then return "classic", 2 end
     return "retail", 1
@@ -30,18 +30,15 @@ end
 
 HA.edition, HA.editionBit = DetectEdition()
 
--- Edition bitmask constants (used in FRAME_CATALOG .ed field)
-local R   = 1   -- Retail
+-- Edition bitmask constants  (used in FRAME_CATALOG .ed field)
+local R   = 1   -- Retail  (Midnight / The War Within / etc.)
 local C   = 2   -- Classic Era
 local T   = 4   -- TBC Anniversary
-local W   = 8   -- Wrath Classic
-local X   = 16  -- Cata Classic
-local M   = 32  -- MoP Classic
-local ALL = R+C+T+W+X+M        -- 63
-local CL  = C+T+W+X+M          -- All Classic variants
-local TBC_UP   = T+W+X+M+R     -- TBC and later (including Retail)
-local WRATH_UP = W+X+M+R       -- Wrath and later
-local CATA_UP  = X+M+R         -- Cata and later
+local M   = 8   -- MoP Classic
+local ALL = R+C+T+M            -- 15
+local CL  = C+T+M              -- 14  (all classic variants)
+local TBC_UP = T+M+R           -- 13  (TBC and later, incl. Retail)
+local MOP_UP = M+R              -- 9  (MoP Classic + Retail)
 
 HA.ED_ALL = ALL
 
@@ -50,8 +47,6 @@ HA.EDITION_NAMES = {
     retail  = "Retail",
     classic = "Classic Era",
     tbc     = "TBC Anniversary",
-    wrath   = "Wrath Classic",
-    cata    = "Cata Classic",
     mop     = "MoP Classic",
 }
 
@@ -59,8 +54,6 @@ HA.EDITION_COLORS = {
     retail  = "3399ff",
     classic = "ffcc00",
     tbc     = "00cc44",
-    wrath   = "88aaff",
-    cata    = "ff6600",
     mop     = "66dd88",
 }
 
@@ -75,8 +68,7 @@ function HA:GetEditionTag(entry)
     if ed == R then return "Retail", "3399ff" end
     if ed == CL then return "Classic", "ffcc00" end
     if ed == TBC_UP then return "TBC+", "00cc44" end
-    if ed == WRATH_UP then return "Wrath+", "88aaff" end
-    if ed == CATA_UP then return "Cata+", "ff6600" end
+    if ed == MOP_UP then return "MoP+", "66dd88" end
     return nil, nil
 end
 
@@ -84,9 +76,10 @@ end
 -- Default settings
 ---------------------------------------------------------------------------
 HA.DEFAULTS = {
-    hiddenFrames = {},
-    hiddenCVars = {},
-    frameAlphas = {},
+    hiddenFrames    = {},
+    hiddenCVars     = {},
+    frameAlphas     = {},
+    combatHideFrames = {},   -- frames to auto-hide during combat
 
     settings = {
         locked           = false,
@@ -117,7 +110,6 @@ HA.PROTECTED_FRAMES = {
     ["GameTooltip"]          = true,
     ["DropDownList1"]        = true,
     ["DropDownList2"]        = true,
-    ["ChatFrame1"]           = true,
     ["GossipFrame"]          = true,
     ["QuestFrame"]           = true,
     ["MerchantFrame"]        = true,
@@ -127,7 +119,7 @@ HA.PROTECTED_FRAMES = {
 
 ---------------------------------------------------------------------------
 -- Curated frame catalog
--- .ed = edition bitmask (default ALL if omitted)
+-- .ed = edition bitmask  (default ALL if omitted)
 ---------------------------------------------------------------------------
 HA.FRAME_CATALOG = {
 
@@ -142,9 +134,9 @@ HA.FRAME_CATALOG = {
     { name = "FocusFrameToT",             label = "Focus Target of Target",     labelDE = "Fokusziel des Ziels",        ed = TBC_UP },
     { name = "PetFrame",                  label = "Pet Frame",                  labelDE = "Begleiter-Frame" },
     { name = "PartyFrame",                label = "Party Frames",               labelDE = "Gruppen-Frames" },
-    { name = "CompactRaidFrameContainer", label = "Raid Frames",                labelDE = "Raid-Frames",                ed = CATA_UP },
-    { name = "CompactRaidFrameManager",   label = "Raid Frame Manager",         labelDE = "Raid-Frame Manager",         ed = CATA_UP },
-    { name = "BossTargetFrameContainer",  label = "Boss Frames",                labelDE = "Boss-Frames",                ed = WRATH_UP },
+    { name = "CompactRaidFrameContainer", label = "Raid Frames",                labelDE = "Raid-Frames",                ed = MOP_UP },
+    { name = "CompactRaidFrameManager",   label = "Raid Frame Manager",         labelDE = "Raid-Frame Manager",         ed = MOP_UP },
+    { name = "BossTargetFrameContainer",  label = "Boss Frames",                labelDE = "Boss-Frames",                ed = MOP_UP },
     { name = "ArenaEnemyFramesContainer", label = "Arena Enemy Frames",         labelDE = "Arena-Gegner-Frames",        ed = TBC_UP },
 
     ---------------------------------------------------------------------------
@@ -163,12 +155,12 @@ HA.FRAME_CATALOG = {
     { name = "PetActionBar",             label = "Pet Action Bar",            labelDE = "Begleiter-Aktionsleiste" },
     { name = "ExtraAbilityContainer",    label = "Extra Action Button",       labelDE = "Extra-Aktionsknopf" },
     { name = "EncounterBar",             label = "Encounter Bar",             labelDE = "Begegnungsleiste",            ed = R },
-    { name = "OverrideActionBar",        label = "Override / Vehicle Bar",    labelDE = "Override-/Fahrzeugleiste",    ed = CATA_UP },
+    { name = "OverrideActionBar",        label = "Override / Vehicle Bar",    labelDE = "Override-/Fahrzeugleiste",    ed = MOP_UP },
 
     ---------------------------------------------------------------------------
     -- Bars & Menus
     ---------------------------------------------------------------------------
-    { section = true, label = "Bars & Menus",           labelDE = "Leisten & Menus" },
+    { section = true, label = "Bars & Menus",           labelDE = "Leisten & Menüs" },
     { name = "MicroButtonAndBagsBar",    label = "Micro Menu & Bags",         labelDE = "Mikromenü & Taschen",         ed = CL },
     { name = "MicroMenuContainer",       label = "Micro Menu",                labelDE = "Mikromenü",                   ed = R },
     { name = "BagBar",                   label = "Bag Bar",                   labelDE = "Taschenleiste",               ed = R },
@@ -178,6 +170,19 @@ HA.FRAME_CATALOG = {
     { name = "StatusTrackingBarManager", label = "XP / Rep Bar",              labelDE = "EP / Ruf-Leiste" },
     { name = "PlayerCastingBarFrame",    label = "Cast Bar",                  labelDE = "Zauberleiste" },
     { name = "EditModeManagerFrame",     label = "Edit Mode Bar",             labelDE = "Bearbeitungsmodus-Leiste",    ed = R },
+
+    ---------------------------------------------------------------------------
+    -- Chat
+    ---------------------------------------------------------------------------
+    { section = true, label = "Chat",                   labelDE = "Chat" },
+    { name = "ChatFrame1",               label = "Chat Window (Main)",        labelDE = "Chat-Fenster (Haupt)" },
+    { name = "ChatFrame2",               label = "Chat Window 2 (Combat Log)",labelDE = "Chat-Fenster 2 (Kampflog)" },
+    { name = "GeneralDockManager",       label = "Chat Tab Bar",              labelDE = "Chat-Tab-Leiste" },
+    { name = "ChatFrameMenuButton",      label = "Chat Menu Button",          labelDE = "Chat-Menü-Button" },
+    { name = "QuickJoinToastButton",     label = "Quick Join Button",         labelDE = "Schnellbeitritt-Button" },
+    { name = "CombatLogQuickButtonFrame",label = "Combat Log Buttons",        labelDE = "Kampflog-Buttons" },
+    { cvar = "chatBubbles",              label = "Chat Bubbles",              labelDE = "Chat-Blasen" },
+    { cvar = "chatBubblesParty",         label = "Party Chat Bubbles",        labelDE = "Gruppen-Chat-Blasen" },
 
     ---------------------------------------------------------------------------
     -- Buffs & Auras
@@ -243,17 +248,6 @@ HA.FRAME_CATALOG = {
     { cvar = "Sound_EnableDialog",        label = "NPC Dialog Voice",          labelDE = "NPC-Dialog-Stimmen" },
 
     ---------------------------------------------------------------------------
-    -- Chat & Bubbles
-    ---------------------------------------------------------------------------
-    { section = true, label = "Chat & Bubbles",         labelDE = "Chat & Blasen" },
-    { name = "GeneralDockManager",           label = "Chat Tab Bar",              labelDE = "Chat-Tab-Leiste" },
-    { name = "ChatFrameMenuButton",          label = "Chat Menu Button",          labelDE = "Chat-Menü-Button" },
-    { name = "QuickJoinToastButton",         label = "Quick Join Button",         labelDE = "Schnellbeitritt-Button" },
-    { name = "CombatLogQuickButtonFrame",    label = "Combat Log Buttons",        labelDE = "Kampflog-Buttons" },
-    { cvar = "chatBubbles",                  label = "Chat Bubbles",              labelDE = "Chat-Blasen" },
-    { cvar = "chatBubblesParty",             label = "Party Chat Bubbles",        labelDE = "Gruppen-Chat-Blasen" },
-
-    ---------------------------------------------------------------------------
     -- Gameplay Options (CVar-based)
     ---------------------------------------------------------------------------
     { section = true, label = "Gameplay Options",       labelDE = "Gameplay-Optionen" },
@@ -273,9 +267,9 @@ HA.FRAME_CATALOG = {
     -- Raid & Party (CVar-based)
     ---------------------------------------------------------------------------
     { section = true, label = "Raid & Party",           labelDE = "Raid & Gruppe" },
-    { cvar = "raidFramesDisplayPowerBars",    label = "Raid Power Bars",             labelDE = "Raid-Energieleisten",         ed = CATA_UP },
-    { cvar = "raidFramesDisplayClassColor",   label = "Raid Class Colors",           labelDE = "Raid-Klassenfarben",          ed = CATA_UP },
-    { cvar = "useCompactPartyFrames",         label = "Compact Party Frames",        labelDE = "Kompakte Gruppenframes",      ed = CATA_UP },
+    { cvar = "raidFramesDisplayPowerBars",    label = "Raid Power Bars",             labelDE = "Raid-Energieleisten",         ed = MOP_UP },
+    { cvar = "raidFramesDisplayClassColor",   label = "Raid Class Colors",           labelDE = "Raid-Klassenfarben",          ed = MOP_UP },
+    { cvar = "useCompactPartyFrames",         label = "Compact Party Frames",        labelDE = "Kompakte Gruppenframes",      ed = MOP_UP },
     { cvar = "showPartyPets",                 label = "Show Party Pets",             labelDE = "Gruppen-Begleiter anzeigen" },
     { cvar = "showArenaEnemyFrames",          label = "Arena Enemy Frames",          labelDE = "Arena-Gegnerframes",          ed = TBC_UP },
 
@@ -386,6 +380,9 @@ function HA:InitDB()
     end
     if type(db.frameAlphas) ~= "table" then
         db.frameAlphas = {}
+    end
+    if type(db.combatHideFrames) ~= "table" then
+        db.combatHideFrames = {}
     end
 
     self.db = db

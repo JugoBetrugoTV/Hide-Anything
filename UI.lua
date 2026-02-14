@@ -103,10 +103,20 @@ local function AcquireRow(parent)
         tech:SetJustifyH("LEFT")
         row._techName = tech
 
+        -- Combat auto-hide button
+        local combatBtn = CreateFrame("Button", nil, row, "BackdropTemplate")
+        combatBtn:SetSize(22, 20)
+        combatBtn:SetPoint("RIGHT", row, "RIGHT", -156, 0)
+        combatBtn:SetBackdrop(BD_ALPHA_BTN)
+        local combatText = combatBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        combatText:SetPoint("CENTER")
+        combatBtn._text = combatText
+        row._combatBtn = combatBtn
+
         -- Eye button for highlight
         local eyeBtn = CreateFrame("Button", nil, row)
         eyeBtn:SetSize(22, 22)
-        eyeBtn:SetPoint("RIGHT", row, "RIGHT", -108, 0)
+        eyeBtn:SetPoint("RIGHT", row, "RIGHT", -128, 0)
         local eyeText = eyeBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         eyeText:SetPoint("CENTER")
         eyeBtn._text = eyeText
@@ -160,6 +170,10 @@ local function ReleaseAllRows()
         row:SetScript("OnLeave", nil)
         row._label:SetText("")
         row._techName:SetText("")
+        row._combatBtn:SetScript("OnClick", nil)
+        row._combatBtn:SetScript("OnEnter", nil)
+        row._combatBtn:SetScript("OnLeave", nil)
+        row._combatBtn:Hide()
         row._eyeBtn:SetScript("OnClick", nil)
         row._eyeBtn:Hide()
         row._alphaBtn:SetScript("OnClick", nil)
@@ -695,10 +709,6 @@ local function CreateSettingsBlock(parent)
         function() return HA:GetSetting("locked") end,
         function() HA:SetSetting("locked", not HA:GetSetting("locked")) end)
 
-    y = MakeSettingsToggle(y, L["CFG_HIGHLIGHT_ENABLED"], L["CFG_HIGHLIGHT_ENABLED_TT"],
-        function() return HA:GetSetting("highlightEnabled") end,
-        function() HA:SetSetting("highlightEnabled", not HA:GetSetting("highlightEnabled")) end)
-
     y = MakeSettingsToggle(y, L["CFG_CHAT_FEEDBACK"], L["CFG_CHAT_FEEDBACK_TT"],
         function() return HA:GetSetting("chatEnabled") end,
         function() HA:SetSetting("chatEnabled", not HA:GetSetting("chatEnabled")) end)
@@ -788,6 +798,55 @@ function HA:RefreshFrameList()
     -- Start below the settings block
     local y = settingsHeight - 8
 
+    -- Prominent "Frames hervorheben" toggle button
+    local hlEnabled = self:GetSetting("highlightEnabled")
+    local hlRow = AcquireMiscFrame(parent)
+    hlRow:SetSize(parent:GetWidth() - 16, 30)
+    hlRow:SetPoint("TOPLEFT", parent, "TOPLEFT", 8, y)
+
+    local hlBg = AcquireTexture(parent)
+    hlBg:SetAllPoints(hlRow)
+    if hlEnabled then
+        hlBg:SetColorTexture(0.05, 0.20, 0.12, 0.7)
+    else
+        hlBg:SetColorTexture(0.12, 0.12, 0.14, 0.5)
+    end
+
+    local hlLabel = AcquireFont(parent, "GameFontNormal")
+    hlLabel:SetPoint("LEFT", hlRow, "LEFT", 10, 0)
+    if hlEnabled then
+        hlLabel:SetText("|cff00ff66@|r  |cff00cc66" .. L["CFG_HIGHLIGHT_ENABLED"] .. "|r")
+    else
+        hlLabel:SetText("|cff555560@|r  |cff888888" .. L["CFG_HIGHLIGHT_ENABLED"] .. "|r")
+    end
+
+    local hlToggleBg = CreateFrame("Button", nil, hlRow, "BackdropTemplate")
+    hlToggleBg:SetSize(TOGGLE_W, TOGGLE_H)
+    hlToggleBg:SetPoint("RIGHT", hlRow, "RIGHT", -6, 0)
+    hlToggleBg:SetBackdrop(BD_TOGGLE)
+    local hlKnob = hlToggleBg:CreateTexture(nil, "OVERLAY")
+    hlKnob:SetSize(TOGGLE_H - 6, TOGGLE_H - 6)
+    hlKnob:SetTexture("Interface\\Buttons\\WHITE8X8")
+    SetToggleState(hlToggleBg, hlKnob, hlEnabled)
+    hlToggleBg:SetScript("OnClick", function()
+        HA:SetSetting("highlightEnabled", not HA:GetSetting("highlightEnabled"))
+        if not HA:GetSetting("highlightEnabled") then
+            HA:UnhighlightFrame()
+        end
+        HA:RefreshFrameList()
+    end)
+
+    hlRow:EnableMouse(true)
+    hlRow:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:AddLine(L["CFG_HIGHLIGHT_ENABLED"], ACCENT_R, ACCENT_G, ACCENT_B)
+        GameTooltip:AddLine(L["CFG_HIGHLIGHT_ENABLED_TT"], 1, 1, 1, true)
+        GameTooltip:Show()
+    end)
+    hlRow:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+    y = y - 36
+
     -- Section: Frame Catalog header
     local catHdr = AcquireFont(parent, "GameFontNormal")
     catHdr:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, y)
@@ -800,7 +859,6 @@ function HA:RefreshFrameList()
     y = y - 26
 
     local rowIndex = 0
-    local hlEnabled = self:GetSetting("highlightEnabled")
 
     for catIndex, entry in ipairs(self.FRAME_CATALOG) do
 
@@ -859,6 +917,7 @@ function HA:RefreshFrameList()
                 row._techName:SetText(techStr)
                 row._techName:SetWidth(parent:GetWidth() * 0.25)
 
+                row._combatBtn:Hide()
                 row._eyeBtn:Hide()
                 row._alphaBtn:Hide()
                 row._showBtn:Hide()
@@ -929,7 +988,36 @@ function HA:RefreshFrameList()
                 row._techName:SetText(techStr)
                 row._techName:SetWidth(parent:GetWidth() * 0.18)
 
-                -- Eye button (highlight toggle) - only if setting enabled
+                -- Combat auto-hide button
+                local isCombatHide = self.db.combatHideFrames and self.db.combatHideFrames[frameName]
+                row._combatBtn:Show()
+                if isCombatHide then
+                    row._combatBtn:SetBackdropColor(0.35, 0.15, 0.08, 0.8)
+                    row._combatBtn:SetBackdropBorderColor(0.6, 0.25, 0.1, 0.8)
+                    row._combatBtn._text:SetText("|cfffe4422C|r")
+                else
+                    row._combatBtn:SetBackdropColor(0.10, 0.10, 0.12, 0.5)
+                    row._combatBtn:SetBackdropBorderColor(0.22, 0.22, 0.25, 0.5)
+                    row._combatBtn._text:SetText("|cff555560C|r")
+                end
+                row._combatBtn:SetScript("OnClick", function()
+                    if not HA.db.combatHideFrames then HA.db.combatHideFrames = {} end
+                    if HA.db.combatHideFrames[frameName] then
+                        HA.db.combatHideFrames[frameName] = nil
+                    else
+                        HA.db.combatHideFrames[frameName] = true
+                    end
+                    HA:RefreshFrameList()
+                end)
+                row._combatBtn:SetScript("OnEnter", function(self)
+                    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                    GameTooltip:AddLine(L["CFG_COMBAT_HIDE"], ACCENT_R, ACCENT_G, ACCENT_B)
+                    GameTooltip:AddLine(L["CFG_COMBAT_HIDE_TT"], 1, 1, 1, true)
+                    GameTooltip:Show()
+                end)
+                row._combatBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+                -- Eye button (highlight toggle) - always visible when highlight enabled
                 if hlEnabled then
                     row._eyeBtn:Show()
                     local isHighlighted = (HA._highlightedFrame == frameName)
@@ -1434,9 +1522,12 @@ local function BuildAboutTab(parent)
         "  |cff70a890-|r " .. L["ABOUT_F4"] .. "\n" ..
         "  |cff70a890-|r " .. L["ABOUT_F5"] .. "\n" ..
         "  |cff70a890-|r " .. L["ABOUT_F6"] .. "\n" ..
-        "  |cff70a890-|r " .. L["ABOUT_F7"] .. "\n\n" ..
+        "  |cff70a890-|r " .. L["ABOUT_F7"] .. "\n" ..
+        "  |cff70a890-|r " .. L["ABOUT_F8"] .. "\n" ..
+        "  |cff70a890-|r " .. L["ABOUT_F9"] .. "\n\n" ..
         "|cff70a890Commands:|r |cff00c761/ha|r or |cff00c761/hideanything|r\n" ..
-        "|cff70a890Config:|r   |cff00c761/ha toggle|r"
+        "|cff70a890Config:|r   |cff00c761/ha toggle|r\n\n" ..
+        "|cff70a890Edition:|r  |cff" .. (HA.EDITION_COLORS[HA.edition] or "ffffff") .. (HA.EDITION_NAMES[HA.edition] or "Unknown") .. "|r"
     )
 
     parent:SetHeight(320)

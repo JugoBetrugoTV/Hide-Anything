@@ -165,17 +165,21 @@ L["CFG_HIGHLIGHT_ENABLED_TT"]= "Enable the eye button to highlight frames on scr
 L["CFG_CHAT_FEEDBACK"]       = "Chat Feedback"
 L["CFG_CHAT_FEEDBACK_TT"]    = "Show messages in chat when hiding or showing frames."
 L["CFG_EDITION_LABEL"]       = "Edition"
+L["CFG_COMBAT_HIDE"]         = "Combat Auto-Hide"
+L["CFG_COMBAT_HIDE_TT"]      = "Automatically hide this frame when entering combat and show it again after."
 
 -- About
 L["ABOUT_DESC"]              = "lets you hide any UI element with a simple toggle."
 L["ABOUT_FEATURES"]          = "Features:"
-L["ABOUT_F1"]                = "Toggle list of common UI frames"
-L["ABOUT_F2"]                = "Hide any frame by name"
+L["ABOUT_F1"]                = "Toggle list of 80+ UI frames & CVars"
+L["ABOUT_F2"]                = "Hide any frame by name, hide chat completely"
 L["ABOUT_F3"]                = "Opacity slider per frame"
 L["ABOUT_F4"]                = "Profiles: save, load, delete, export/import"
 L["ABOUT_F5"]                = "Search & filter, frame highlight on hover"
-L["ABOUT_F6"]                = "LibDataBroker plugin for bar addons"
-L["ABOUT_F7"]                = "Combat protection & secure hooks"
+L["ABOUT_F6"]                = "Combat auto-hide: hide specific frames in fight"
+L["ABOUT_F7"]                = "Edition support: Classic, TBC, MoP Classic, Retail"
+L["ABOUT_F8"]                = "LibDataBroker plugin for bar addons"
+L["ABOUT_F9"]                = "Combat protection & secure hooks"
 
 ---------------------------------------------------------------------------
 -- German (deDE)
@@ -308,14 +312,18 @@ if locale == "deDE" then
     L["CFG_CHAT_FEEDBACK"]       = "Chat-Rückmeldung"
     L["CFG_CHAT_FEEDBACK_TT"]    = "Zeigt Nachrichten im Chat beim Verstecken oder Anzeigen von Frames."
     L["CFG_EDITION_LABEL"]       = "Edition"
+    L["CFG_COMBAT_HIDE"]         = "Kampf-Auto-Verstecken"
+    L["CFG_COMBAT_HIDE_TT"]      = "Diesen Frame automatisch im Kampf verstecken und danach wieder anzeigen."
 
     L["ABOUT_DESC"]              = "versteckt beliebige UI-Elemente per einfachem Toggle."
     L["ABOUT_FEATURES"]          = "Funktionen:"
-    L["ABOUT_F1"]                = "Toggle-Liste gängiger UI-Frames"
-    L["ABOUT_F2"]                = "Beliebigen Frame per Name verstecken"
+    L["ABOUT_F1"]                = "Toggle-Liste mit 80+ UI-Frames & CVars"
+    L["ABOUT_F2"]                = "Beliebigen Frame per Name verstecken, Chat komplett ausblenden"
     L["ABOUT_F3"]                = "Deckkraft-Regler pro Frame"
     L["ABOUT_F4"]                = "Profile: speichern, laden, löschen, export/import"
     L["ABOUT_F5"]                = "Suche & Filter, Frame-Hervorhebung"
-    L["ABOUT_F6"]                = "LibDataBroker-Plugin für Leistenaddons"
-    L["ABOUT_F7"]                = "Kampfschutz & sichere Hooks"
+    L["ABOUT_F6"]                = "Kampf-Auto-Verstecken: bestimmte Frames im Fight ausblenden"
+    L["ABOUT_F7"]                = "Editions-Support: Classic, TBC, MoP Classic, Retail"
+    L["ABOUT_F8"]                = "LibDataBroker-Plugin für Leistenaddons"
+    L["ABOUT_F9"]                = "Kampfschutz & sichere Hooks"
 end
