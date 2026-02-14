@@ -39,6 +39,7 @@ L["HELP_LOCK"]               = "|cff00cc66/ha lock|r - Lock all hidden frames"
 L["HELP_UNLOCK"]             = "|cff00cc66/ha unlock|r - Unlock all hidden frames"
 L["HELP_STATUS"]             = "|cff00cc66/ha status|r - Show addon status"
 L["HELP_MINIMAP"]            = "|cff00cc66/ha minimap|r - Toggle minimap button"
+L["HELP_ALPHA"]              = "|cff00cc66/ha alpha <frame> <0-100>|r - Set frame opacity"
 
 -- Hide / Show
 L["FRAME_HIDDEN"]            = "Hidden: |cffff8800%s|r"
@@ -48,10 +49,21 @@ L["FRAME_NOT_HIDDEN"]        = "Frame |cffffffff%s|r is not currently hidden."
 L["ALL_FRAMES_SHOWN"]        = "All |cff00ff00%d|r hidden frames are now visible again."
 L["NO_FRAMES_HIDDEN"]        = "No frames are currently hidden."
 
+-- Alpha / Opacity
+L["ALPHA_SET"]               = "Opacity of |cff00cc66%s|r set to |cffffffff%d%%|r."
+L["ALPHA_RESET"]             = "Opacity of |cff00cc66%s|r reset to 100%%."
+L["ALPHA_TITLE"]             = "Opacity"
+L["ALPHA_LABEL"]             = "Opacity: %d%%"
+L["ALPHA_TOOLTIP"]           = "Set frame transparency (0%% = invisible, 100%% = fully visible)"
+
 -- Frame states (tooltips)
 L["FRAME_STATE_HIDDEN"]      = "Currently hidden"
 L["FRAME_STATE_VISIBLE"]     = "Currently visible"
+L["FRAME_STATE_ALPHA"]       = "Opacity: %d%%"
 L["FRAME_NOT_LOADED"]        = "Frame not loaded yet"
+
+-- Search
+L["SEARCH_PLACEHOLDER"]      = "Search frames..."
 
 -- Protected
 L["PICKER_PROTECTED"]        = "Cannot hide |cffff4444%s|r - this frame is protected."
@@ -146,16 +158,19 @@ L["CFG_MINIMAP_BTN"]         = "Minimap Button"
 L["CFG_MINIMAP_BTN_TT"]      = "Show or hide the minimap button."
 L["CFG_LOCK_MODE"]           = "Lock Mode"
 L["CFG_LOCK_MODE_TT"]        = "When locked, hidden frames cannot be restored. Only the config panel or /ha unlock can restore them."
+L["CFG_HIGHLIGHT"]           = "Highlight Frames"
+L["CFG_HIGHLIGHT_TT"]        = "Highlight the actual game frame when hovering over a catalog row."
 
 -- About
 L["ABOUT_DESC"]              = "lets you hide any UI element with a simple toggle."
 L["ABOUT_FEATURES"]          = "Features:"
 L["ABOUT_F1"]                = "Toggle list of common UI frames"
 L["ABOUT_F2"]                = "Hide any frame by name"
-L["ABOUT_F3"]                = "Combat text toggle (damage, healing)"
+L["ABOUT_F3"]                = "Opacity slider per frame"
 L["ABOUT_F4"]                = "Profiles: save, load, delete, export/import"
-L["ABOUT_F5"]                = "Minimap + floating button"
-L["ABOUT_F6"]                = "Combat protection & secure hooks"
+L["ABOUT_F5"]                = "Search & filter, frame highlight on hover"
+L["ABOUT_F6"]                = "LibDataBroker plugin for bar addons"
+L["ABOUT_F7"]                = "Combat protection & secure hooks"
 
 ---------------------------------------------------------------------------
 -- German (deDE)
@@ -176,6 +191,7 @@ if locale == "deDE" then
     L["HELP_UNLOCK"]             = "|cff00cc66/ha unlock|r - Alle versteckten Frames entsperren"
     L["HELP_STATUS"]             = "|cff00cc66/ha status|r - Addon-Status anzeigen"
     L["HELP_MINIMAP"]            = "|cff00cc66/ha minimap|r - Minimap-Button umschalten"
+    L["HELP_ALPHA"]              = "|cff00cc66/ha alpha <frame> <0-100>|r - Frame-Deckkraft setzen"
 
     L["FRAME_HIDDEN"]            = "Versteckt: |cffff8800%s|r"
     L["FRAME_SHOWN"]             = "Angezeigt: |cff00ff00%s|r"
@@ -184,9 +200,18 @@ if locale == "deDE" then
     L["ALL_FRAMES_SHOWN"]        = "Alle |cff00ff00%d|r versteckten Frames sind jetzt wieder sichtbar."
     L["NO_FRAMES_HIDDEN"]        = "Es sind keine Frames versteckt."
 
+    L["ALPHA_SET"]               = "Deckkraft von |cff00cc66%s|r auf |cffffffff%d%%|r gesetzt."
+    L["ALPHA_RESET"]             = "Deckkraft von |cff00cc66%s|r auf 100%% zurückgesetzt."
+    L["ALPHA_TITLE"]             = "Deckkraft"
+    L["ALPHA_LABEL"]             = "Deckkraft: %d%%"
+    L["ALPHA_TOOLTIP"]           = "Frame-Transparenz einstellen (0%% = unsichtbar, 100%% = voll sichtbar)"
+
     L["FRAME_STATE_HIDDEN"]      = "Momentan versteckt"
     L["FRAME_STATE_VISIBLE"]     = "Momentan sichtbar"
+    L["FRAME_STATE_ALPHA"]       = "Deckkraft: %d%%"
     L["FRAME_NOT_LOADED"]        = "Frame noch nicht geladen"
+
+    L["SEARCH_PLACEHOLDER"]      = "Frames suchen..."
 
     L["PICKER_PROTECTED"]        = "Kann |cffff4444%s|r nicht verstecken - dieser Frame ist geschützt."
     L["PICKER_ALREADY_HIDDEN"]   = "|cffffffff%s|r ist bereits versteckt."
@@ -271,13 +296,16 @@ if locale == "deDE" then
     L["CFG_MINIMAP_BTN_TT"]      = "Zeigt oder versteckt den Minimap-Button."
     L["CFG_LOCK_MODE"]           = "Sperrmodus"
     L["CFG_LOCK_MODE_TT"]        = "Wenn gesperrt, können versteckte Frames nicht wiederhergestellt werden."
+    L["CFG_HIGHLIGHT"]           = "Frames hervorheben"
+    L["CFG_HIGHLIGHT_TT"]        = "Hebt den tatsächlichen Frame hervor, wenn du mit der Maus über einen Katalogeintrag fährst."
 
     L["ABOUT_DESC"]              = "versteckt beliebige UI-Elemente per einfachem Toggle."
     L["ABOUT_FEATURES"]          = "Funktionen:"
     L["ABOUT_F1"]                = "Toggle-Liste gängiger UI-Frames"
     L["ABOUT_F2"]                = "Beliebigen Frame per Name verstecken"
-    L["ABOUT_F3"]                = "Kampftext ein-/ausschalten (Schaden, Heilung)"
+    L["ABOUT_F3"]                = "Deckkraft-Regler pro Frame"
     L["ABOUT_F4"]                = "Profile: speichern, laden, löschen, export/import"
-    L["ABOUT_F5"]                = "Minimap- + Floating-Button"
-    L["ABOUT_F6"]                = "Kampfschutz & sichere Hooks"
+    L["ABOUT_F5"]                = "Suche & Filter, Frame-Hervorhebung"
+    L["ABOUT_F6"]                = "LibDataBroker-Plugin für Leistenaddons"
+    L["ABOUT_F7"]                = "Kampfschutz & sichere Hooks"
 end

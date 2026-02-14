@@ -15,11 +15,15 @@ HA.DEFAULTS = {
     -- Hidden CVars: { ["cvarName"] = true, ... }
     hiddenCVars = {},
 
+    -- Frame alpha values: { ["FrameName"] = 0.5, ... } (0.0 - 1.0)
+    frameAlphas = {},
+
     -- Settings
     settings = {
         locked      = false,
         showMinimap = true,
         chatEnabled = true,
+        highlight   = true,
     },
 
     -- Profiles
@@ -28,7 +32,7 @@ HA.DEFAULTS = {
     -- Active profile name (nil = no profile)
     activeProfile = nil,
 
-    -- Minimap button position
+    -- Minimap button position (used by LibDBIcon)
     minimap = {
         minimapPos = 220,
         hide = false,
@@ -242,6 +246,9 @@ function HA:InitDB()
     end
     if type(db.profiles) ~= "table" then
         db.profiles = {}
+    end
+    if type(db.frameAlphas) ~= "table" then
+        db.frameAlphas = {}
     end
 
     self.db = db

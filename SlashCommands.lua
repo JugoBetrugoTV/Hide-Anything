@@ -97,6 +97,22 @@ SlashCmdList["HIDEANYTHING"] = function(msg)
     elseif cmd == "status" or cmd == "info" then
         HA:PrintStatus()
 
+    elseif cmd == "alpha" or cmd == "opacity" then
+        if args == "" then
+            HA:Print(L["HELP_ALPHA"])
+        else
+            local frameName, pctStr = strsplit(" ", args, 2)
+            frameName = strtrim(frameName or "")
+            pctStr = strtrim(pctStr or "")
+            local pct = tonumber(pctStr)
+            if frameName ~= "" and pct then
+                pct = math.max(0, math.min(100, pct))
+                HA:SetFrameAlpha(frameName, pct / 100)
+            else
+                HA:Print(L["HELP_ALPHA"])
+            end
+        end
+
     elseif cmd == "minimap" then
         HA:ToggleMinimapButton()
 
@@ -123,6 +139,7 @@ function HA:PrintHelp()
     self:Print(L["HELP_RESET"])
     self:Print(L["HELP_STATUS"])
     self:Print(L["HELP_MINIMAP"])
+    self:Print(L["HELP_ALPHA"])
 end
 
 ---------------------------------------------------------------------------

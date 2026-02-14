@@ -1,7 +1,8 @@
 --[[
     HideAnything - Core.lua
     Main addon engine: initialization, frame hiding/showing, event handling,
-    combat lockdown protection, secure hooks, re-hide on show
+    combat lockdown protection, secure hooks, re-hide on show, alpha system,
+    LibDataBroker data object
 ]]
 
 local AddonName, HA = ...
@@ -19,7 +20,7 @@ local function SafeGetVersion()
             ok, ver = pcall(GetAddOnMetadata, AddonName, "Version")
         end
     end
-    return (ok and ver) or "1.0.0"
+    return (ok and ver) or "1.1.0"
 end
 HA.version = SafeGetVersion()
 
@@ -50,6 +51,7 @@ HA.eventFrame:SetScript("OnEvent", function(self, event, ...)
         C_Timer.After(0.5, function()
             HA:ReapplyHiddenFrames()
             HA:ReapplyHiddenCVars()
+            HA:ReapplyFrameAlphas()
         end)
     elseif event == "PLAYER_REGEN_DISABLED" then
         HA.inCombat = true
@@ -69,7 +71,7 @@ function HA:OnInitialize()
         -- Initialize saved variables / database
         self:InitDB()
 
-        -- Initialize minimap button
+        -- Initialize minimap button (LibDBIcon)
         if self.InitMinimap then
             self:InitMinimap()
         end
@@ -77,6 +79,11 @@ function HA:OnInitialize()
         -- Initialize floating button
         if self.InitFloatingButton then
             self:InitFloatingButton()
+        end
+
+        -- Initialize LDB data object
+        if self.InitLDB then
+            self:InitLDB()
         end
 
         -- Mark init as done (for startup diagnostic in Locales.lua)
@@ -342,6 +349,17 @@ function HA:ShowAllFrames()
         wipe(self.db.hiddenCVars)
     end
 
+    -- Also reset all frame alphas
+    if self.db.frameAlphas then
+        for frameName, _ in pairs(self.db.frameAlphas) do
+            local frame = self:GetFrameByName(frameName)
+            if frame then
+                pcall(function() frame:SetAlpha(1) end)
+            end
+        end
+        wipe(self.db.frameAlphas)
+    end
+
     self:FeedbackShowAll(count)
 
     if self.RefreshFrameList then
@@ -433,10 +451,79 @@ end
 function HA:SecureShowFrame(frame, frameName)
     if not frame then return end
 
+    -- Restore alpha: use saved alpha if exists, otherwise 1.0
+    local alpha = 1.0
+    if self.db and self.db.frameAlphas and self.db.frameAlphas[frameName] then
+        alpha = self.db.frameAlphas[frameName]
+    end
+
     pcall(function()
-        frame:SetAlpha(1)
+        frame:SetAlpha(alpha)
         frame:Show()
     end)
+end
+
+---------------------------------------------------------------------------
+-- Set frame alpha (opacity)
+---------------------------------------------------------------------------
+function HA:SetFrameAlpha(frameName, alpha)
+    local L = self.L
+
+    if not frameName or frameName == "" then
+        self:FeedbackError("ERROR_FRAME_NIL")
+        return false
+    end
+
+    -- Clamp alpha 0.0 - 1.0
+    alpha = math.max(0, math.min(1, alpha))
+
+    -- If alpha is 1.0, remove from frameAlphas (reset)
+    if alpha >= 1.0 then
+        self.db.frameAlphas[frameName] = nil
+        local frame = self:GetFrameByName(frameName)
+        if frame and not self.db.hiddenFrames[frameName] then
+            pcall(function() frame:SetAlpha(1) end)
+        end
+        self:ChatMsg(L["ALPHA_RESET"]:format(frameName))
+    else
+        self.db.frameAlphas[frameName] = alpha
+        local frame = self:GetFrameByName(frameName)
+        if frame and not self.db.hiddenFrames[frameName] then
+            pcall(function() frame:SetAlpha(alpha) end)
+        end
+        self:ChatMsg(L["ALPHA_SET"]:format(frameName, math.floor(alpha * 100)))
+    end
+
+    if self.RefreshFrameList then
+        self:RefreshFrameList()
+    end
+
+    return true
+end
+
+---------------------------------------------------------------------------
+-- Get frame alpha (returns 0.0-1.0, defaults to 1.0)
+---------------------------------------------------------------------------
+function HA:GetFrameAlpha(frameName)
+    if self.db and self.db.frameAlphas and self.db.frameAlphas[frameName] then
+        return self.db.frameAlphas[frameName]
+    end
+    return 1.0
+end
+
+---------------------------------------------------------------------------
+-- Reapply frame alphas (after login/reload)
+---------------------------------------------------------------------------
+function HA:ReapplyFrameAlphas()
+    if not self.db or not self.db.frameAlphas then return end
+    for frameName, alpha in pairs(self.db.frameAlphas) do
+        if not self.db.hiddenFrames[frameName] then
+            local frame = self:GetFrameByName(frameName)
+            if frame then
+                pcall(function() frame:SetAlpha(alpha) end)
+            end
+        end
+    end
 end
 
 ---------------------------------------------------------------------------
@@ -533,4 +620,42 @@ end
 function HA:ConfirmReset()
     self.resetPending = true
     self:RequestReset()
+end
+
+---------------------------------------------------------------------------
+-- LibDataBroker data object (for bar addons: Titan Panel, ChocolateBar, etc.)
+---------------------------------------------------------------------------
+function HA:InitLDB()
+    local LDB = LibStub and LibStub("LibDataBroker-1.1", true)
+    if not LDB then return end
+
+    self.ldbObject = LDB:NewDataObject("HideAnything", {
+        type    = "launcher",
+        label   = "HideAnything",
+        icon    = "Interface\\Icons\\INV_Misc_Eye_02",
+        OnClick = function(frame, button)
+            if button == "LeftButton" then
+                if IsShiftKeyDown() then
+                    HA:ShowAllFrames()
+                else
+                    HA:ToggleOptionsPanel()
+                end
+            elseif button == "RightButton" then
+                HA:ToggleOptionsPanel()
+            end
+        end,
+        OnTooltipShow = function(tooltip)
+            local L = HA.L
+            tooltip:AddLine(L["MINIMAP_TOOLTIP_TITLE"])
+            tooltip:AddLine(" ")
+            tooltip:AddLine(L["MINIMAP_TOOLTIP_LEFT"], 1, 1, 1)
+            tooltip:AddLine(L["MINIMAP_TOOLTIP_SHIFT"], 1, 1, 1)
+            tooltip:AddLine(L["MINIMAP_TOOLTIP_DRAG"], 1, 1, 1)
+            local count = HA:GetHiddenCount()
+            if count > 0 then
+                tooltip:AddLine(" ")
+                tooltip:AddLine(L["STATUS_HIDDEN_COUNT"]:format(count), 1, 0.82, 0)
+            end
+        end,
+    })
 end
