@@ -91,6 +91,9 @@ HA.FRAME_CATALOG = {
     { name = "ExtraAbilityContainer",    label = "Extra Action Button",       labelDE = "Extra-Aktionsknopf" },
     { name = "EncounterBar",             label = "Encounter Bar",             labelDE = "Begegnungsleiste" },
     { name = "OverrideActionBar",        label = "Override / Vehicle Bar",    labelDE = "Override-/Fahrzeugleiste" },
+    { name = "MultiBar5",               label = "Action Bar 5",              labelDE = "Aktionsleiste 5" },
+    { name = "MultiBar6",               label = "Action Bar 6",              labelDE = "Aktionsleiste 6" },
+    { name = "MultiBar7",               label = "Action Bar 7",              labelDE = "Aktionsleiste 7" },
 
     ---------------------------------------------------------------------------
     -- Bars & Menus
@@ -130,24 +133,34 @@ HA.FRAME_CATALOG = {
     -- Nameplates (CVar-based)
     ---------------------------------------------------------------------------
     { section = true, label = "Nameplates",             labelDE = "Namensplaketten" },
-    { cvar = "nameplateShowAll",          label = "All Nameplates",            labelDE = "Alle Namensplaketten" },
-    { cvar = "nameplateShowFriends",      label = "Friendly Nameplates",       labelDE = "Freundliche Namensplaketten" },
-    { cvar = "nameplateShowEnemies",      label = "Enemy Nameplates",          labelDE = "Feindliche Namensplaketten" },
+    { cvar = "nameplateShowAll",              label = "All Nameplates",              labelDE = "Alle Namensplaketten" },
+    { cvar = "nameplateShowFriends",          label = "Friendly Nameplates",         labelDE = "Freundliche Namensplaketten" },
+    { cvar = "nameplateShowEnemies",          label = "Enemy Nameplates",            labelDE = "Feindliche Namensplaketten" },
+    { cvar = "nameplateShowSelf",             label = "Personal Resource Bar",       labelDE = "Eigene Ressourcenanzeige" },
+    { cvar = "nameplateShowFriendlyNPCs",     label = "Friendly NPC Nameplates",     labelDE = "Freundliche NPC-Namensplaketten" },
+    { cvar = "nameplateShowEnemyMinions",     label = "Enemy Pet Nameplates",        labelDE = "Gegner-Pet-Namensplaketten" },
+    { cvar = "nameplateShowEnemyMinus",       label = "Trivial Enemy Nameplates",    labelDE = "Triviale Gegner-Namensplaketten" },
 
     ---------------------------------------------------------------------------
     -- Sound (CVar-based)
     ---------------------------------------------------------------------------
     { section = true, label = "Sound",                  labelDE = "Sound" },
     { cvar = "Sound_EnableErrorSpeech",   label = "Error Speech",              labelDE = "Fehler-Stimme" },
+    { cvar = "Sound_EnableMusic",         label = "Music",                     labelDE = "Musik" },
+    { cvar = "Sound_EnableSFX",           label = "Sound Effects",             labelDE = "Sound-Effekte" },
+    { cvar = "Sound_EnableAmbience",      label = "Ambience",                  labelDE = "Umgebungsgeräusche" },
+    { cvar = "Sound_EnableDialog",        label = "NPC Dialog Voice",          labelDE = "NPC-Dialog-Stimmen" },
 
     ---------------------------------------------------------------------------
-    -- Chat
+    -- Chat & Bubbles
     ---------------------------------------------------------------------------
-    { section = true, label = "Chat",                   labelDE = "Chat" },
+    { section = true, label = "Chat & Bubbles",         labelDE = "Chat & Blasen" },
     { name = "GeneralDockManager",           label = "Chat Tab Bar",              labelDE = "Chat-Tab-Leiste" },
     { name = "ChatFrameMenuButton",          label = "Chat Menu Button",          labelDE = "Chat-Menü-Button" },
     { name = "QuickJoinToastButton",         label = "Quick Join Button",         labelDE = "Schnellbeitritt-Button" },
     { name = "CombatLogQuickButtonFrame",    label = "Combat Log Buttons",        labelDE = "Kampflog-Buttons" },
+    { cvar = "chatBubbles",                  label = "Chat Bubbles",              labelDE = "Chat-Blasen" },
+    { cvar = "chatBubblesParty",             label = "Party Chat Bubbles",        labelDE = "Gruppen-Chat-Blasen" },
 
     ---------------------------------------------------------------------------
     -- Map & Navigation
@@ -156,6 +169,9 @@ HA.FRAME_CATALOG = {
     { name = "MinimapCluster",           label = "Minimap",                   labelDE = "Minimap" },
     { name = "GameTimeFrame",            label = "Calendar Button",           labelDE = "Kalender-Button" },
     { name = "TimeManagerClockButton",   label = "Clock",                     labelDE = "Uhr" },
+    { name = "MiniMapMailFrame",         label = "Mail Notification",         labelDE = "Post-Benachrichtigung" },
+    { name = "MiniMapInstanceDifficulty", label = "Instance Difficulty",      labelDE = "Instanz-Schwierigkeit" },
+    { name = "MiniMapTracking",          label = "Tracking Button",           labelDE = "Tracking-Button" },
     { name = "ObjectiveTrackerFrame",    label = "Quest / Objective Tracker", labelDE = "Quest-Tracker" },
 
     ---------------------------------------------------------------------------
@@ -173,6 +189,8 @@ HA.FRAME_CATALOG = {
     { name = "GhostFrame",              label = "Spirit Release",             labelDE = "Geistfreilassung" },
     { name = "TimerTracker",             label = "BG / Arena Timer",          labelDE = "BG-/Arena-Timer" },
     { name = "MirrorTimerContainer",     label = "Breath / Fatigue Timer",    labelDE = "Atem-/Ermüdungs-Timer" },
+    { name = "UIErrorsFrame",            label = "Error Text (red)",          labelDE = "Fehlertext (rot)" },
+    { name = "RaidWarningFrame",         label = "Raid Warning Text",         labelDE = "Raid-Warnungstext" },
 
     ---------------------------------------------------------------------------
     -- Widgets & Misc
@@ -183,7 +201,15 @@ HA.FRAME_CATALOG = {
     { name = "DurabilityFrame",          label = "Durability",                labelDE = "Haltbarkeit" },
     { name = "VehicleSeatIndicator",     label = "Vehicle Seat",              labelDE = "Fahrzeugsitz" },
     { name = "QueueStatusButton",        label = "Queue Status Eye",          labelDE = "Warteschlangen-Auge" },
+    { name = "PlayerPowerBarAlt",        label = "Alternate Power Bar",       labelDE = "Alternative Energieleiste" },
     { name = "OrderHallCommandBar",      label = "Order Hall Bar",            labelDE = "Ordenshallen-Leiste" },
+    { name = "UIWidgetCenterScreenContainerFrame", label = "Center Screen Widgets", labelDE = "Bildschirmmitte-Widgets" },
+
+    ---------------------------------------------------------------------------
+    -- Tutorials (CVar-based)
+    ---------------------------------------------------------------------------
+    { section = true, label = "Tutorials",              labelDE = "Tutorials" },
+    { cvar = "showTutorials",            label = "Tutorial Popups",           labelDE = "Tutorial-Popups" },
 }
 
 ---------------------------------------------------------------------------
