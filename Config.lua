@@ -80,6 +80,7 @@ HA.DEFAULTS = {
     hiddenCVars     = {},
     frameAlphas     = {},
     combatHideFrames = {},   -- frames to auto-hide during combat
+    hiddenTextures  = {},    -- hidden texture/region elements
 
     settings = {
         locked           = false,
@@ -159,6 +160,8 @@ HA.FRAME_CATALOG = {
     { name = "EncounterBar",             label = "Encounter Bar",             labelDE = "Begegnungsleiste",            ed = R },
     { name = "OverrideActionBar",        label = "Override / Vehicle Bar",    labelDE = "Override-/Fahrzeugleiste",    ed = MOP_UP },
     { name = "PossessActionBar",         label = "Possess Bar",               labelDE = "Besitz-Leiste" },
+    { name = "MainMenuBarLeftEndCap",  label = "Left Bar Gryphon",          labelDE = "Linker Leisten-Greif",        ed = CL },
+    { name = "MainMenuBarRightEndCap", label = "Right Bar Gryphon",         labelDE = "Rechter Leisten-Greif",       ed = CL },
 
     ---------------------------------------------------------------------------
     -- Bars & Menus
@@ -174,6 +177,9 @@ HA.FRAME_CATALOG = {
     { name = "PlayerCastingBarFrame",    label = "Cast Bar",                  labelDE = "Zauberleiste" },
     { name = "CastingBarFrame",          label = "Cast Bar (Classic)",        labelDE = "Zauberleiste (Classic)",      ed = CL },
     { name = "EditModeManagerFrame",     label = "Edit Mode Bar",             labelDE = "Bearbeitungsmodus-Leiste",    ed = R },
+    { name = "HelpMicroButton",        label = "Help Button",               labelDE = "Hilfe-Button" },
+    { name = "StoreMicroButton",       label = "Store Button",              labelDE = "Shop-Button",                 ed = R },
+    { name = "ContainerFrameCombinedBags", label = "Combined Bags",         labelDE = "Kombinierte Taschen",         ed = R },
 
     ---------------------------------------------------------------------------
     -- Chat
@@ -201,6 +207,8 @@ HA.FRAME_CATALOG = {
     { name = "BuffFrame",                label = "Buffs",                     labelDE = "Buffs" },
     { name = "DebuffFrame",              label = "Debuffs",                   labelDE = "Debuffs" },
     { name = "TotemFrame",               label = "Totems",                    labelDE = "Totems" },
+    { cvar = "showCastableBuffs",       label = "Castable Buffs (Target)",   labelDE = "Zauberwirksame Buffs (Ziel)" },
+    { cvar = "showDispelDebuffs",       label = "Dispellable Debuffs (Target)", labelDE = "Bannbare Debuffs (Ziel)" },
 
     ---------------------------------------------------------------------------
     -- Combat Text (CVar-based)
@@ -236,6 +244,8 @@ HA.FRAME_CATALOG = {
     { cvar = "nameplateShowFriendlyTotems",   label = "Friendly Totem Nameplates",   labelDE = "Freundl. Totem-Namensplaketten" },
     { cvar = "ShowClassColorInNameplate",          label = "Enemy Class Colors (Plates)", labelDE = "Gegner-Klassenfarben (Plaketten)" },
     { cvar = "ShowClassColorInFriendlyNameplate",  label = "Friendly Class Colors (Plates)", labelDE = "Freundl. Klassenfarben (Plaketten)" },
+    { cvar = "nameplateResourceOnTarget",           label = "Resource on Target Plate",    labelDE = "Ressource auf Ziel-Plakette",       ed = R },
+    { cvar = "nameplateShowDebuffsOnFriendly",      label = "Debuffs on Friendly Plates",  labelDE = "Debuffs auf freundl. Plaketten",    ed = R },
 
     ---------------------------------------------------------------------------
     -- Names & Titles (CVar-based)
@@ -268,6 +278,7 @@ HA.FRAME_CATALOG = {
     { cvar = "Sound_EnableAmbience",      label = "Ambience",                  labelDE = "Umgebungsgeräusche" },
     { cvar = "Sound_EnableDialog",        label = "NPC Dialog Voice",          labelDE = "NPC-Dialog-Stimmen" },
     { cvar = "Sound_EnableEmoteSounds",   label = "Emote Sounds",              labelDE = "Emote-Sounds" },
+    { cvar = "Sound_EnablePetSounds",   label = "Pet Sounds",                labelDE = "Begleiter-Sounds" },
 
     ---------------------------------------------------------------------------
     -- Gameplay Options (CVar-based)
@@ -287,6 +298,9 @@ HA.FRAME_CATALOG = {
     { cvar = "autoQuestWatch",                label = "Auto Quest Watch",            labelDE = "Automatische Quest-Verfolgung" },
     { cvar = "autoQuestProgress",             label = "Auto Quest Progress",         labelDE = "Automatischer Quest-Fortschritt" },
     { cvar = "interactOnLeftClick",           label = "Interact on Left-Click",      labelDE = "Interaktion bei Linksklick",  ed = R },
+    { cvar = "instantQuestText",              label = "Instant Quest Text",          labelDE = "Sofortiger Quest-Text" },
+    { cvar = "predictedHealth",               label = "Predicted Health",            labelDE = "Vorhergesagte Gesundheit" },
+    { cvar = "scriptErrors",                  label = "Lua Error Display",           labelDE = "Lua-Fehleranzeige" },
 
     ---------------------------------------------------------------------------
     -- Raid & Party (CVar-based)
@@ -311,6 +325,7 @@ HA.FRAME_CATALOG = {
     { cvar = "showToastOffline",              label = "Friend Offline Toast",        labelDE = "Freund-Offline-Meldung" },
     { cvar = "showToastBroadcast",            label = "Broadcast Toast",             labelDE = "Broadcast-Meldung" },
     { cvar = "showToastFriendRequest",        label = "Friend Request Toast",        labelDE = "Freundschaftsanfrage-Meldung" },
+    { cvar = "removeChatDelay",               label = "Remove Chat Delay",           labelDE = "Chat-Verzögerung entfernen" },
 
     ---------------------------------------------------------------------------
     -- Map & Navigation
@@ -346,6 +361,7 @@ HA.FRAME_CATALOG = {
     { name = "RaidWarningFrame",         label = "Raid Warning Text",         labelDE = "Raid-Warnungstext" },
     { name = "RaidBossEmoteFrame",       label = "Boss Emote Text",           labelDE = "Boss-Emote-Text" },
     { name = "LevelUpDisplay",           label = "Level Up Animation",        labelDE = "Level-Up-Animation",          ed = R },
+    { name = "WorldStateAlwaysUpFrame", label = "World State Info",          labelDE = "Weltstatus-Info",             ed = CL },
 
     ---------------------------------------------------------------------------
     -- Widgets & Misc
@@ -387,6 +403,7 @@ HA.FRAME_CATALOG = {
     { cvar = "showTargetOfTarget",       label = "Target of Target",          labelDE = "Ziel des Ziels" },
     { cvar = "fullSizeFocusFrame",       label = "Full Size Focus Frame",     labelDE = "Fokus-Frame Vollgröße" },
     { cvar = "doNotFlashLowHealthWarning", label = "Low Health Flash",        labelDE = "Warnung: Wenig Leben" },
+    { cvar = "empowerTapControls",      label = "Empower Tap Controls",      labelDE = "Empower-Tap-Steuerung",       ed = R },
 
     ---------------------------------------------------------------------------
     -- Visual Effects (CVar-based)
@@ -394,6 +411,7 @@ HA.FRAME_CATALOG = {
     { section = true, label = "Visual Effects",         labelDE = "Visuelle Effekte" },
     { cvar = "ffxGlow",                  label = "Full Screen Glow",          labelDE = "Vollbild-Leuchten" },
     { cvar = "ffxDeath",                 label = "Death Effect",              labelDE = "Todeseffekt" },
+    { cvar = "movieSubtitle",            label = "Movie Subtitles",           labelDE = "Film-Untertitel" },
 
     ---------------------------------------------------------------------------
     -- Accessibility (CVar-based)
@@ -401,6 +419,23 @@ HA.FRAME_CATALOG = {
     { section = true, label = "Accessibility",          labelDE = "Barrierefreiheit" },
     { cvar = "colorblindMode",           label = "Colorblind Mode",           labelDE = "Farbenblind-Modus" },
     { cvar = "enableMovePad",            label = "Move Pad",                  labelDE = "Bewegungsfeld" },
+    { cvar = "useUiScale",               label = "UI Scale",                  labelDE = "UI-Skalierung" },
+
+    ---------------------------------------------------------------------------
+    -- Decorations (Textures / Regions)
+    ---------------------------------------------------------------------------
+    { section = true, label = "Decorations",           labelDE = "Dekorationen" },
+    { texture = "MinimapBorder",                label = "Minimap Border",            labelDE = "Minimap-Rahmen" },
+    { texture = "MinimapNorthTag",              label = "Minimap North Indicator",   labelDE = "Minimap-Nordanzeige" },
+    { texture = "MainMenuBarTexture0",          label = "Action Bar Art (Left)",     labelDE = "Aktionsleisten-Art (Links)",     ed = CL },
+    { texture = "MainMenuBarTexture1",          label = "Action Bar Art (Right)",    labelDE = "Aktionsleisten-Art (Rechts)",    ed = CL },
+    { texture = "MainMenuBarTexture2",          label = "Bottom Bar Art (Left)",     labelDE = "Untere Leisten-Art (Links)",     ed = CL },
+    { texture = "MainMenuBarTexture3",          label = "Bottom Bar Art (Right)",    labelDE = "Untere Leisten-Art (Rechts)",    ed = CL },
+    { texture = "SlidingActionBarTexture0",     label = "Bonus Bar Art (Left)",      labelDE = "Bonusleisten-Art (Links)",       ed = CL },
+    { texture = "SlidingActionBarTexture1",     label = "Bonus Bar Art (Right)",     labelDE = "Bonusleisten-Art (Rechts)",      ed = CL },
+    { texture = "StanceBarLeft",                label = "Stance Bar Art (Left)",     labelDE = "Haltungsleisten-Art (Links)" },
+    { texture = "StanceBarMiddle",              label = "Stance Bar Art (Middle)",   labelDE = "Haltungsleisten-Art (Mitte)" },
+    { texture = "StanceBarRight",               label = "Stance Bar Art (Right)",    labelDE = "Haltungsleisten-Art (Rechts)" },
 }
 
 ---------------------------------------------------------------------------
@@ -436,6 +471,9 @@ function HA:InitDB()
     end
     if type(db.combatHideFrames) ~= "table" then
         db.combatHideFrames = {}
+    end
+    if type(db.hiddenTextures) ~= "table" then
+        db.hiddenTextures = {}
     end
 
     self.db = db

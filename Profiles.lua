@@ -26,10 +26,11 @@ function HA:SaveProfile(name, overwrite)
 
     -- Save profile
     self.db.profiles[name] = {
-        hiddenFrames = self:DeepCopy(self.db.hiddenFrames),
-        hiddenCVars  = self:DeepCopy(self.db.hiddenCVars or {}),
-        frameAlphas  = self:DeepCopy(self.db.frameAlphas or {}),
-        settings     = self:DeepCopy(self.db.settings),
+        hiddenFrames   = self:DeepCopy(self.db.hiddenFrames),
+        hiddenCVars    = self:DeepCopy(self.db.hiddenCVars or {}),
+        hiddenTextures = self:DeepCopy(self.db.hiddenTextures or {}),
+        frameAlphas    = self:DeepCopy(self.db.frameAlphas or {}),
+        settings       = self:DeepCopy(self.db.settings),
     }
 
     local count = self:GetHiddenCount()
@@ -79,6 +80,16 @@ function HA:LoadProfile(name)
         end
     end
 
+    -- Restore currently hidden textures
+    if self.db.hiddenTextures then
+        for textureName, _ in pairs(self.db.hiddenTextures) do
+            local region = self:GetRegionByName(textureName)
+            if region then
+                pcall(function() region:SetAlpha(1); region:Show() end)
+            end
+        end
+    end
+
     -- Reset all frame alphas
     if self.db.frameAlphas then
         for frameName, _ in pairs(self.db.frameAlphas) do
@@ -89,10 +100,11 @@ function HA:LoadProfile(name)
         end
     end
 
-    -- Apply profile hidden frames, CVars, and alphas
-    self.db.hiddenFrames = self:DeepCopy(profile.hiddenFrames or {})
-    self.db.hiddenCVars  = self:DeepCopy(profile.hiddenCVars or {})
-    self.db.frameAlphas  = self:DeepCopy(profile.frameAlphas or {})
+    -- Apply profile hidden frames, CVars, textures, and alphas
+    self.db.hiddenFrames   = self:DeepCopy(profile.hiddenFrames or {})
+    self.db.hiddenCVars    = self:DeepCopy(profile.hiddenCVars or {})
+    self.db.hiddenTextures = self:DeepCopy(profile.hiddenTextures or {})
+    self.db.frameAlphas    = self:DeepCopy(profile.frameAlphas or {})
 
     -- Apply profile settings (merge, don't overwrite completely)
     if profile.settings then
@@ -103,10 +115,11 @@ function HA:LoadProfile(name)
 
     self.db.activeProfile = name
 
-    -- Re-hide all frames and CVars from the loaded profile
+    -- Re-hide all frames, CVars, and textures from the loaded profile
     self:ReapplyHiddenFrames()
     self:ReapplyHiddenCVars()
     self:ReapplyFrameAlphas()
+    self:ReapplyHiddenTextures()
 
     local count = self:GetHiddenCount()
     self:FeedbackProfileLoaded(name, count)
@@ -218,6 +231,14 @@ function HA:ExportProfile(name)
         end
     end
 
+    -- Collect textures
+    local textures = {}
+    if profile.hiddenTextures then
+        for textureName, _ in pairs(profile.hiddenTextures) do
+            table.insert(textures, textureName)
+        end
+    end
+
     -- Collect alphas (stored as frameName=percentage)
     local alphas = {}
     if profile.frameAlphas then
@@ -235,6 +256,10 @@ function HA:ExportProfile(name)
 
     if #cvars > 0 then
         table.insert(parts, "C:" .. table.concat(cvars, ","))
+    end
+
+    if #textures > 0 then
+        table.insert(parts, "T:" .. table.concat(textures, ","))
     end
 
     if #alphas > 0 then
@@ -350,6 +375,7 @@ function HA:ImportProfileHA2(data)
 
     local hiddenFrames = {}
     local hiddenCVars = {}
+    local hiddenTextures = {}
     local frameAlphas = {}
 
     -- Parse remaining segments
@@ -377,6 +403,16 @@ function HA:ImportProfileHA2(data)
                 end
             end
 
+        elseif segType == "T" and segData and segData ~= "" then
+            -- Textures
+            local textureNames = { strsplit(",", segData) }
+            for _, textureName in ipairs(textureNames) do
+                textureName = strtrim(textureName)
+                if textureName ~= "" then
+                    hiddenTextures[textureName] = true
+                end
+            end
+
         elseif segType == "A" and segData and segData ~= "" then
             -- Alphas (format: frameName=percentage)
             local alphaEntries = { strsplit(",", segData) }
@@ -399,13 +435,15 @@ function HA:ImportProfileHA2(data)
     local frameCount = 0
     for _ in pairs(hiddenFrames) do frameCount = frameCount + 1 end
     for _ in pairs(hiddenCVars) do frameCount = frameCount + 1 end
+    for _ in pairs(hiddenTextures) do frameCount = frameCount + 1 end
 
     -- Save as a new profile
     self.db.profiles[name] = {
-        hiddenFrames = hiddenFrames,
-        hiddenCVars  = hiddenCVars,
-        frameAlphas  = frameAlphas,
-        settings     = self:DeepCopy(self.db.settings),
+        hiddenFrames   = hiddenFrames,
+        hiddenCVars    = hiddenCVars,
+        hiddenTextures = hiddenTextures,
+        frameAlphas    = frameAlphas,
+        settings       = self:DeepCopy(self.db.settings),
     }
 
     self:Print(L["PROFILE_IMPORTED"]:format(name, frameCount))

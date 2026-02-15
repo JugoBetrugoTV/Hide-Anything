@@ -554,6 +554,7 @@ local function MatchesFilter(entry, filter)
     if entry.labelDE and strfind(strlower(entry.labelDE), lowerFilter, 1, true) then return true end
     if entry.name and strfind(strlower(entry.name), lowerFilter, 1, true) then return true end
     if entry.cvar and strfind(strlower(entry.cvar), lowerFilter, 1, true) then return true end
+    if entry.texture and strfind(strlower(entry.texture), lowerFilter, 1, true) then return true end
     return false
 end
 
@@ -1129,18 +1130,106 @@ function HA:RefreshFrameList()
 
                 y = y - (ROW_HEIGHT + 1)
             end
+        -- Texture/Region toggle
+        elseif entry.texture then
+            if MatchesFilter(entry, searchFilter) then
+                local textureName = entry.texture
+                local displayLabel = self:GetCatalogLabel(entry)
+                local isHidden = self.db.hiddenTextures and self.db.hiddenTextures[textureName] == true
+                local regionExists = self:GetRegionByName(textureName) ~= nil
+                rowIndex = rowIndex + 1
+
+                local row = AcquireRow(parent)
+                row:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, y)
+
+                if rowIndex % 2 == 0 then
+                    row:SetBackdrop(BD_ROW_ALT)
+                    row:SetBackdropColor(0.12, 0.12, 0.14, 0.35)
+                end
+
+                if not regionExists then
+                    row._label:SetText("|cff555560" .. displayLabel .. "|r")
+                else
+                    row._label:SetText(displayLabel)
+                    row._label:SetTextColor(0.85, 0.85, 0.88)
+                end
+                row._label:SetWidth(parent:GetWidth() * 0.42)
+
+                -- Edition tag + Texture badge
+                local edTag, edColor = self:GetEditionTag(entry)
+                local techStr = "|cff886644Texture|r"
+                if edTag then
+                    techStr = "|cff" .. edColor .. edTag .. "|r |cff886644Texture|r"
+                end
+                row._techName:SetText(techStr)
+                row._techName:SetWidth(parent:GetWidth() * 0.25)
+
+                row._combatBtn:Hide()
+                row._eyeBtn:Hide()
+                row._alphaBtn:Hide()
+                row._showBtn:Hide()
+
+                row._toggleBg:Show()
+                if regionExists then
+                    SetToggleState(row._toggleBg, row._toggleBg._knob, not isHidden)
+                    row._toggleBg:SetScript("OnClick", function()
+                        if isHidden then
+                            HA:ShowTexture(textureName)
+                        else
+                            HA:HideTexture(textureName)
+                        end
+                    end)
+                else
+                    row._toggleBg:SetBackdropColor(0.15, 0.15, 0.17, 0.5)
+                    row._toggleBg:SetBackdropBorderColor(0.22, 0.22, 0.25, 0.5)
+                    row._toggleBg._knob:ClearAllPoints()
+                    row._toggleBg._knob:SetPoint("LEFT", row._toggleBg, "LEFT", 3, 0)
+                    row._toggleBg._knob:SetColorTexture(0.35, 0.35, 0.38, 0.5)
+                    row._toggleBg:SetScript("OnClick", nil)
+                end
+
+                row:SetScript("OnEnter", function(self)
+                    RowOnEnter(self)
+                    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                    GameTooltip:AddLine(displayLabel, ACCENT_R, ACCENT_G, ACCENT_B)
+                    GameTooltip:AddLine("Texture: " .. textureName, 0.5, 0.5, 0.5)
+                    if edTag then
+                        GameTooltip:AddLine(edTag, 0.5, 0.5, 0.5)
+                    end
+                    if not regionExists then
+                        GameTooltip:AddLine(L["FRAME_NOT_LOADED"], 1, 0.5, 0)
+                    elseif isHidden then
+                        GameTooltip:AddLine(L["FRAME_STATE_HIDDEN"], 1, 0.3, 0.3)
+                    else
+                        GameTooltip:AddLine(L["FRAME_STATE_VISIBLE"], 0.3, 1, 0.3)
+                    end
+                    GameTooltip:Show()
+                end)
+                row:SetScript("OnLeave", RowOnLeave)
+
+                y = y - (ROW_HEIGHT + 1)
+            end
         end
     end
 
     -- Custom hidden frames (not in catalog)
     local customHidden = {}
     local catalogNames = {}
+    local catalogTextures = {}
     for _, entry in ipairs(self.FRAME_CATALOG) do
         if entry.name then catalogNames[entry.name] = true end
+        if entry.texture then catalogTextures[entry.texture] = true end
     end
     for frameName, _ in pairs(self.db.hiddenFrames) do
         if not catalogNames[frameName] then
             table.insert(customHidden, frameName)
+        end
+    end
+    if self.db.hiddenTextures then
+        for textureName, _ in pairs(self.db.hiddenTextures) do
+            if not catalogTextures[textureName] then
+                table.insert(customHidden, textureName .. " |cff886644(Texture)|r")
+            end
         end
     end
 

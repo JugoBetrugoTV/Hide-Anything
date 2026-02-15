@@ -52,6 +52,7 @@ HA.eventFrame:SetScript("OnEvent", function(self, event, ...)
             HA:ReapplyHiddenFrames()
             HA:ReapplyHiddenCVars()
             HA:ReapplyFrameAlphas()
+            HA:ReapplyHiddenTextures()
         end)
     elseif event == "PLAYER_REGEN_DISABLED" then
         HA.inCombat = true
@@ -209,6 +210,35 @@ function HA:GetFrameByName(name)
         end
     end
     if obj and type(obj) == "table" and obj.IsObjectType and obj:IsObjectType("Frame") then
+        return obj
+    end
+
+    return nil
+end
+
+---------------------------------------------------------------------------
+-- Get any region (texture, fontstring, frame) by global name
+---------------------------------------------------------------------------
+function HA:GetRegionByName(name)
+    if not name or name == "" then return nil end
+
+    -- Try _G first
+    local region = _G[name]
+    if region and type(region) == "table" and region.Hide and region.Show then
+        return region
+    end
+
+    -- Try nested names (e.g. "MainMenuBarArtFrame.Background")
+    local parts = { strsplit(".", name) }
+    local obj = _G[parts[1]]
+    for i = 2, #parts do
+        if obj and type(obj) == "table" then
+            obj = obj[parts[i]]
+        else
+            return nil
+        end
+    end
+    if obj and type(obj) == "table" and obj.Hide and obj.Show then
         return obj
     end
 
@@ -449,6 +479,18 @@ function HA:ShowAllFrames()
             count = count + 1
         end
         wipe(self.db.hiddenCVars)
+    end
+
+    -- Also restore all hidden textures
+    if self.db.hiddenTextures then
+        for textureName, _ in pairs(self.db.hiddenTextures) do
+            local region = self:GetRegionByName(textureName)
+            if region then
+                pcall(function() region:SetAlpha(1); region:Show() end)
+            end
+            count = count + 1
+        end
+        wipe(self.db.hiddenTextures)
     end
 
     -- Also reset all frame alphas
@@ -719,6 +761,11 @@ function HA:GetHiddenCount()
             count = count + 1
         end
     end
+    if self.db and self.db.hiddenTextures then
+        for _ in pairs(self.db.hiddenTextures) do
+            count = count + 1
+        end
+    end
     return count
 end
 
@@ -739,6 +786,12 @@ function HA:ListHiddenFrames()
     for frameName, _ in pairs(self.db.hiddenFrames) do
         self:Print(L["LIST_ENTRY"]:format(i, frameName))
         i = i + 1
+    end
+    if self.db.hiddenTextures then
+        for textureName, _ in pairs(self.db.hiddenTextures) do
+            self:Print(L["LIST_ENTRY"]:format(i, textureName .. " |cff555560(Texture)|r"))
+            i = i + 1
+        end
     end
 end
 
@@ -825,4 +878,121 @@ function HA:InitLDB()
             end
         end,
     })
+end
+
+---------------------------------------------------------------------------
+-- Texture/Region hiding system
+---------------------------------------------------------------------------
+
+-- Hook a texture/region to prevent re-showing
+function HA:HookTexture(region, textureName)
+    if self.hookedFrames[textureName] then return end
+    local ok = pcall(function()
+        hooksecurefunc(region, "Show", function(r)
+            if HA.db and HA.db.hiddenTextures and HA.db.hiddenTextures[textureName] then
+                pcall(function() r:Hide(); r:SetAlpha(0) end)
+            end
+        end)
+        if region.SetShown then
+            hooksecurefunc(region, "SetShown", function(r, shown)
+                if shown and HA.db and HA.db.hiddenTextures and HA.db.hiddenTextures[textureName] then
+                    pcall(function() r:Hide(); r:SetAlpha(0) end)
+                end
+            end)
+        end
+        hooksecurefunc(region, "SetAlpha", function(r, alpha)
+            if alpha and alpha > 0 and HA.db and HA.db.hiddenTextures and HA.db.hiddenTextures[textureName] then
+                pcall(function() r:SetAlpha(0) end)
+            end
+        end)
+    end)
+    if ok then self.hookedFrames[textureName] = true end
+end
+
+-- Hide a texture/region by name
+function HA:HideTexture(textureName)
+    if not textureName or textureName == "" then return false end
+    if self.db.hiddenTextures[textureName] then return false end
+
+    local region = self:GetRegionByName(textureName)
+    if not region then
+        self:FeedbackFrameNotFound(textureName)
+        return false
+    end
+
+    local ok = pcall(function()
+        region:Hide()
+        region:SetAlpha(0)
+    end)
+    if not ok then return false end
+
+    self.db.hiddenTextures[textureName] = true
+    self:HookTexture(region, textureName)
+
+    local displayName = textureName
+    for _, entry in ipairs(self.FRAME_CATALOG) do
+        if entry.texture == textureName then
+            displayName = self:GetCatalogLabel(entry)
+            break
+        end
+    end
+    self:FeedbackHide(displayName)
+    if self.RefreshFrameList then self:RefreshFrameList() end
+    return true
+end
+
+-- Show a texture/region by name
+function HA:ShowTexture(textureName)
+    if not textureName or textureName == "" then return false end
+    if not self.db.hiddenTextures[textureName] then return false end
+
+    self.db.hiddenTextures[textureName] = nil
+
+    local region = self:GetRegionByName(textureName)
+    if region then
+        pcall(function()
+            region:SetAlpha(1)
+            region:Show()
+        end)
+    end
+
+    local displayName = textureName
+    for _, entry in ipairs(self.FRAME_CATALOG) do
+        if entry.texture == textureName then
+            displayName = self:GetCatalogLabel(entry)
+            break
+        end
+    end
+    self:FeedbackShow(displayName)
+    if self.RefreshFrameList then self:RefreshFrameList() end
+    return true
+end
+
+-- Reapply hidden textures after login/reload
+function HA:ReapplyHiddenTextures()
+    if not self.db or not self.db.hiddenTextures then return end
+
+    local failed = {}
+    for textureName, _ in pairs(self.db.hiddenTextures) do
+        local region = self:GetRegionByName(textureName)
+        if region then
+            pcall(function() region:Hide(); region:SetAlpha(0) end)
+            self:HookTexture(region, textureName)
+        else
+            table.insert(failed, textureName)
+        end
+    end
+
+    -- Retry failed textures after a short delay
+    if #failed > 0 then
+        C_Timer.After(2.0, function()
+            for _, textureName in ipairs(failed) do
+                local region = HA:GetRegionByName(textureName)
+                if region then
+                    pcall(function() region:Hide(); region:SetAlpha(0) end)
+                    HA:HookTexture(region, textureName)
+                end
+            end
+        end)
+    end
 end
