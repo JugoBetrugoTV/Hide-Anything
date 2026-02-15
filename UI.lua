@@ -718,136 +718,6 @@ local function CreateSettingsBlock(parent)
         function() return HA:GetSetting("fadeEnabled") end,
         function() HA:SetSetting("fadeEnabled", not HA:GetSetting("fadeEnabled")) end)
 
-    -- Language selector row
-    do
-        local rowHeight = 38
-        local langRow = CreateFrame("Frame", nil, block)
-        langRow:SetSize(block:GetWidth() - 20, rowHeight)
-        langRow:SetPoint("TOPLEFT", block, "TOPLEFT", 10, y)
-
-        local langLabel = langRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        langLabel:SetPoint("TOPLEFT", langRow, "TOPLEFT", 6, -4)
-        langLabel:SetText(L["CFG_LANGUAGE"] or "Language")
-        langLabel:SetTextColor(0.9, 0.9, 0.92)
-
-        local langDesc = langRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        langDesc:SetPoint("TOPLEFT", langLabel, "BOTTOMLEFT", 0, -2)
-        langDesc:SetText("|cff555560" .. (L["CFG_LANGUAGE_TT"] or "Select addon display language.") .. "|r")
-        langDesc:SetWidth(langRow:GetWidth() - 120)
-        langDesc:SetJustifyH("LEFT")
-
-        -- Language button
-        local langBtn = CreateFrame("Button", nil, langRow, "BackdropTemplate")
-        langBtn:SetSize(100, TOGGLE_H)
-        langBtn:SetPoint("RIGHT", langRow, "RIGHT", -6, 0)
-        langBtn:SetBackdrop(BD_TOGGLE)
-        langBtn:SetBackdropColor(0.12, 0.12, 0.14, 1)
-        langBtn:SetBackdropBorderColor(0.3, 0.3, 0.33, 1)
-
-        local langBtnText = langBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        langBtnText:SetPoint("CENTER")
-
-        local currentLang = HA:GetSetting("language") or "auto"
-        local displayName = (HA.LANGUAGE_NAMES and HA.LANGUAGE_NAMES[currentLang]) or currentLang
-        if currentLang == "auto" then
-            local clientLang = GetLocale()
-            if clientLang == "esMX" then clientLang = "esES" end
-            local clientName = (HA.LANGUAGE_NAMES and HA.LANGUAGE_NAMES[clientLang]) or clientLang
-            displayName = "Auto (" .. clientName .. ")"
-        end
-        langBtnText:SetText("|cff00c761" .. displayName .. "|r")
-
-        -- Language popup
-        langBtn:SetScript("OnClick", function(self)
-            -- Create or toggle popup
-            if self._popup and self._popup:IsShown() then
-                self._popup:Hide()
-                return
-            end
-
-            if not self._popup then
-                local popup = CreateFrame("Frame", nil, self, "BackdropTemplate")
-                popup:SetFrameStrata("FULLSCREEN_DIALOG")
-                popup:SetFrameLevel(300)
-                popup:SetBackdrop(BD_POPUP)
-                popup:SetBackdropColor(0.08, 0.08, 0.10, 0.97)
-                popup:SetBackdropBorderColor(0.25, 0.25, 0.28, 1)
-
-                local popStripe = popup:CreateTexture(nil, "OVERLAY")
-                popStripe:SetHeight(2)
-                popStripe:SetPoint("TOPLEFT", popup, "TOPLEFT", 4, -4)
-                popStripe:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -4, -4)
-                popStripe:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 0.7)
-
-                local order = HA.LANGUAGE_ORDER or { "auto", "enUS", "deDE", "frFR", "esES", "ruRU", "itIT" }
-                local btnH = 22
-                local popH = #order * (btnH + 2) + 12
-                popup:SetSize(140, popH)
-                popup:SetPoint("TOP", self, "BOTTOM", 0, -4)
-
-                for i, langCode in ipairs(order) do
-                    local lBtn = CreateFrame("Button", nil, popup)
-                    lBtn:SetSize(130, btnH)
-                    lBtn:SetPoint("TOP", popup, "TOP", 0, -6 - (i-1) * (btnH + 2))
-
-                    local lBg = lBtn:CreateTexture(nil, "BACKGROUND")
-                    lBg:SetAllPoints()
-                    lBg:SetTexture("Interface\\Buttons\\WHITE8X8")
-                    lBg:SetVertexColor(0.12, 0.12, 0.14, 0)
-
-                    local lText = lBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-                    lText:SetPoint("CENTER")
-                    local name = (HA.LANGUAGE_NAMES and HA.LANGUAGE_NAMES[langCode]) or langCode
-                    if langCode == "auto" then
-                        local cl = GetLocale()
-                        if cl == "esMX" then cl = "esES" end
-                        name = "Auto (" .. ((HA.LANGUAGE_NAMES and HA.LANGUAGE_NAMES[cl]) or cl) .. ")"
-                    end
-                    lText:SetText("|cffcccccc" .. name .. "|r")
-
-                    lBtn:SetScript("OnEnter", function()
-                        lBg:SetVertexColor(ACCENT_R, ACCENT_G, ACCENT_B, 0.15)
-                    end)
-                    lBtn:SetScript("OnLeave", function()
-                        lBg:SetVertexColor(0.12, 0.12, 0.14, 0)
-                    end)
-                    lBtn:SetScript("OnClick", function()
-                        HA:SetSetting("language", langCode)
-                        if HA.ApplyLanguage then
-                            HA:ApplyLanguage(langCode)
-                        end
-                        popup:Hide()
-                        -- Rebuild the panel to reflect new language
-                        if panel.initialized then
-                            panel.initialized = false
-                            panel:Hide()
-                            HA:ToggleOptionsPanel()
-                        end
-                    end)
-                end
-                self._popup = popup
-            end
-            self._popup:Show()
-        end)
-
-        langBtn:SetScript("OnEnter", function(self)
-            self:SetBackdropColor(ACCENT_DIM_R, ACCENT_DIM_G, ACCENT_DIM_B, 0.4)
-            self:SetBackdropBorderColor(ACCENT_R, ACCENT_G, ACCENT_B, 0.6)
-        end)
-        langBtn:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(0.12, 0.12, 0.14, 1)
-            self:SetBackdropBorderColor(0.3, 0.3, 0.33, 1)
-        end)
-
-        local sep = langRow:CreateTexture(nil, "ARTWORK")
-        sep:SetHeight(1)
-        sep:SetPoint("BOTTOMLEFT", langRow, "BOTTOMLEFT", 0, 0)
-        sep:SetPoint("BOTTOMRIGHT", langRow, "BOTTOMRIGHT", 0, 0)
-        sep:SetColorTexture(0.18, 0.18, 0.20, 0.5)
-
-        y = y - rowHeight
-    end
-
     -- Search bar with styled background
     y = y - 6
     local searchBg = CreateFrame("Frame", nil, block, "BackdropTemplate")
@@ -1767,6 +1637,21 @@ local function BuildAboutTab(parent)
     edValue:SetText("|cff" .. edColor .. edName .. "|r")
 
     y = y - 100
+
+    -----------------------------------------------------------------------
+    -- Card: Social / Community
+    -----------------------------------------------------------------------
+    local socialCard = MakeCard(y, 56)
+
+    local twitchLabel = socialCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    twitchLabel:SetPoint("TOPLEFT", socialCard, "TOPLEFT", 14, -14)
+    twitchLabel:SetText("|cff9146ffTwitch|r  |cffcccccctwitch.tv/JugoBetrugoTV|r")
+
+    local discordLabel = socialCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    discordLabel:SetPoint("TOPLEFT", socialCard, "TOPLEFT", 14, -34)
+    discordLabel:SetText("|cff5865f2Discord|r  |cfffcccccdiscord.gg/jugobetrugo|r")
+
+    y = y - 64
 
     -----------------------------------------------------------------------
     -- Card 2: Quick Stats
