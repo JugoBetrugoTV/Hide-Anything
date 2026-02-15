@@ -713,6 +713,10 @@ local function CreateSettingsBlock(parent)
         function() return HA:GetSetting("chatEnabled") end,
         function() HA:SetSetting("chatEnabled", not HA:GetSetting("chatEnabled")) end)
 
+    y = MakeSettingsToggle(y, L["CFG_FADE_ANIM"], L["CFG_FADE_ANIM_TT"],
+        function() return HA:GetSetting("fadeEnabled") end,
+        function() HA:SetSetting("fadeEnabled", not HA:GetSetting("fadeEnabled")) end)
+
     -- Search bar with styled background
     y = y - 6
     local searchBg = CreateFrame("Frame", nil, block, "BackdropTemplate")

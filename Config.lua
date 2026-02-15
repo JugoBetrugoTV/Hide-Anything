@@ -86,6 +86,7 @@ HA.DEFAULTS = {
         showMinimap      = true,
         chatEnabled      = true,
         highlightEnabled = true,
+        fadeEnabled      = false,
     },
 
     profiles = {},
@@ -138,6 +139,7 @@ HA.FRAME_CATALOG = {
     { name = "CompactRaidFrameManager",   label = "Raid Frame Manager",         labelDE = "Raid-Frame Manager",         ed = MOP_UP },
     { name = "BossTargetFrameContainer",  label = "Boss Frames",                labelDE = "Boss-Frames",                ed = MOP_UP },
     { name = "ArenaEnemyFramesContainer", label = "Arena Enemy Frames",         labelDE = "Arena-Gegner-Frames",        ed = TBC_UP },
+    { name = "RuneFrame",                label = "Death Knight Runes",         labelDE = "Todesritter-Runen" },
 
     ---------------------------------------------------------------------------
     -- Action Bars
@@ -156,6 +158,7 @@ HA.FRAME_CATALOG = {
     { name = "ExtraAbilityContainer",    label = "Extra Action Button",       labelDE = "Extra-Aktionsknopf" },
     { name = "EncounterBar",             label = "Encounter Bar",             labelDE = "Begegnungsleiste",            ed = R },
     { name = "OverrideActionBar",        label = "Override / Vehicle Bar",    labelDE = "Override-/Fahrzeugleiste",    ed = MOP_UP },
+    { name = "PossessActionBar",         label = "Possess Bar",               labelDE = "Besitz-Leiste" },
 
     ---------------------------------------------------------------------------
     -- Bars & Menus
@@ -181,6 +184,9 @@ HA.FRAME_CATALOG = {
     { name = "ChatFrameMenuButton",      label = "Chat Menu Button",          labelDE = "Chat-Menü-Button" },
     { name = "QuickJoinToastButton",     label = "Quick Join Button",         labelDE = "Schnellbeitritt-Button" },
     { name = "CombatLogQuickButtonFrame",label = "Combat Log Buttons",        labelDE = "Kampflog-Buttons" },
+    { name = "ChatFrame3",               label = "Chat Window 3",             labelDE = "Chat-Fenster 3" },
+    { name = "ChatFrame4",               label = "Chat Window 4",             labelDE = "Chat-Fenster 4" },
+    { name = "VoiceChatHeadsetButton",   label = "Voice Chat Button",         labelDE = "Sprachchat-Button",           ed = R },
     { cvar = "chatBubbles",              label = "Chat Bubbles",              labelDE = "Chat-Blasen" },
     { cvar = "chatBubblesParty",         label = "Party Chat Bubbles",        labelDE = "Gruppen-Chat-Blasen" },
 
@@ -221,6 +227,8 @@ HA.FRAME_CATALOG = {
     { cvar = "nameplateShowFriendlyNPCs",     label = "Friendly NPC Nameplates",     labelDE = "Freundliche NPC-Namensplaketten" },
     { cvar = "nameplateShowEnemyMinions",     label = "Enemy Pet Nameplates",        labelDE = "Gegner-Pet-Namensplaketten" },
     { cvar = "nameplateShowEnemyMinus",       label = "Trivial Enemy Nameplates",    labelDE = "Triviale Gegner-Namensplaketten" },
+    { cvar = "ShowClassColorInNameplate",          label = "Enemy Class Colors (Plates)", labelDE = "Gegner-Klassenfarben (Plaketten)" },
+    { cvar = "ShowClassColorInFriendlyNameplate",  label = "Friendly Class Colors (Plates)", labelDE = "Freundl. Klassenfarben (Plaketten)" },
 
     ---------------------------------------------------------------------------
     -- Names & Titles (CVar-based)
@@ -294,6 +302,8 @@ HA.FRAME_CATALOG = {
     { name = "MiniMapInstanceDifficulty", label = "Instance Difficulty",      labelDE = "Instanz-Schwierigkeit" },
     { name = "MiniMapTracking",          label = "Tracking Button",           labelDE = "Tracking-Button" },
     { name = "ObjectiveTrackerFrame",    label = "Quest / Objective Tracker", labelDE = "Quest-Tracker" },
+    { name = "MinimapZoneTextButton",    label = "Zone Name (Minimap)",       labelDE = "Zonenname (Minimap)" },
+    { name = "AddonCompartmentFrame",    label = "Addon Compartment",         labelDE = "Addon-Fach",                  ed = R },
 
     ---------------------------------------------------------------------------
     -- Alerts & Notifications
@@ -312,6 +322,8 @@ HA.FRAME_CATALOG = {
     { name = "MirrorTimerContainer",     label = "Breath / Fatigue Timer",    labelDE = "Atem-/Ermüdungs-Timer" },
     { name = "UIErrorsFrame",            label = "Error Text (red)",          labelDE = "Fehlertext (rot)" },
     { name = "RaidWarningFrame",         label = "Raid Warning Text",         labelDE = "Raid-Warnungstext" },
+    { name = "RaidBossEmoteFrame",       label = "Boss Emote Text",           labelDE = "Boss-Emote-Text" },
+    { name = "LevelUpDisplay",           label = "Level Up Animation",        labelDE = "Level-Up-Animation",          ed = R },
 
     ---------------------------------------------------------------------------
     -- Widgets & Misc
@@ -326,12 +338,23 @@ HA.FRAME_CATALOG = {
     { name = "OrderHallCommandBar",      label = "Order Hall Bar",            labelDE = "Ordenshallen-Leiste",          ed = R },
     { name = "UIWidgetCenterScreenContainerFrame", label = "Center Screen Widgets", labelDE = "Bildschirmmitte-Widgets", ed = R },
     { name = "ExpansionLandingPageMinimapButton",  label = "Expansion Landing Button", labelDE = "Erweiterungs-Landungstaste", ed = R },
+    { name = "TicketStatusFrame",        label = "GM Ticket Status",          labelDE = "GM-Ticket-Status" },
+    { name = "StreamingIcon",            label = "Streaming Indicator",       labelDE = "Streaming-Anzeige",           ed = R },
+    { name = "MainStatusTrackingBarContainer", label = "Status Bar Container", labelDE = "Statusleisten-Container",    ed = R },
+
+    ---------------------------------------------------------------------------
+    -- PvP
+    ---------------------------------------------------------------------------
+    { section = true, label = "PvP",                   labelDE = "PvP" },
+    { name = "PVPReadyDialog",           label = "PvP Ready Popup",           labelDE = "PvP-Bereit-Popup" },
+    { name = "BattlefieldMapFrame",      label = "Battleground Map",          labelDE = "Schlachtfeldkarte" },
 
     ---------------------------------------------------------------------------
     -- Tutorials (CVar-based)
     ---------------------------------------------------------------------------
     { section = true, label = "Tutorials",              labelDE = "Tutorials" },
     { cvar = "showTutorials",            label = "Tutorial Popups",           labelDE = "Tutorial-Popups" },
+    { cvar = "showGameTips",             label = "Loading Screen Tips",       labelDE = "Ladebildschirm-Tipps" },
 
     ---------------------------------------------------------------------------
     -- HUD Options (CVar-based)

@@ -100,6 +100,93 @@ function HA:OnInitialize()
 end
 
 ---------------------------------------------------------------------------
+-- Fade animation system
+---------------------------------------------------------------------------
+HA.FADE_DURATION = 0.3
+HA._activeFades = {}
+
+local fadeFrame = CreateFrame("Frame")
+
+local function RunFadeEngine()
+    fadeFrame:SetScript("OnUpdate", function(_, dt)
+        local anyActive = false
+        for frameName, data in pairs(HA._activeFades) do
+            anyActive = true
+            data.elapsed = data.elapsed + dt
+            local progress = data.elapsed / data.duration
+            if progress >= 1 then
+                pcall(function() data.frame:SetAlpha(data.endAlpha) end)
+                HA._activeFades[frameName] = nil
+                if data.onFinish then data.onFinish() end
+            else
+                local alpha = data.startAlpha + (data.endAlpha - data.startAlpha) * progress
+                pcall(function() data.frame:SetAlpha(alpha) end)
+            end
+        end
+        if not anyActive then
+            fadeFrame:SetScript("OnUpdate", nil)
+        end
+    end)
+end
+
+function HA:CancelFade(frameName)
+    self._activeFades[frameName] = nil
+end
+
+function HA:IsFading(frameName)
+    return self._activeFades[frameName] ~= nil
+end
+
+function HA:FadeOutAndHide(frame, frameName)
+    self:CancelFade(frameName)
+
+    local startAlpha = frame:GetAlpha()
+    if startAlpha <= 0 then
+        self:SecureHideFrame(frame, frameName)
+        self.db.hiddenFrames[frameName] = true
+        if self.RefreshFrameList then self:RefreshFrameList() end
+        return
+    end
+
+    self._activeFades[frameName] = {
+        frame      = frame,
+        startAlpha = startAlpha,
+        endAlpha   = 0,
+        elapsed    = 0,
+        duration   = self.FADE_DURATION,
+        onFinish   = function()
+            HA:SecureHideFrame(frame, frameName)
+            HA.db.hiddenFrames[frameName] = true
+            if HA.RefreshFrameList then HA:RefreshFrameList() end
+        end,
+    }
+    RunFadeEngine()
+end
+
+function HA:FadeInAndShow(frame, frameName)
+    self:CancelFade(frameName)
+
+    local targetAlpha = self:GetFrameAlpha(frameName)
+
+    pcall(function()
+        frame:SetAlpha(0)
+        frame:Show()
+    end)
+
+    self._activeFades[frameName] = {
+        frame      = frame,
+        startAlpha = 0,
+        endAlpha   = targetAlpha,
+        elapsed    = 0,
+        duration   = self.FADE_DURATION,
+        onFinish   = function()
+            pcall(function() frame:SetAlpha(targetAlpha) end)
+        end,
+    }
+    RunFadeEngine()
+end
+
+---------------------------------------------------------------------------
 -- Get a frame object from its name string
 ---------------------------------------------------------------------------
 function HA:GetFrameByName(name)
@@ -188,6 +275,12 @@ function HA:HideFrame(frameName)
     end
 
     -- Hide it
+    if self:GetSetting("fadeEnabled") then
+        self:FeedbackHide(frameName)
+        self:FadeOutAndHide(frame, frameName)
+        return true
+    end
+
     local success = self:SecureHideFrame(frame, frameName)
     if success then
         self.db.hiddenFrames[frameName] = true
@@ -230,13 +323,20 @@ function HA:ShowFrame(frameName)
         return false
     end
 
+    -- Cancel any active fade-out for this frame
+    self:CancelFade(frameName)
+
     -- Remove from DB FIRST (before showing, so the re-hide hook doesn't trigger)
     self.db.hiddenFrames[frameName] = nil
 
     -- Find the frame and show it
     local frame = self:GetFrameByName(frameName)
     if frame then
-        self:SecureShowFrame(frame, frameName)
+        if self:GetSetting("fadeEnabled") then
+            self:FadeInAndShow(frame, frameName)
+        else
+            self:SecureShowFrame(frame, frameName)
+        end
     end
 
     self:FeedbackShow(frameName)
@@ -433,6 +533,7 @@ function HA:SecureHideFrame(frame, frameName)
     if not self.hookedFrames[frameName] then
         local hookSuccess = pcall(function()
             hooksecurefunc(frame, "Show", function(f)
+                if HA:IsFading(frameName) then return end
                 if HA.db and HA.db.hiddenFrames and HA.db.hiddenFrames[frameName] then
                     if not InCombatLockdown() then
                         f:Hide()
@@ -441,6 +542,7 @@ function HA:SecureHideFrame(frame, frameName)
                 end
             end)
             hooksecurefunc(frame, "SetShown", function(f, shown)
+                if HA:IsFading(frameName) then return end
                 if shown and HA.db and HA.db.hiddenFrames and HA.db.hiddenFrames[frameName] then
                     if not InCombatLockdown() then
                         f:Hide()
@@ -450,6 +552,7 @@ function HA:SecureHideFrame(frame, frameName)
             end)
             -- Hook SetAlpha so Blizzard's layout system can't reset opacity
             hooksecurefunc(frame, "SetAlpha", function(f, alpha)
+                if HA:IsFading(frameName) then return end
                 if alpha and alpha > 0 and HA.db and HA.db.hiddenFrames and HA.db.hiddenFrames[frameName] then
                     if not InCombatLockdown() then
                         f:SetAlpha(0)
