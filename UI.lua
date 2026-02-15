@@ -1051,19 +1051,19 @@ function HA:RefreshFrameList()
                     row._eyeBtn:Hide()
                 end
 
-                -- Alpha button
+                -- Alpha / Opacity button
                 local alphaPct = math.floor(frameAlpha * 100 + 0.5)
                 row._alphaBtn:Show()
                 row._showBtn:Hide()
 
                 if alphaPct < 100 then
-                    row._alphaBtn:SetBackdropColor(0.12, 0.28, 0.45, 0.8)
-                    row._alphaBtn:SetBackdropBorderColor(0.2, 0.4, 0.65, 0.8)
-                    row._alphaBtn._text:SetText("|cff6699cc" .. alphaPct .. "%%|r")
+                    row._alphaBtn:SetBackdropColor(0.12, 0.28, 0.45, 0.9)
+                    row._alphaBtn:SetBackdropBorderColor(0.2, 0.5, 0.75, 0.9)
+                    row._alphaBtn._text:SetText("|cff88bbee" .. alphaPct .. "%%|r")
                 else
-                    row._alphaBtn:SetBackdropColor(0.10, 0.10, 0.12, 0.5)
-                    row._alphaBtn:SetBackdropBorderColor(0.22, 0.22, 0.25, 0.5)
-                    row._alphaBtn._text:SetText("|cff555560" .. alphaPct .. "%%|r")
+                    row._alphaBtn:SetBackdropColor(0.14, 0.14, 0.16, 0.8)
+                    row._alphaBtn:SetBackdropBorderColor(0.30, 0.30, 0.34, 0.8)
+                    row._alphaBtn._text:SetText("|cff999999" .. alphaPct .. "%%|r")
                 end
 
                 if frameExists then
@@ -1071,12 +1071,23 @@ function HA:RefreshFrameList()
                         HA:ShowAlphaPopup(frameName, self)
                     end)
                     row._alphaBtn:SetScript("OnEnter", function(self)
+                        self:SetBackdropColor(ACCENT_DIM_R, ACCENT_DIM_G, ACCENT_DIM_B, 0.5)
+                        self:SetBackdropBorderColor(ACCENT_R, ACCENT_G, ACCENT_B, 0.7)
                         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                         GameTooltip:AddLine(L["ALPHA_TITLE"], ACCENT_R, ACCENT_G, ACCENT_B)
                         GameTooltip:AddLine(L["ALPHA_TOOLTIP"], 1, 1, 1, true)
                         GameTooltip:Show()
                     end)
-                    row._alphaBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+                    row._alphaBtn:SetScript("OnLeave", function(self)
+                        if alphaPct < 100 then
+                            self:SetBackdropColor(0.12, 0.28, 0.45, 0.9)
+                            self:SetBackdropBorderColor(0.2, 0.5, 0.75, 0.9)
+                        else
+                            self:SetBackdropColor(0.14, 0.14, 0.16, 0.8)
+                            self:SetBackdropBorderColor(0.30, 0.30, 0.34, 0.8)
+                        end
+                        GameTooltip:Hide()
+                    end)
                 else
                     row._alphaBtn:SetScript("OnClick", nil)
                     row._alphaBtn:SetScript("OnEnter", nil)
@@ -1101,8 +1112,9 @@ function HA:RefreshFrameList()
                     row._toggleBg._knob:SetPoint("LEFT", row._toggleBg, "LEFT", 3, 0)
                     row._toggleBg._knob:SetColorTexture(0.35, 0.35, 0.38, 0.5)
                     row._toggleBg:SetScript("OnClick", nil)
-                    row._alphaBtn:SetBackdropColor(0.08, 0.08, 0.10, 0.3)
-                    row._alphaBtn:SetBackdropBorderColor(0.15, 0.15, 0.18, 0.3)
+                    row._alphaBtn:SetBackdropColor(0.10, 0.10, 0.12, 0.4)
+                    row._alphaBtn:SetBackdropBorderColor(0.20, 0.20, 0.23, 0.4)
+                    row._alphaBtn._text:SetText("|cff666666" .. alphaPct .. "%%|r")
                 end
 
                 -- Row tooltip with hover
@@ -1649,7 +1661,7 @@ local function BuildAboutTab(parent)
 
     local discordLabel = socialCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     discordLabel:SetPoint("TOPLEFT", socialCard, "TOPLEFT", 14, -34)
-    discordLabel:SetText("|cff5865f2Discord|r  |cfffcccccdiscord.gg/jugobetrugo|r")
+    discordLabel:SetText("|cff5865f2Discord|r  |cffccccccdiscord.gg/rv2BsbE|r")
 
     y = y - 64
 
