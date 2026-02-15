@@ -131,15 +131,15 @@ HA.FRAME_CATALOG = {
     { name = "PlayerFrame",               label = "Player Frame",               labelDE = "Spieler-Frame" },
     { name = "TargetFrame",               label = "Target Frame",               labelDE = "Ziel-Frame" },
     { name = "TargetFrameToT",            label = "Target of Target",           labelDE = "Ziel des Ziels" },
-    { name = "FocusFrame",                label = "Focus Frame",                labelDE = "Fokus-Frame",                ed = TBC_UP },
-    { name = "FocusFrameToT",             label = "Focus Target of Target",     labelDE = "Fokusziel des Ziels",        ed = TBC_UP },
+    { name = "FocusFrame",                label = "Focus Frame",                labelDE = "Fokus-Frame" },
+    { name = "FocusFrameToT",             label = "Focus Target of Target",     labelDE = "Fokusziel des Ziels" },
     { name = "PetFrame",                  label = "Pet Frame",                  labelDE = "Begleiter-Frame" },
     { name = "PartyFrame",                label = "Party Frames",               labelDE = "Gruppen-Frames" },
     { name = "CompactRaidFrameContainer", label = "Raid Frames",                labelDE = "Raid-Frames",                ed = MOP_UP },
     { name = "CompactRaidFrameManager",   label = "Raid Frame Manager",         labelDE = "Raid-Frame Manager",         ed = MOP_UP },
     { name = "BossTargetFrameContainer",  label = "Boss Frames",                labelDE = "Boss-Frames",                ed = MOP_UP },
     { name = "ArenaEnemyFramesContainer", label = "Arena Enemy Frames",         labelDE = "Arena-Gegner-Frames",        ed = TBC_UP },
-    { name = "RuneFrame",                label = "Death Knight Runes",         labelDE = "Todesritter-Runen" },
+    { name = "RuneFrame",                 label = "Death Knight Runes",         labelDE = "Todesritter-Runen",          ed = MOP_UP },
 
     ---------------------------------------------------------------------------
     -- Action Bars
@@ -155,7 +155,7 @@ HA.FRAME_CATALOG = {
     { name = "MultiBar7",               label = "Action Bar 7",              labelDE = "Aktionsleiste 7",             ed = R },
     { name = "StanceBar",                label = "Stance / Form Bar",         labelDE = "Haltungsleiste" },
     { name = "PetActionBar",             label = "Pet Action Bar",            labelDE = "Begleiter-Aktionsleiste" },
-    { name = "ExtraAbilityContainer",    label = "Extra Action Button",       labelDE = "Extra-Aktionsknopf" },
+    { name = "ExtraAbilityContainer",    label = "Extra Action Button",       labelDE = "Extra-Aktionsknopf",          ed = MOP_UP },
     { name = "EncounterBar",             label = "Encounter Bar",             labelDE = "Begegnungsleiste",            ed = R },
     { name = "OverrideActionBar",        label = "Override / Vehicle Bar",    labelDE = "Override-/Fahrzeugleiste",    ed = MOP_UP },
     { name = "PossessActionBar",         label = "Possess Bar",               labelDE = "Besitz-Leiste" },
@@ -172,6 +172,7 @@ HA.FRAME_CATALOG = {
     { name = "MainMenuBarBackpackButton",label = "Backpack Button",           labelDE = "Rucksack-Button",             ed = CL },
     { name = "StatusTrackingBarManager", label = "XP / Rep Bar",              labelDE = "EP / Ruf-Leiste" },
     { name = "PlayerCastingBarFrame",    label = "Cast Bar",                  labelDE = "Zauberleiste" },
+    { name = "CastingBarFrame",          label = "Cast Bar (Classic)",        labelDE = "Zauberleiste (Classic)",      ed = CL },
     { name = "EditModeManagerFrame",     label = "Edit Mode Bar",             labelDE = "Bearbeitungsmodus-Leiste",    ed = R },
 
     ---------------------------------------------------------------------------
@@ -180,12 +181,15 @@ HA.FRAME_CATALOG = {
     { section = true, label = "Chat",                   labelDE = "Chat" },
     { name = "ChatFrame1",               label = "Chat Window (Main)",        labelDE = "Chat-Fenster (Haupt)" },
     { name = "ChatFrame2",               label = "Chat Window 2 (Combat Log)",labelDE = "Chat-Fenster 2 (Kampflog)" },
-    { name = "GeneralDockManager",       label = "Chat Tab Bar",              labelDE = "Chat-Tab-Leiste" },
-    { name = "ChatFrameMenuButton",      label = "Chat Menu Button",          labelDE = "Chat-Menü-Button" },
-    { name = "QuickJoinToastButton",     label = "Quick Join Button",         labelDE = "Schnellbeitritt-Button" },
-    { name = "CombatLogQuickButtonFrame",label = "Combat Log Buttons",        labelDE = "Kampflog-Buttons" },
     { name = "ChatFrame3",               label = "Chat Window 3",             labelDE = "Chat-Fenster 3" },
     { name = "ChatFrame4",               label = "Chat Window 4",             labelDE = "Chat-Fenster 4" },
+    { name = "ChatFrame5",               label = "Chat Window 5",             labelDE = "Chat-Fenster 5" },
+    { name = "ChatFrame6",               label = "Chat Window 6",             labelDE = "Chat-Fenster 6" },
+    { name = "ChatFrame7",               label = "Chat Window 7",             labelDE = "Chat-Fenster 7" },
+    { name = "GeneralDockManager",       label = "Chat Tab Bar",              labelDE = "Chat-Tab-Leiste" },
+    { name = "ChatFrameMenuButton",      label = "Chat Menu Button",          labelDE = "Chat-Menü-Button" },
+    { name = "QuickJoinToastButton",     label = "Quick Join Button",         labelDE = "Schnellbeitritt-Button",      ed = R },
+    { name = "CombatLogQuickButtonFrame",label = "Combat Log Buttons",        labelDE = "Kampflog-Buttons" },
     { name = "VoiceChatHeadsetButton",   label = "Voice Chat Button",         labelDE = "Sprachchat-Button",           ed = R },
     { cvar = "chatBubbles",              label = "Chat Bubbles",              labelDE = "Chat-Blasen" },
     { cvar = "chatBubblesParty",         label = "Party Chat Bubbles",        labelDE = "Gruppen-Chat-Blasen" },
@@ -227,6 +231,9 @@ HA.FRAME_CATALOG = {
     { cvar = "nameplateShowFriendlyNPCs",     label = "Friendly NPC Nameplates",     labelDE = "Freundliche NPC-Namensplaketten" },
     { cvar = "nameplateShowEnemyMinions",     label = "Enemy Pet Nameplates",        labelDE = "Gegner-Pet-Namensplaketten" },
     { cvar = "nameplateShowEnemyMinus",       label = "Trivial Enemy Nameplates",    labelDE = "Triviale Gegner-Namensplaketten" },
+    { cvar = "nameplateShowFriendlyGuardians",label = "Friendly Guardian Nameplates",labelDE = "Freundl. Wächter-Namensplaketten" },
+    { cvar = "nameplateShowFriendlyMinions",  label = "Friendly Pet Nameplates",     labelDE = "Freundl. Begleiter-Namensplaketten" },
+    { cvar = "nameplateShowFriendlyTotems",   label = "Friendly Totem Nameplates",   labelDE = "Freundl. Totem-Namensplaketten" },
     { cvar = "ShowClassColorInNameplate",          label = "Enemy Class Colors (Plates)", labelDE = "Gegner-Klassenfarben (Plaketten)" },
     { cvar = "ShowClassColorInFriendlyNameplate",  label = "Friendly Class Colors (Plates)", labelDE = "Freundl. Klassenfarben (Plaketten)" },
 
@@ -237,11 +244,17 @@ HA.FRAME_CATALOG = {
     { cvar = "UnitNameOwn",                   label = "Own Name",                    labelDE = "Eigener Name" },
     { cvar = "UnitNameNPC",                   label = "NPC Names",                   labelDE = "NPC-Namen" },
     { cvar = "UnitNamePlayerGuild",           label = "Guild Names",                 labelDE = "Gildennamen" },
+    { cvar = "UnitNameGuildTitle",            label = "Guild Titles",                labelDE = "Gildentitel" },
     { cvar = "UnitNamePlayerPVPTitle",        label = "PvP Titles",                  labelDE = "PvP-Titel" },
     { cvar = "UnitNameFriendlyPlayerName",    label = "Friendly Player Names",       labelDE = "Freundliche Spielernamen" },
     { cvar = "UnitNameFriendlyPetName",       label = "Friendly Pet Names",          labelDE = "Freundliche Begleiternamen" },
+    { cvar = "UnitNameFriendlyMinionName",    label = "Friendly Minion Names",       labelDE = "Freundl. Dienernamen" },
+    { cvar = "UnitNameFriendlyGuardianName",  label = "Friendly Guardian Names",     labelDE = "Freundl. Wächternamen" },
+    { cvar = "UnitNameFriendlyTotemName",     label = "Friendly Totem Names",        labelDE = "Freundl. Totemnamen" },
     { cvar = "UnitNameEnemyPlayerName",       label = "Enemy Player Names",          labelDE = "Feindliche Spielernamen" },
     { cvar = "UnitNameEnemyPetName",          label = "Enemy Pet Names",             labelDE = "Feindliche Begleiternamen" },
+    { cvar = "UnitNameEnemyMinionName",       label = "Enemy Minion Names",          labelDE = "Feindl. Dienernamen" },
+    { cvar = "UnitNameEnemyGuardianName",     label = "Enemy Guardian Names",        labelDE = "Feindl. Wächternamen" },
     { cvar = "UnitNameNonCombatCreatureName", label = "Critter Names",               labelDE = "Tierchennamen" },
 
     ---------------------------------------------------------------------------
@@ -254,6 +267,7 @@ HA.FRAME_CATALOG = {
     { cvar = "Sound_EnableSFX",           label = "Sound Effects",             labelDE = "Sound-Effekte" },
     { cvar = "Sound_EnableAmbience",      label = "Ambience",                  labelDE = "Umgebungsgeräusche" },
     { cvar = "Sound_EnableDialog",        label = "NPC Dialog Voice",          labelDE = "NPC-Dialog-Stimmen" },
+    { cvar = "Sound_EnableEmoteSounds",   label = "Emote Sounds",              labelDE = "Emote-Sounds" },
 
     ---------------------------------------------------------------------------
     -- Gameplay Options (CVar-based)
@@ -269,6 +283,9 @@ HA.FRAME_CATALOG = {
     { cvar = "lockActionBars",                label = "Lock Action Bars",            labelDE = "Aktionsleisten sperren" },
     { cvar = "alwaysShowActionBars",          label = "Always Show Action Bars",     labelDE = "Aktionsleisten immer anzeigen" },
     { cvar = "countdownForCooldowns",         label = "Cooldown Numbers",            labelDE = "Abklingzeit-Zahlen" },
+    { cvar = "ActionButtonUseKeyDown",        label = "Cast on Key Down",            labelDE = "Zauber bei Tastendruck" },
+    { cvar = "autoQuestWatch",                label = "Auto Quest Watch",            labelDE = "Automatische Quest-Verfolgung" },
+    { cvar = "autoQuestProgress",             label = "Auto Quest Progress",         labelDE = "Automatischer Quest-Fortschritt" },
     { cvar = "interactOnLeftClick",           label = "Interact on Left-Click",      labelDE = "Interaktion bei Linksklick",  ed = R },
 
     ---------------------------------------------------------------------------
@@ -290,6 +307,10 @@ HA.FRAME_CATALOG = {
     { cvar = "guildMemberNotify",             label = "Guild Online Notifications",  labelDE = "Gilden-Online-Meldungen" },
     { cvar = "blockTrades",                   label = "Block Trades",                labelDE = "Handel blockieren" },
     { cvar = "blockChannelInvites",           label = "Block Channel Invites",       labelDE = "Kanaleinladungen blockieren" },
+    { cvar = "showToastOnline",               label = "Friend Online Toast",         labelDE = "Freund-Online-Meldung" },
+    { cvar = "showToastOffline",              label = "Friend Offline Toast",        labelDE = "Freund-Offline-Meldung" },
+    { cvar = "showToastBroadcast",            label = "Broadcast Toast",             labelDE = "Broadcast-Meldung" },
+    { cvar = "showToastFriendRequest",        label = "Friend Request Toast",        labelDE = "Freundschaftsanfrage-Meldung" },
 
     ---------------------------------------------------------------------------
     -- Map & Navigation
@@ -309,14 +330,15 @@ HA.FRAME_CATALOG = {
     -- Alerts & Notifications
     ---------------------------------------------------------------------------
     { section = true, label = "Alerts & Info",          labelDE = "Meldungen & Info" },
-    { name = "BossBanner",               label = "Boss Banner",               labelDE = "Boss-Banner" },
+    { name = "BossBanner",               label = "Boss Banner",               labelDE = "Boss-Banner",                 ed = MOP_UP },
     { name = "AlertFrame",               label = "Achievement Alerts",        labelDE = "Erfolgs-Meldungen" },
-    { name = "TalkingHeadFrame",         label = "Talking Head",              labelDE = "Sprechender Kopf" },
+    { name = "TalkingHeadFrame",         label = "Talking Head",              labelDE = "Sprechender Kopf",            ed = R },
     { name = "ZoneTextFrame",            label = "Zone Text",                 labelDE = "Zonentext" },
     { name = "SubZoneTextFrame",         label = "Sub Zone Text",             labelDE = "Unterzonentext" },
-    { name = "LossOfControlFrame",       label = "Loss of Control",           labelDE = "Kontrollverlust" },
+    { name = "LossOfControlFrame",       label = "Loss of Control",           labelDE = "Kontrollverlust",             ed = MOP_UP },
     { name = "GroupLootContainer",       label = "Loot Rolls",                labelDE = "Beutewürfe" },
-    { name = "SpellActivationOverlayFrame", label = "Spell Proc Overlays",    labelDE = "Zauber-Proc-Overlays" },
+    { name = "BonusRollFrame",           label = "Bonus Roll",                labelDE = "Bonuswurf",                   ed = MOP_UP },
+    { name = "SpellActivationOverlayFrame", label = "Spell Proc Overlays",    labelDE = "Zauber-Proc-Overlays",        ed = MOP_UP },
     { name = "GhostFrame",              label = "Spirit Release",             labelDE = "Geistfreilassung" },
     { name = "TimerTracker",             label = "BG / Arena Timer",          labelDE = "BG-/Arena-Timer" },
     { name = "MirrorTimerContainer",     label = "Breath / Fatigue Timer",    labelDE = "Atem-/Ermüdungs-Timer" },
@@ -331,12 +353,12 @@ HA.FRAME_CATALOG = {
     { section = true, label = "Widgets & Misc",         labelDE = "Widgets & Sonstiges" },
     { name = "UIWidgetTopCenterContainerFrame",    label = "Top Center Widgets",  labelDE = "Obere Widgets",              ed = R },
     { name = "UIWidgetBelowMinimapContainerFrame", label = "Minimap Widgets",     labelDE = "Minimap-Widgets",            ed = R },
+    { name = "UIWidgetCenterScreenContainerFrame", label = "Center Screen Widgets", labelDE = "Bildschirmmitte-Widgets", ed = R },
     { name = "DurabilityFrame",          label = "Durability",                labelDE = "Haltbarkeit" },
-    { name = "VehicleSeatIndicator",     label = "Vehicle Seat",              labelDE = "Fahrzeugsitz" },
+    { name = "VehicleSeatIndicator",     label = "Vehicle Seat",              labelDE = "Fahrzeugsitz",                ed = MOP_UP },
     { name = "QueueStatusButton",        label = "Queue Status Eye",          labelDE = "Warteschlangen-Auge" },
     { name = "PlayerPowerBarAlt",        label = "Alternate Power Bar",       labelDE = "Alternative Energieleiste" },
     { name = "OrderHallCommandBar",      label = "Order Hall Bar",            labelDE = "Ordenshallen-Leiste",          ed = R },
-    { name = "UIWidgetCenterScreenContainerFrame", label = "Center Screen Widgets", labelDE = "Bildschirmmitte-Widgets", ed = R },
     { name = "ExpansionLandingPageMinimapButton",  label = "Expansion Landing Button", labelDE = "Erweiterungs-Landungstaste", ed = R },
     { name = "TicketStatusFrame",        label = "GM Ticket Status",          labelDE = "GM-Ticket-Status" },
     { name = "StreamingIcon",            label = "Streaming Indicator",       labelDE = "Streaming-Anzeige",           ed = R },
@@ -363,7 +385,15 @@ HA.FRAME_CATALOG = {
     { cvar = "showTargetCastbar",        label = "Target Cast Bar",           labelDE = "Ziel-Zauberleiste" },
     { cvar = "showVKeyCastbar",          label = "Focus Cast Bar",            labelDE = "Fokus-Zauberleiste" },
     { cvar = "showTargetOfTarget",       label = "Target of Target",          labelDE = "Ziel des Ziels" },
+    { cvar = "fullSizeFocusFrame",       label = "Full Size Focus Frame",     labelDE = "Fokus-Frame Vollgröße" },
     { cvar = "doNotFlashLowHealthWarning", label = "Low Health Flash",        labelDE = "Warnung: Wenig Leben" },
+
+    ---------------------------------------------------------------------------
+    -- Visual Effects (CVar-based)
+    ---------------------------------------------------------------------------
+    { section = true, label = "Visual Effects",         labelDE = "Visuelle Effekte" },
+    { cvar = "ffxGlow",                  label = "Full Screen Glow",          labelDE = "Vollbild-Leuchten" },
+    { cvar = "ffxDeath",                 label = "Death Effect",              labelDE = "Todeseffekt" },
 
     ---------------------------------------------------------------------------
     -- Accessibility (CVar-based)
