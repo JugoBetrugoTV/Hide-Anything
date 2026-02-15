@@ -102,13 +102,43 @@ end)
 -- Public API
 ---------------------------------------------------------------------------
 function HA:InitFloatingButton()
-    -- Restore saved position
+    -- Restore saved position or center on first start
     if self.db and self.db.floatingButton then
         local pos = self.db.floatingButton
         if pos.point and pos.relPoint and pos.x and pos.y then
             btn:ClearAllPoints()
             btn:SetPoint(pos.point, UIParent, pos.relPoint, pos.x, pos.y)
         end
+    else
+        -- First start: center the button so the user can find it easily
+        btn:ClearAllPoints()
+        btn:SetPoint("CENTER", UIParent, "CENTER", 0, 200)
+        btn:SetSize(48, 48)
+        label:SetFontObject(GameFontNormal)
+        label:SetText("|cff00cc66HA|r")
+
+        -- Pulse animation to draw attention on first start
+        local pulseGroup = btn:CreateAnimationGroup()
+        local pulseOut = pulseGroup:CreateAnimation("Scale")
+        pulseOut:SetScale(1.15, 1.15)
+        pulseOut:SetDuration(0.5)
+        pulseOut:SetOrder(1)
+        pulseOut:SetSmoothing("IN_OUT")
+        local pulseIn = pulseGroup:CreateAnimation("Scale")
+        pulseIn:SetScale(1/1.15, 1/1.15)
+        pulseIn:SetDuration(0.5)
+        pulseIn:SetOrder(2)
+        pulseIn:SetSmoothing("IN_OUT")
+        pulseGroup:SetLooping("REPEAT")
+        pulseGroup:Play()
+
+        -- Stop pulsing after 6 seconds and shrink to normal size
+        C_Timer.After(6, function()
+            pulseGroup:Stop()
+            btn:SetSize(36, 36)
+            label:SetFontObject(GameFontNormalSmall)
+            label:SetText("|cff00cc66HA|r")
+        end)
     end
     btn:Show()
 end

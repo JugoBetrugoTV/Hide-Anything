@@ -718,6 +718,136 @@ local function CreateSettingsBlock(parent)
         function() return HA:GetSetting("fadeEnabled") end,
         function() HA:SetSetting("fadeEnabled", not HA:GetSetting("fadeEnabled")) end)
 
+    -- Language selector row
+    do
+        local rowHeight = 38
+        local langRow = CreateFrame("Frame", nil, block)
+        langRow:SetSize(block:GetWidth() - 20, rowHeight)
+        langRow:SetPoint("TOPLEFT", block, "TOPLEFT", 10, y)
+
+        local langLabel = langRow:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        langLabel:SetPoint("TOPLEFT", langRow, "TOPLEFT", 6, -4)
+        langLabel:SetText(L["CFG_LANGUAGE"] or "Language")
+        langLabel:SetTextColor(0.9, 0.9, 0.92)
+
+        local langDesc = langRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        langDesc:SetPoint("TOPLEFT", langLabel, "BOTTOMLEFT", 0, -2)
+        langDesc:SetText("|cff555560" .. (L["CFG_LANGUAGE_TT"] or "Select addon display language.") .. "|r")
+        langDesc:SetWidth(langRow:GetWidth() - 120)
+        langDesc:SetJustifyH("LEFT")
+
+        -- Language button
+        local langBtn = CreateFrame("Button", nil, langRow, "BackdropTemplate")
+        langBtn:SetSize(100, TOGGLE_H)
+        langBtn:SetPoint("RIGHT", langRow, "RIGHT", -6, 0)
+        langBtn:SetBackdrop(BD_TOGGLE)
+        langBtn:SetBackdropColor(0.12, 0.12, 0.14, 1)
+        langBtn:SetBackdropBorderColor(0.3, 0.3, 0.33, 1)
+
+        local langBtnText = langBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        langBtnText:SetPoint("CENTER")
+
+        local currentLang = HA:GetSetting("language") or "auto"
+        local displayName = (HA.LANGUAGE_NAMES and HA.LANGUAGE_NAMES[currentLang]) or currentLang
+        if currentLang == "auto" then
+            local clientLang = GetLocale()
+            if clientLang == "esMX" then clientLang = "esES" end
+            local clientName = (HA.LANGUAGE_NAMES and HA.LANGUAGE_NAMES[clientLang]) or clientLang
+            displayName = "Auto (" .. clientName .. ")"
+        end
+        langBtnText:SetText("|cff00c761" .. displayName .. "|r")
+
+        -- Language popup
+        langBtn:SetScript("OnClick", function(self)
+            -- Create or toggle popup
+            if self._popup and self._popup:IsShown() then
+                self._popup:Hide()
+                return
+            end
+
+            if not self._popup then
+                local popup = CreateFrame("Frame", nil, self, "BackdropTemplate")
+                popup:SetFrameStrata("FULLSCREEN_DIALOG")
+                popup:SetFrameLevel(300)
+                popup:SetBackdrop(BD_POPUP)
+                popup:SetBackdropColor(0.08, 0.08, 0.10, 0.97)
+                popup:SetBackdropBorderColor(0.25, 0.25, 0.28, 1)
+
+                local popStripe = popup:CreateTexture(nil, "OVERLAY")
+                popStripe:SetHeight(2)
+                popStripe:SetPoint("TOPLEFT", popup, "TOPLEFT", 4, -4)
+                popStripe:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -4, -4)
+                popStripe:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 0.7)
+
+                local order = HA.LANGUAGE_ORDER or { "auto", "enUS", "deDE", "frFR", "esES", "ruRU", "itIT" }
+                local btnH = 22
+                local popH = #order * (btnH + 2) + 12
+                popup:SetSize(140, popH)
+                popup:SetPoint("TOP", self, "BOTTOM", 0, -4)
+
+                for i, langCode in ipairs(order) do
+                    local lBtn = CreateFrame("Button", nil, popup)
+                    lBtn:SetSize(130, btnH)
+                    lBtn:SetPoint("TOP", popup, "TOP", 0, -6 - (i-1) * (btnH + 2))
+
+                    local lBg = lBtn:CreateTexture(nil, "BACKGROUND")
+                    lBg:SetAllPoints()
+                    lBg:SetTexture("Interface\\Buttons\\WHITE8X8")
+                    lBg:SetVertexColor(0.12, 0.12, 0.14, 0)
+
+                    local lText = lBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                    lText:SetPoint("CENTER")
+                    local name = (HA.LANGUAGE_NAMES and HA.LANGUAGE_NAMES[langCode]) or langCode
+                    if langCode == "auto" then
+                        local cl = GetLocale()
+                        if cl == "esMX" then cl = "esES" end
+                        name = "Auto (" .. ((HA.LANGUAGE_NAMES and HA.LANGUAGE_NAMES[cl]) or cl) .. ")"
+                    end
+                    lText:SetText("|cffcccccc" .. name .. "|r")
+
+                    lBtn:SetScript("OnEnter", function()
+                        lBg:SetVertexColor(ACCENT_R, ACCENT_G, ACCENT_B, 0.15)
+                    end)
+                    lBtn:SetScript("OnLeave", function()
+                        lBg:SetVertexColor(0.12, 0.12, 0.14, 0)
+                    end)
+                    lBtn:SetScript("OnClick", function()
+                        HA:SetSetting("language", langCode)
+                        if HA.ApplyLanguage then
+                            HA:ApplyLanguage(langCode)
+                        end
+                        popup:Hide()
+                        -- Rebuild the panel to reflect new language
+                        if panel.initialized then
+                            panel.initialized = false
+                            panel:Hide()
+                            HA:ToggleOptionsPanel()
+                        end
+                    end)
+                end
+                self._popup = popup
+            end
+            self._popup:Show()
+        end)
+
+        langBtn:SetScript("OnEnter", function(self)
+            self:SetBackdropColor(ACCENT_DIM_R, ACCENT_DIM_G, ACCENT_DIM_B, 0.4)
+            self:SetBackdropBorderColor(ACCENT_R, ACCENT_G, ACCENT_B, 0.6)
+        end)
+        langBtn:SetScript("OnLeave", function(self)
+            self:SetBackdropColor(0.12, 0.12, 0.14, 1)
+            self:SetBackdropBorderColor(0.3, 0.3, 0.33, 1)
+        end)
+
+        local sep = langRow:CreateTexture(nil, "ARTWORK")
+        sep:SetHeight(1)
+        sep:SetPoint("BOTTOMLEFT", langRow, "BOTTOMLEFT", 0, 0)
+        sep:SetPoint("BOTTOMRIGHT", langRow, "BOTTOMRIGHT", 0, 0)
+        sep:SetColorTexture(0.18, 0.18, 0.20, 0.5)
+
+        y = y - rowHeight
+    end
+
     -- Search bar with styled background
     y = y - 6
     local searchBg = CreateFrame("Frame", nil, block, "BackdropTemplate")
@@ -1575,55 +1705,225 @@ end
 ---------------------------------------------------------------------------
 local function BuildAboutTab(parent)
     local L = HA.L
-    local y = -12
+    local w = parent:GetWidth()
+    local y = -8
 
-    -- Logo / title area
-    local title = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    title:SetPoint("TOPLEFT", parent, "TOPLEFT", 16, y)
-    title:SetText("|cff00c761Hide|r|cffffffffAnything|r")
-    y = y - 26
+    -- Helper: create a styled card
+    local function MakeCard(yPos, height)
+        local card = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+        card:SetSize(w - 8, height)
+        card:SetPoint("TOPLEFT", parent, "TOPLEFT", 4, yPos)
+        card:SetBackdrop(BD_CARD)
+        card:SetBackdropColor(0.09, 0.09, 0.11, 0.7)
+        card:SetBackdropBorderColor(0.20, 0.20, 0.23, 0.6)
+        local stripe = card:CreateTexture(nil, "OVERLAY")
+        stripe:SetHeight(2)
+        stripe:SetPoint("TOPLEFT", card, "TOPLEFT", 3, -3)
+        stripe:SetPoint("TOPRIGHT", card, "TOPRIGHT", -3, -3)
+        stripe:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 0.5)
+        return card
+    end
 
-    local ver = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    ver:SetPoint("TOPLEFT", parent, "TOPLEFT", 16, y)
-    ver:SetText(L["VERSION"] .. ": |cffffffff" .. HA.version .. "|r")
-    y = y - 20
+    -----------------------------------------------------------------------
+    -- Card 1: Title + Edition
+    -----------------------------------------------------------------------
+    local titleCard = MakeCard(y, 90)
 
-    local author = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    author:SetPoint("TOPLEFT", parent, "TOPLEFT", 16, y)
-    author:SetText("Author: |cffffffffJugoBetrugoTV|r")
-    y = y - 12
+    local titleText = titleCard:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    titleText:SetPoint("TOPLEFT", titleCard, "TOPLEFT", 14, -14)
+    titleText:SetText("|cff00c761Hide|r|cffffffffAnything|r")
 
-    -- Separator
-    local sep = parent:CreateTexture(nil, "ARTWORK")
-    sep:SetHeight(1)
-    sep:SetPoint("TOPLEFT", parent, "TOPLEFT", 16, y)
-    sep:SetPoint("RIGHT", parent, "RIGHT", -16, 0)
-    sep:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 0.3)
-    y = y - 16
+    local verBadge = CreateFrame("Frame", nil, titleCard, "BackdropTemplate")
+    verBadge:SetSize(56, 18)
+    verBadge:SetPoint("LEFT", titleText, "RIGHT", 8, 0)
+    verBadge:SetBackdrop(BD_TOGGLE)
+    verBadge:SetBackdropColor(ACCENT_R, ACCENT_G, ACCENT_B, 0.2)
+    verBadge:SetBackdropBorderColor(ACCENT_R, ACCENT_G, ACCENT_B, 0.4)
+    local verLabel = verBadge:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    verLabel:SetPoint("CENTER")
+    verLabel:SetText("|cff00c761v" .. HA.version .. "|r")
 
-    local desc = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    desc:SetPoint("TOPLEFT", parent, "TOPLEFT", 16, y)
-    desc:SetWidth(parent:GetWidth() - 32)
-    desc:SetJustifyH("LEFT")
-    desc:SetSpacing(3)
-    desc:SetText(
-        "|cff00c761Hide Anything|r " .. L["ABOUT_DESC"] .. "\n\n" ..
-        "|cff00c761" .. L["ABOUT_FEATURES"] .. "|r\n" ..
-        "  |cff70a890-|r " .. L["ABOUT_F1"] .. "\n" ..
-        "  |cff70a890-|r " .. L["ABOUT_F2"] .. "\n" ..
-        "  |cff70a890-|r " .. L["ABOUT_F3"] .. "\n" ..
-        "  |cff70a890-|r " .. L["ABOUT_F4"] .. "\n" ..
-        "  |cff70a890-|r " .. L["ABOUT_F5"] .. "\n" ..
-        "  |cff70a890-|r " .. L["ABOUT_F6"] .. "\n" ..
-        "  |cff70a890-|r " .. L["ABOUT_F7"] .. "\n" ..
-        "  |cff70a890-|r " .. L["ABOUT_F8"] .. "\n" ..
-        "  |cff70a890-|r " .. L["ABOUT_F9"] .. "\n\n" ..
-        "|cff70a890" .. L["ABOUT_COMMANDS_LABEL"] .. "|r |cff00c761/hide|r or |cff00c761/hideanything|r\n" ..
-        "|cff70a890" .. L["ABOUT_CONFIG_LABEL"] .. "|r   |cff00c761/hide toggle|r\n\n" ..
-        "|cff70a890Edition:|r  |cff" .. (HA.EDITION_COLORS[HA.edition] or "ffffff") .. (HA.EDITION_NAMES[HA.edition] or "Unknown") .. "|r"
-    )
+    local authorLabel = titleCard:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    authorLabel:SetPoint("TOPLEFT", titleCard, "TOPLEFT", 14, -38)
+    authorLabel:SetText("|cff888890Author:|r  |cffffffffJugoBetrugoTV|r")
 
-    parent:SetHeight(320)
+    -- Edition display (prominent)
+    local edName = HA.EDITION_NAMES[HA.edition] or "Unknown"
+    local edColor = HA.EDITION_COLORS[HA.edition] or "888888"
+
+    local edCard = CreateFrame("Frame", nil, titleCard, "BackdropTemplate")
+    edCard:SetSize(w - 36, 26)
+    edCard:SetPoint("TOPLEFT", titleCard, "TOPLEFT", 12, -58)
+    edCard:SetBackdrop(BD_TOGGLE)
+    edCard:SetBackdropColor(0.06, 0.06, 0.08, 0.8)
+    edCard:SetBackdropBorderColor(0.22, 0.22, 0.25, 0.6)
+
+    local edIcon = edCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    edIcon:SetPoint("LEFT", edCard, "LEFT", 10, 0)
+    edIcon:SetText("|cff888890" .. (L["CFG_EDITION_LABEL"] or "Edition") .. ":|r")
+
+    local edValue = edCard:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    edValue:SetPoint("LEFT", edIcon, "RIGHT", 6, 0)
+    edValue:SetText("|cff" .. edColor .. edName .. "|r")
+
+    y = y - 100
+
+    -----------------------------------------------------------------------
+    -- Card 2: Quick Stats
+    -----------------------------------------------------------------------
+    local statsCard = MakeCard(y, 70)
+
+    local statsTitle = statsCard:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    statsTitle:SetPoint("TOPLEFT", statsCard, "TOPLEFT", 14, -12)
+    statsTitle:SetText("|cff00c761" .. (L["ABOUT_STATS_TITLE"] or "Quick Stats") .. "|r")
+
+    -- Count stats
+    local hiddenCount = HA:GetHiddenCount()
+    local profileCount = 0
+    if HA.db and HA.db.profiles then
+        for _ in pairs(HA.db.profiles) do profileCount = profileCount + 1 end
+    end
+    local catalogCount = 0
+    for _, entry in ipairs(HA.FRAME_CATALOG) do
+        if not entry.section then catalogCount = catalogCount + 1 end
+    end
+
+    local col1 = statsCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    col1:SetPoint("TOPLEFT", statsCard, "TOPLEFT", 14, -34)
+    col1:SetText("|cff888890" .. (L["ABOUT_STATS_HIDDEN"] or "Hidden: |cffffffff%d|r"):format(hiddenCount))
+
+    local col2 = statsCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    col2:SetPoint("TOPLEFT", statsCard, "TOPLEFT", 160, -34)
+    col2:SetText("|cff888890" .. (L["ABOUT_STATS_PROFILES"] or "Profiles: |cffffffff%d|r"):format(profileCount))
+
+    local col3 = statsCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    col3:SetPoint("TOPLEFT", statsCard, "TOPLEFT", 320, -34)
+    col3:SetText("|cff888890" .. (L["ABOUT_STATS_CATALOG"] or "Catalog: |cffffffff%d+|r"):format(catalogCount))
+
+    -- Lock status indicator
+    local lockStatus = statsCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    lockStatus:SetPoint("TOPLEFT", statsCard, "TOPLEFT", 14, -50)
+    if HA:GetSetting("locked") then
+        lockStatus:SetText(L["STATUS_LOCKED"])
+    else
+        lockStatus:SetText(L["STATUS_UNLOCKED"])
+    end
+
+    y = y - 78
+
+    -----------------------------------------------------------------------
+    -- Card 3: Features
+    -----------------------------------------------------------------------
+    local featCard = MakeCard(y, 168)
+
+    local featTitle = featCard:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    featTitle:SetPoint("TOPLEFT", featCard, "TOPLEFT", 14, -12)
+    featTitle:SetText("|cff00c761" .. L["ABOUT_FEATURES"] .. "|r")
+
+    local featLine = featCard:CreateTexture(nil, "ARTWORK")
+    featLine:SetHeight(1)
+    featLine:SetPoint("TOPLEFT", featTitle, "BOTTOMLEFT", 0, -3)
+    featLine:SetPoint("RIGHT", featCard, "RIGHT", -14, 0)
+    featLine:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 0.2)
+
+    local features = {
+        L["ABOUT_F1"], L["ABOUT_F2"], L["ABOUT_F3"],
+        L["ABOUT_F4"], L["ABOUT_F5"], L["ABOUT_F6"],
+        L["ABOUT_F7"], L["ABOUT_F8"], L["ABOUT_F9"],
+    }
+    if L["ABOUT_F10"] then table.insert(features, L["ABOUT_F10"]) end
+
+    local fy = -32
+    for _, feat in ipairs(features) do
+        local fl = featCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        fl:SetPoint("TOPLEFT", featCard, "TOPLEFT", 14, fy)
+        fl:SetWidth(w - 50)
+        fl:SetJustifyH("LEFT")
+        fl:SetText("|cff00c761>|r  |cffcccccc" .. feat .. "|r")
+        fy = fy - 14
+    end
+
+    featCard:SetHeight(math.abs(fy) + 8)
+    y = y - (math.abs(fy) + 16)
+
+    -----------------------------------------------------------------------
+    -- Card 4: Commands Reference
+    -----------------------------------------------------------------------
+    local cmdCard = MakeCard(y, 150)
+
+    local cmdTitle = cmdCard:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    cmdTitle:SetPoint("TOPLEFT", cmdCard, "TOPLEFT", 14, -12)
+    cmdTitle:SetText("|cff00c761" .. (L["ABOUT_COMMANDS_LABEL"] or "Commands:") .. "|r")
+
+    local cmdLine = cmdCard:CreateTexture(nil, "ARTWORK")
+    cmdLine:SetHeight(1)
+    cmdLine:SetPoint("TOPLEFT", cmdTitle, "BOTTOMLEFT", 0, -3)
+    cmdLine:SetPoint("RIGHT", cmdCard, "RIGHT", -14, 0)
+    cmdLine:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 0.2)
+
+    local commands = {
+        { "/hide toggle",       L["HELP_TOGGLE"]:gsub("|cff00cc66/hide toggle|r %- ", "") },
+        { "/hide hide <name>",  L["HELP_HIDE"]:gsub("|cff00cc66/hide hide <.-|r %- ", "") },
+        { "/hide show <name>",  L["HELP_SHOW"]:gsub("|cff00cc66/hide show <.-|r %- ", "") },
+        { "/hide showall",      L["HELP_SHOW_ALL"]:gsub("|cff00cc66/hide showall|r %- ", "") },
+        { "/hide list",         L["HELP_LIST"]:gsub("|cff00cc66/hide list|r %- ", "") },
+        { "/hide profile",      L["HELP_PROFILE"]:gsub("|cff00cc66/hide profile <.-|r %- ", "") },
+        { "/hide alpha",        L["HELP_ALPHA"]:gsub("|cff00cc66/hide alpha <.-|r %- ", "") },
+        { "/hide status",       L["HELP_STATUS"]:gsub("|cff00cc66/hide status|r %- ", "") },
+    }
+
+    local cy = -32
+    for _, cmd in ipairs(commands) do
+        local cmdLbl = cmdCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        cmdLbl:SetPoint("TOPLEFT", cmdCard, "TOPLEFT", 14, cy)
+        cmdLbl:SetText("|cff00c761" .. cmd[1] .. "|r")
+
+        local cmdDesc = cmdCard:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        cmdDesc:SetPoint("TOPLEFT", cmdCard, "TOPLEFT", 180, cy)
+        cmdDesc:SetText("|cff888890" .. cmd[2] .. "|r")
+        cy = cy - 14
+    end
+
+    cmdCard:SetHeight(math.abs(cy) + 8)
+    y = y - (math.abs(cy) + 16)
+
+    -----------------------------------------------------------------------
+    -- Card 5: Action Buttons
+    -----------------------------------------------------------------------
+    local actRow = CreateFrame("Frame", nil, parent)
+    actRow:SetSize(w - 8, 34)
+    actRow:SetPoint("TOPLEFT", parent, "TOPLEFT", 4, y)
+
+    local btnConfig = CreateStyledButton(actRow, 140, 28, "|cff00c761/hide toggle|r", function()
+        panel:Hide()
+        HA:ToggleOptionsPanel()
+    end)
+    btnConfig:SetPoint("LEFT", actRow, "LEFT", 4, 0)
+
+    local btnShowAll = CreateStyledButton(actRow, 140, 28, L["UI_BTN_SHOW_ALL"], function()
+        HA:ShowAllFrames()
+    end)
+    btnShowAll:SetPoint("LEFT", btnConfig, "RIGHT", 8, 0)
+
+    local btnStatus = CreateStyledButton(actRow, 140, 28, "Status", function()
+        HA:PrintStatus()
+    end)
+    btnStatus:SetPoint("LEFT", btnShowAll, "RIGHT", 8, 0)
+
+    y = y - 44
+
+    -----------------------------------------------------------------------
+    -- Description at bottom
+    -----------------------------------------------------------------------
+    local descText = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    descText:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, y)
+    descText:SetWidth(w - 20)
+    descText:SetJustifyH("CENTER")
+    descText:SetText("|cff555560" .. "|cff00c761HideAnything|r " .. L["ABOUT_DESC"] .. "|r")
+
+    y = y - 24
+
+    parent:SetHeight(math.abs(y) + 10)
 end
 
 ---------------------------------------------------------------------------

@@ -88,6 +88,7 @@ HA.DEFAULTS = {
         chatEnabled      = true,
         highlightEnabled = true,
         fadeEnabled      = false,
+        language         = "auto",   -- "auto" = client locale, or "enUS"/"deDE"/etc.
     },
 
     profiles = {},

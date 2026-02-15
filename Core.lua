@@ -74,6 +74,12 @@ function HA:OnInitialize()
         -- Initialize saved variables / database
         self:InitDB()
 
+        -- Apply saved language preference
+        if self.ApplyLanguage then
+            local lang = self:GetSetting("language") or "auto"
+            self:ApplyLanguage(lang)
+        end
+
         -- Initialize minimap button (LibDBIcon)
         if self.InitMinimap then
             self:InitMinimap()
