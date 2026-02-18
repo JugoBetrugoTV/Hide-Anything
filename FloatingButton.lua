@@ -104,6 +104,23 @@ end)
 ---------------------------------------------------------------------------
 -- Public API
 ---------------------------------------------------------------------------
+-- Improvement #25: frame count badge
+local badge = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+badge:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", 2, -2)
+badge:SetJustifyH("RIGHT")
+badge:Hide()
+
+function HA:UpdateFloatingBadge()
+    if not self.db then return end
+    local count = self:GetHiddenCount()
+    if count > 0 then
+        badge:SetText("|cffffffff" .. count .. "|r")
+        badge:Show()
+    else
+        badge:Hide()
+    end
+end
+
 function HA:InitFloatingButton()
     -- Restore saved position or center on first start
     if self.db and self.db.floatingButton then
@@ -113,9 +130,17 @@ function HA:InitFloatingButton()
             btn:SetPoint(pos.point, UIParent, pos.relPoint, pos.x, pos.y)
         end
     else
-        -- First start: center the button so the user can find it easily
+        -- Improvement #15: First start safety - use TOPRIGHT if UIScale is very small
+        local scale = UIParent:GetEffectiveScale()
+        local point, yOff
+        if scale < 0.5 then
+            point, yOff = "TOPRIGHT", -40
+        else
+            point, yOff = "CENTER", 200
+        end
+
         btn:ClearAllPoints()
-        btn:SetPoint("CENTER", UIParent, "CENTER", 0, 200)
+        btn:SetPoint(point, UIParent, point, point == "TOPRIGHT" and -40 or 0, yOff)
         btn:SetSize(48, 48)
         label:SetFontObject(GameFontNormal)
         label:SetText("|cff00cc66HA|r")
@@ -144,5 +169,20 @@ function HA:InitFloatingButton()
             label:SetText("|cff00cc66HA|r")
         end)
     end
+
+    -- Improvement #15: Verify button is on-screen after 1s, reposition if not
+    C_Timer.After(1, function()
+        if not btn:IsVisible() then return end
+        local left, bottom, width, height = btn:GetRect()
+        if not left then return end
+        local screenW, screenH = UIParent:GetWidth(), UIParent:GetHeight()
+        if left < 0 or bottom < 0 or (left + (width or 36)) > screenW or (bottom + (height or 36)) > screenH then
+            btn:ClearAllPoints()
+            btn:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -40, -40)
+            HA:DebugLog("Floating button was off-screen, repositioned to TOPRIGHT")
+        end
+    end)
+
     btn:Show()
+    self:UpdateFloatingBadge()
 end

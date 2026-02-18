@@ -251,6 +251,15 @@ HA.LOCALES["enUS"] = {
     PROFILE_NAME_INVALID     = "Profile name contains invalid characters.",
     IMPORT_UNAVAILABLE       = "|cffff8800Warning|r: %d items may not exist in this WoW version.",
     PROFILE_DELETE_CONFIRM   = "Delete profile |cffff4444%s|r? Repeat to confirm.",
+
+    -- New keys (improvements batch 3)
+    LIST_TRUNCATED           = "|cff888888...and %d more. Use /hide toggle to see all.|r",
+    PRESET_CONFIRM           = "|cffffcc00Warning|r: This will show all currently hidden frames first. Repeat |cff00cc66/hide preset %s|r to confirm.",
+    WILDCARD_HIDDEN          = "Hidden |cff00cc66%d|r frames matching pattern |cffffffff%s|r.",
+    WILDCARD_NO_MATCH        = "No frames found matching pattern |cffffffff%s|r.",
+    UI_SEARCH_RESULTS        = "Found %d results",
+    HELP_HIDEALL             = "|cff00cc66/hide hideall <pattern>|r - Hide frames matching wildcard (e.g. Player*)",
+    HELP_DEBUG               = "|cff00cc66/hide debug|r - Toggle verbose debug logging",
 }
 
 ---------------------------------------------------------------------------
@@ -472,6 +481,13 @@ HA.LOCALES["deDE"] = {
     PROFILE_NAME_INVALID     = "Profilname enthält ungültige Zeichen.",
     IMPORT_UNAVAILABLE       = "|cffff8800Warnung|r: %d Elemente existieren möglicherweise nicht in dieser WoW-Version.",
     PROFILE_DELETE_CONFIRM   = "Profil |cffff4444%s|r löschen? Wiederholen zum Bestätigen.",
+    LIST_TRUNCATED           = "|cff888888...und %d weitere. Nutze /hide toggle um alle zu sehen.|r",
+    PRESET_CONFIRM           = "|cffffcc00Warnung|r: Dies zeigt zuerst alle versteckten Frames. Wiederhole |cff00cc66/hide preset %s|r zum Bestätigen.",
+    WILDCARD_HIDDEN          = "|cff00cc66%d|r Frames versteckt, die dem Muster |cffffffff%s|r entsprechen.",
+    WILDCARD_NO_MATCH        = "Keine Frames gefunden, die dem Muster |cffffffff%s|r entsprechen.",
+    UI_SEARCH_RESULTS        = "%d Ergebnisse gefunden",
+    HELP_HIDEALL             = "|cff00cc66/hide hideall <muster>|r - Frames per Wildcard verstecken (z.B. Player*)",
+    HELP_DEBUG               = "|cff00cc66/hide debug|r - Ausführliches Debug-Logging umschalten",
 }
 
 ---------------------------------------------------------------------------
@@ -683,6 +699,13 @@ HA.LOCALES["frFR"] = {
     PROFILE_NAME_INVALID     = "Le nom du profil contient des caractères invalides.",
     IMPORT_UNAVAILABLE       = "|cffff8800Attention|r : %d éléments n'existent peut-être pas dans cette version de WoW.",
     PROFILE_DELETE_CONFIRM   = "Supprimer le profil |cffff4444%s|r ? Répétez pour confirmer.",
+    LIST_TRUNCATED           = "|cff888888...et %d de plus. Utilisez /hide toggle pour tout voir.|r",
+    PRESET_CONFIRM           = "|cffffcc00Attention|r : Cela affichera d'abord tous les cadres cachés. Répétez |cff00cc66/hide preset %s|r pour confirmer.",
+    WILDCARD_HIDDEN          = "|cff00cc66%d|r cadres cachés correspondant au motif |cffffffff%s|r.",
+    WILDCARD_NO_MATCH        = "Aucun cadre trouvé correspondant au motif |cffffffff%s|r.",
+    UI_SEARCH_RESULTS        = "%d résultats trouvés",
+    HELP_HIDEALL             = "|cff00cc66/hide hideall <motif>|r - Cacher les cadres par motif (ex: Player*)",
+    HELP_DEBUG               = "|cff00cc66/hide debug|r - Activer/désactiver le mode débogage",
 }
 
 ---------------------------------------------------------------------------
@@ -894,6 +917,13 @@ HA.LOCALES["esES"] = {
     PROFILE_NAME_INVALID     = "El nombre del perfil contiene caracteres no válidos.",
     IMPORT_UNAVAILABLE       = "|cffff8800Advertencia|r: %d elementos pueden no existir en esta versión de WoW.",
     PROFILE_DELETE_CONFIRM   = "¿Eliminar perfil |cffff4444%s|r? Repite para confirmar.",
+    LIST_TRUNCATED           = "|cff888888...y %d más. Usa /hide toggle para ver todos.|r",
+    PRESET_CONFIRM           = "|cffffcc00Advertencia|r: Esto mostrará primero todos los marcos ocultos. Repite |cff00cc66/hide preset %s|r para confirmar.",
+    WILDCARD_HIDDEN          = "|cff00cc66%d|r marcos ocultos que coinciden con el patrón |cffffffff%s|r.",
+    WILDCARD_NO_MATCH        = "No se encontraron marcos que coincidan con el patrón |cffffffff%s|r.",
+    UI_SEARCH_RESULTS        = "%d resultados encontrados",
+    HELP_HIDEALL             = "|cff00cc66/hide hideall <patrón>|r - Ocultar marcos por patrón (ej. Player*)",
+    HELP_DEBUG               = "|cff00cc66/hide debug|r - Activar/desactivar modo depuración",
 }
 
 ---------------------------------------------------------------------------
@@ -1105,6 +1135,13 @@ HA.LOCALES["ruRU"] = {
     PROFILE_NAME_INVALID     = "Имя профиля содержит недопустимые символы.",
     IMPORT_UNAVAILABLE       = "|cffff8800Предупреждение|r: %d элементов могут не существовать в этой версии WoW.",
     PROFILE_DELETE_CONFIRM   = "Удалить профиль |cffff4444%s|r? Повторите для подтверждения.",
+    LIST_TRUNCATED           = "|cff888888...и ещё %d. Используйте /hide toggle чтобы увидеть все.|r",
+    PRESET_CONFIRM           = "|cffffcc00Внимание|r: Это сначала покажет все скрытые фреймы. Повторите |cff00cc66/hide preset %s|r для подтверждения.",
+    WILDCARD_HIDDEN          = "Скрыто |cff00cc66%d|r фреймов по шаблону |cffffffff%s|r.",
+    WILDCARD_NO_MATCH        = "Фреймы по шаблону |cffffffff%s|r не найдены.",
+    UI_SEARCH_RESULTS        = "Найдено %d результатов",
+    HELP_HIDEALL             = "|cff00cc66/hide hideall <шаблон>|r - Скрыть фреймы по шаблону (напр. Player*)",
+    HELP_DEBUG               = "|cff00cc66/hide debug|r - Вкл/выкл режим отладки",
 }
 
 ---------------------------------------------------------------------------
@@ -1316,6 +1353,13 @@ HA.LOCALES["itIT"] = {
     PROFILE_NAME_INVALID     = "Il nome del profilo contiene caratteri non validi.",
     IMPORT_UNAVAILABLE       = "|cffff8800Attenzione|r: %d elementi potrebbero non esistere in questa versione di WoW.",
     PROFILE_DELETE_CONFIRM   = "Eliminare il profilo |cffff4444%s|r? Ripeti per confermare.",
+    LIST_TRUNCATED           = "|cff888888...e altri %d. Usa /hide toggle per vedere tutti.|r",
+    PRESET_CONFIRM           = "|cffffcc00Attenzione|r: Questo mostrerà prima tutti i riquadri nascosti. Ripeti |cff00cc66/hide preset %s|r per confermare.",
+    WILDCARD_HIDDEN          = "Nascosti |cff00cc66%d|r riquadri corrispondenti al modello |cffffffff%s|r.",
+    WILDCARD_NO_MATCH        = "Nessun riquadro trovato corrispondente al modello |cffffffff%s|r.",
+    UI_SEARCH_RESULTS        = "%d risultati trovati",
+    HELP_HIDEALL             = "|cff00cc66/hide hideall <modello>|r - Nascondi riquadri per modello (es. Player*)",
+    HELP_DEBUG               = "|cff00cc66/hide debug|r - Attiva/disattiva modalità debug",
 }
 
 ---------------------------------------------------------------------------

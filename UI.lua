@@ -89,8 +89,9 @@ local function TruncateText(text, maxLen)
     -- Strip color codes for length check
     local plain = text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
     if #plain <= maxLen then return text end
-    -- Truncate the plain text and re-apply
-    local truncated = strsub(plain, 1, maxLen - 2) .. ".."
+    -- Improvement #18: handle edge case where name < 3 chars
+    local cutLen = math.max(1, maxLen - 2)
+    local truncated = strsub(plain, 1, cutLen) .. ".."
     return truncated
 end
 
@@ -1692,6 +1693,17 @@ function HA:DoRefreshFrameList()
         tc.actionRow = actionRow
     end
 
+    -- Improvement #11: search result count
+    if searchFilter ~= "" or showHiddenOnly then
+        local countLabel = AcquireFont(parent, "GameFontNormalSmall")
+        countLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, y)
+        local filterInfo = ""
+        if searchFilter ~= "" then filterInfo = " '" .. searchFilter .. "'" end
+        if showHiddenOnly then filterInfo = filterInfo .. (searchFilter ~= "" and " + hidden only" or " hidden only") end
+        countLabel:SetText("|cff888890" .. (L["UI_SEARCH_RESULTS"] or "Found %d results"):format(rowIndex) .. filterInfo .. "|r")
+        y = y - 18
+    end
+
     tc.actionRow:ClearAllPoints()
     tc.actionRow:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, y)
     tc.actionRow:Show()
@@ -1701,6 +1713,9 @@ function HA:DoRefreshFrameList()
 
     -- Update status bar
     UpdateStatusBar()
+
+    -- Improvement #25: update floating button badge
+    if HA.UpdateFloatingBadge then HA:UpdateFloatingBadge() end
 end
 
 ---------------------------------------------------------------------------

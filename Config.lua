@@ -88,6 +88,9 @@ HA.DEFAULTS = {
         chatEnabled      = true,
         highlightEnabled = true,
         fadeEnabled      = false,
+        accentR          = 0,      -- Improvement #21: accent color (green default)
+        accentG          = 0.78,
+        accentB          = 0.38,
     },
 
     profiles = {},
@@ -465,6 +468,14 @@ function HA:InitDB()
     if type(db.settings) ~= "table" then
         self:Print(L["ERROR_DB_CORRUPT"])
         db.settings = self:DeepCopy(self.DEFAULTS.settings)
+    else
+        -- Improvement #7: Validate settings types against defaults
+        for k, v in pairs(self.DEFAULTS.settings) do
+            if db.settings[k] ~= nil and type(db.settings[k]) ~= type(v) then
+                self:DebugLog("Settings type mismatch for '" .. k .. "', resetting to default")
+                db.settings[k] = v
+            end
+        end
     end
     if type(db.hiddenCVars) ~= "table" then
         db.hiddenCVars = {}
@@ -546,7 +557,8 @@ end
 -- Get localized catalog label
 ---------------------------------------------------------------------------
 function HA:GetCatalogLabel(entry)
-    local lang = self._currentLanguage or GetLocale()
+    -- Improvement #19: nil-safe GetLocale fallback
+    local lang = self._currentLanguage or (GetLocale and GetLocale()) or "enUS"
     if lang == "deDE" and entry.labelDE then return entry.labelDE end
     if lang == "frFR" and entry.labelFR then return entry.labelFR end
     if lang == "esES" and entry.labelES then return entry.labelES end
@@ -573,8 +585,10 @@ function HA:DiscoverEditModeFrames()
     local systems = EditModeManagerFrame.registeredSystemFrames
     if systems and type(systems) == "table" then
         for _, sysFrame in pairs(systems) do
-            if sysFrame and sysFrame.GetName then
-                local name = sysFrame:GetName()
+            -- Improvement #20: verify GetName is actually a function before calling
+            if sysFrame and type(sysFrame) == "table" and sysFrame.GetName and type(sysFrame.GetName) == "function" then
+                local ok, name = pcall(sysFrame.GetName, sysFrame)
+                if not ok then name = nil end
                 if name and name ~= "" and not existing[name] then
                     table.insert(discovered, {
                         name  = name,
@@ -608,4 +622,25 @@ function HA:DiscoverEditModeFrames()
     end
 
     return #discovered
+end
+
+---------------------------------------------------------------------------
+-- Accent color helpers (improvement #21)
+---------------------------------------------------------------------------
+function HA:GetAccentColor()
+    local r = self:GetSetting("accentR") or 0
+    local g = self:GetSetting("accentG") or 0.78
+    local b = self:GetSetting("accentB") or 0.38
+    return r, g, b
+end
+
+function HA:SetAccentColor(r, g, b)
+    self:SetSetting("accentR", r)
+    self:SetSetting("accentG", g)
+    self:SetSetting("accentB", b)
+end
+
+function HA:GetAccentHex()
+    local r, g, b = self:GetAccentColor()
+    return string.format("%02x%02x%02x", r * 255, g * 255, b * 255)
 end

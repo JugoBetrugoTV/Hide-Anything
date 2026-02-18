@@ -35,6 +35,8 @@ HA.eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
 
 local pendingQueue = {} -- frames to hide/show after combat ends
 HA.inCombat = false
+HA._debugMode = false  -- verbose debug logging
+HA._frameRetries = {}  -- retry count per frame for ReapplyHiddenFrames
 
 ---------------------------------------------------------------------------
 -- Undo / Redo stack
@@ -96,11 +98,38 @@ HA.eventFrame:SetScript("OnEvent", function(self, event, ...)
         end)
     elseif event == "PLAYER_REGEN_DISABLED" then
         HA.inCombat = true
+        HA:DebugLog("Entered combat")
         HA:ApplyCombatHides()
     elseif event == "PLAYER_REGEN_ENABLED" then
         HA.inCombat = false
+        HA:DebugLog("Left combat")
         HA:RevertCombatHides()
         HA:ProcessPendingQueue()
+    end
+end)
+
+---------------------------------------------------------------------------
+-- Debug logging (improvement #14)
+---------------------------------------------------------------------------
+function HA:DebugLog(msg)
+    if self._debugMode and msg then
+        DEFAULT_CHAT_FRAME:AddMessage("|cff888888[HA Debug]|r " .. tostring(msg))
+    end
+end
+
+function HA:ToggleDebug()
+    self._debugMode = not self._debugMode
+    self:Print(self._debugMode and "|cff00ff00Debug mode ON|r" or "|cffff4444Debug mode OFF|r")
+end
+
+---------------------------------------------------------------------------
+-- Combat flag safety timer (improvement #9)
+-- Resets inCombat if stuck true for 30+ seconds outside actual combat
+---------------------------------------------------------------------------
+C_Timer.NewTicker(30, function()
+    if HA.inCombat and not InCombatLockdown() then
+        HA:DebugLog("Combat flag safety reset (was stuck true)")
+        HA.inCombat = false
     end
 end)
 
@@ -144,6 +173,9 @@ function HA:OnInitialize()
         if self.DiscoverEditModeFrames then
             self:DiscoverEditModeFrames()
         end
+
+        -- Start auto-save timer (improvement #24)
+        self:StartAutoSave()
 
         -- Mark init as done (for startup diagnostic in Locales.lua)
         self._initDone = true
@@ -244,20 +276,15 @@ function HA:FadeInAndShow(frame, frameName)
 end
 
 ---------------------------------------------------------------------------
--- Get a frame object from its name string
+-- Shared nested name resolution helper (improvement #17)
 ---------------------------------------------------------------------------
-function HA:GetFrameByName(name)
+local function ResolveNestedName(name)
     if not name or name == "" then return nil end
-
-    -- Try _G first
-    local frame = _G[name]
-    if frame and type(frame) == "table" and frame.IsObjectType and frame:IsObjectType("Frame") then
-        return frame
-    end
-
+    local obj = _G[name]
+    if obj then return obj end
     -- Try nested names (e.g. "PlayerFrame.PlayerFrameContent")
     local parts = { strsplit(".", name) }
-    local obj = _G[parts[1]]
+    obj = _G[parts[1]]
     for i = 2, #parts do
         if obj and type(obj) == "table" then
             obj = obj[parts[i]]
@@ -265,10 +292,17 @@ function HA:GetFrameByName(name)
             return nil
         end
     end
+    return obj
+end
+
+---------------------------------------------------------------------------
+-- Get a frame object from its name string
+---------------------------------------------------------------------------
+function HA:GetFrameByName(name)
+    local obj = ResolveNestedName(name)
     if obj and type(obj) == "table" and obj.IsObjectType and obj:IsObjectType("Frame") then
         return obj
     end
-
     return nil
 end
 
@@ -276,28 +310,10 @@ end
 -- Get any region (texture, fontstring, frame) by global name
 ---------------------------------------------------------------------------
 function HA:GetRegionByName(name)
-    if not name or name == "" then return nil end
-
-    -- Try _G first
-    local region = _G[name]
-    if region and type(region) == "table" and region.Hide and region.Show then
-        return region
-    end
-
-    -- Try nested names (e.g. "MainMenuBarArtFrame.Background")
-    local parts = { strsplit(".", name) }
-    local obj = _G[parts[1]]
-    for i = 2, #parts do
-        if obj and type(obj) == "table" then
-            obj = obj[parts[i]]
-        else
-            return nil
-        end
-    end
+    local obj = ResolveNestedName(name)
     if obj and type(obj) == "table" and obj.Hide and obj.Show then
         return obj
     end
-
     return nil
 end
 
@@ -443,6 +459,13 @@ end
 function HA:HideCVar(cvarName)
     if not cvarName or cvarName == "" then return false end
 
+    -- Combat check (improvement #4)
+    if self.inCombat or InCombatLockdown() then
+        self:FeedbackCombatError()
+        table.insert(pendingQueue, { action = "hidecvar", cvar = cvarName })
+        return false
+    end
+
     if self.db.hiddenCVars[cvarName] then return false end
 
     local ok = pcall(SetCVar, cvarName, "0")
@@ -514,6 +537,20 @@ function HA:ShowAllFrames()
     end
 
     local count = 0
+
+    -- Improvement #1: Clear alphas BEFORE showing frames to avoid race condition
+    -- where re-hide hooks could re-apply saved alpha during Show()
+    local savedAlphas = self.db.frameAlphas
+    if savedAlphas then
+        for fName, _ in pairs(savedAlphas) do
+            local f = self:GetFrameByName(fName)
+            if f then
+                pcall(function() f:SetAlpha(1) end)
+            end
+        end
+        wipe(self.db.frameAlphas)
+    end
+
     for frameName, _ in pairs(self.db.hiddenFrames) do
         local frame = self:GetFrameByName(frameName)
         if frame then
@@ -550,17 +587,6 @@ function HA:ShowAllFrames()
         wipe(self.db.hiddenTextures)
     end
 
-    -- Also reset all frame alphas
-    if self.db.frameAlphas then
-        for frameName, _ in pairs(self.db.frameAlphas) do
-            local frame = self:GetFrameByName(frameName)
-            if frame then
-                pcall(function() frame:SetAlpha(1) end)
-            end
-        end
-        wipe(self.db.frameAlphas)
-    end
-
     self:FeedbackShowAll(count)
 
     if self.RefreshFrameList then
@@ -584,15 +610,40 @@ function HA:ReapplyHiddenFrames()
         end
     end
 
-    -- Retry failed frames after a short delay
+    -- Retry failed frames after a short delay (improvement #6: max 3 retries)
     if #failed > 0 then
         C_Timer.After(2.0, function()
             if not HA.db then return end
+            local stillFailed = {}
             for _, frameName in ipairs(failed) do
-                local frame = self:GetFrameByName(frameName)
+                local frame = HA:GetFrameByName(frameName)
                 if frame then
-                    self:SecureHideFrame(frame, frameName)
+                    HA:SecureHideFrame(frame, frameName)
+                    HA._frameRetries[frameName] = nil
+                else
+                    local retries = (HA._frameRetries[frameName] or 0) + 1
+                    if retries < 3 then
+                        HA._frameRetries[frameName] = retries
+                        table.insert(stillFailed, frameName)
+                        HA:DebugLog("Retry " .. retries .. "/3 for frame: " .. frameName)
+                    else
+                        HA:DebugLog("Giving up on frame after 3 retries: " .. frameName)
+                        HA._frameRetries[frameName] = nil
+                    end
                 end
+            end
+            -- Recursive retry for remaining
+            if #stillFailed > 0 then
+                C_Timer.After(2.0, function()
+                    if not HA.db then return end
+                    for _, frameName in ipairs(stillFailed) do
+                        local frame = HA:GetFrameByName(frameName)
+                        if frame then
+                            HA:SecureHideFrame(frame, frameName)
+                        end
+                        HA._frameRetries[frameName] = nil
+                    end
+                end)
             end
         end)
     end
@@ -663,8 +714,10 @@ function HA:SecureHideFrame(frame, frameName)
 
         if hookSuccess then
             self.hookedFrames[frameName] = true
+            self:DebugLog("Hooked frame: " .. frameName)
         else
             self:FeedbackError("ERROR_HOOK_FAILED", frameName)
+            self:DebugLog("Hook FAILED for: " .. frameName)
         end
     end
 
@@ -804,6 +857,8 @@ function HA:ProcessPendingQueue()
             self:HideFrame(entry.name)
         elseif entry.action == "show" then
             self:ShowFrame(entry.name)
+        elseif entry.action == "hidecvar" then
+            self:HideCVar(entry.cvar)
         end
     end
     wipe(pendingQueue)
@@ -840,16 +895,24 @@ function HA:ListHiddenFrames()
     end
 
     self:Print(L["LIST_HEADER"]:format(count))
+
+    -- Improvement #8: Limit to 50 entries to avoid chat flood
+    local MAX_DISPLAY = 50
     local i = 1
     for frameName, _ in pairs(self.db.hiddenFrames) do
+        if i > MAX_DISPLAY then break end
         self:Print(L["LIST_ENTRY"]:format(i, frameName))
         i = i + 1
     end
-    if self.db.hiddenTextures then
+    if self.db.hiddenTextures and i <= MAX_DISPLAY then
         for textureName, _ in pairs(self.db.hiddenTextures) do
+            if i > MAX_DISPLAY then break end
             self:Print(L["LIST_ENTRY"]:format(i, textureName .. " |cff555560(Texture)|r"))
             i = i + 1
         end
+    end
+    if count > MAX_DISPLAY then
+        self:Print((L["LIST_TRUNCATED"] or "|cff888888...and %d more. Use /hide toggle to see all.|r"):format(count - MAX_DISPLAY))
     end
 end
 
@@ -1205,9 +1268,24 @@ function HA:GetPresetLabel(preset)
     return preset.label
 end
 
-function HA:ApplyPreset(presetId)
+function HA:ApplyPreset(presetId, confirmed)
     for _, preset in ipairs(self.PRESET_PROFILES) do
         if preset.id == presetId then
+            -- Improvement #13: Confirm before applying preset (destructive action)
+            if not confirmed then
+                if self._pendingPreset == presetId then
+                    self._pendingPreset = nil
+                else
+                    self._pendingPreset = presetId
+                    self:Print((self.L["PRESET_CONFIRM"] or "|cffffcc00Warning|r: This will show all currently hidden frames first. Repeat |cff00cc66/hide preset %s|r to confirm."):format(presetId))
+                    C_Timer.After(10, function()
+                        if HA._pendingPreset == presetId then
+                            HA._pendingPreset = nil
+                        end
+                    end)
+                    return true
+                end
+            end
             -- Show all current hidden frames first
             self:ShowAllFrames()
             -- Apply preset frames
@@ -1219,4 +1297,61 @@ function HA:ApplyPreset(presetId)
         end
     end
     return false
+end
+
+---------------------------------------------------------------------------
+-- Wildcard hide: /hide hide Player* (improvement #23)
+---------------------------------------------------------------------------
+function HA:HideByPattern(pattern)
+    if not pattern or pattern == "" then return 0 end
+
+    local count = 0
+    -- Convert glob pattern (* only) to Lua pattern
+    local luaPattern = "^" .. pattern:gsub("%%", "%%%%"):gsub("%*", ".*"):gsub("%?", ".") .. "$"
+
+    for _, entry in ipairs(self.FRAME_CATALOG) do
+        local itemName = entry.name or entry.cvar or entry.texture
+        if itemName and itemName:match(luaPattern) then
+            if entry.name and not self.db.hiddenFrames[itemName] then
+                self:HideFrame(itemName)
+                count = count + 1
+            elseif entry.cvar and not self.db.hiddenCVars[itemName] then
+                self:HideCVar(itemName)
+                count = count + 1
+            elseif entry.texture and not self.db.hiddenTextures[itemName] then
+                self:HideTexture(itemName)
+                count = count + 1
+            end
+        end
+    end
+
+    if count > 0 then
+        self:Print((self.L["WILDCARD_HIDDEN"] or "Hidden |cff00cc66%d|r frames matching pattern |cffffffff%s|r."):format(count, pattern))
+    else
+        self:Print((self.L["WILDCARD_NO_MATCH"] or "No frames found matching pattern |cffffffff%s|r."):format(pattern))
+    end
+    return count
+end
+
+---------------------------------------------------------------------------
+-- Auto-save timer (improvement #24)
+-- Saves current state to an "AutoSave" profile every 5 minutes
+---------------------------------------------------------------------------
+function HA:StartAutoSave()
+    if self._autoSaveTimer then return end
+    self._autoSaveTimer = C_Timer.NewTicker(300, function()
+        if not HA.db then return end
+        local count = HA:GetHiddenCount()
+        if count > 0 then
+            HA.db.profiles["_AutoSave"] = {
+                hiddenFrames   = HA:DeepCopy(HA.db.hiddenFrames),
+                hiddenCVars    = HA:DeepCopy(HA.db.hiddenCVars or {}),
+                hiddenTextures = HA:DeepCopy(HA.db.hiddenTextures or {}),
+                frameAlphas    = HA:DeepCopy(HA.db.frameAlphas or {}),
+                settings       = HA:DeepCopy(HA.db.settings),
+                savedTime      = time(),
+            }
+            HA:DebugLog("Auto-saved current state (" .. count .. " frames)")
+        end
+    end)
 end

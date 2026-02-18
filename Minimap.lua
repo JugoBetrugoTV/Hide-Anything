@@ -80,11 +80,14 @@ end
 -- Addon Compartment (WoW 11.x minimap dropdown list)
 -- Global functions referenced by ## AddonCompartmentFunc in TOC
 ---------------------------------------------------------------------------
+-- Improvement #10: nil safety guards for addon compartment
 function HideAnything_OnAddonCompartmentClick(addonName, button)
+    if not HA or not HA.db then return end
     HA:ToggleOptionsPanel()
 end
 
 function HideAnything_OnAddonCompartmentEnter(addonName, menuButton)
+    if not HA or not HA.L then return end
     if menuButton and type(menuButton) == "table" and menuButton.GetObjectType then
         GameTooltip:SetOwner(menuButton, "ANCHOR_RIGHT")
     else

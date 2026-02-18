@@ -50,13 +50,14 @@ function HA:SaveProfile(name, overwrite)
         return
     end
 
-    -- Save profile
+    -- Save profile (improvement #12: add timestamp)
     self.db.profiles[name] = {
         hiddenFrames   = self:DeepCopy(self.db.hiddenFrames),
         hiddenCVars    = self:DeepCopy(self.db.hiddenCVars or {}),
         hiddenTextures = self:DeepCopy(self.db.hiddenTextures or {}),
         frameAlphas    = self:DeepCopy(self.db.frameAlphas or {}),
         settings       = self:DeepCopy(self.db.settings),
+        savedTime      = time(),
     }
 
     local count = self:GetHiddenCount()
@@ -91,6 +92,19 @@ function HA:LoadProfile(name)
     if self.inCombat or InCombatLockdown() then
         self:FeedbackCombatError()
         return
+    end
+
+    -- Improvement #22: Push current state to undo stack before loading profile
+    if self._undoStack then
+        table.insert(self._undoStack, {
+            type = "profile",
+            action = "load",
+            name = name,
+            prevHiddenFrames   = self:DeepCopy(self.db.hiddenFrames),
+            prevHiddenCVars    = self:DeepCopy(self.db.hiddenCVars or {}),
+            prevHiddenTextures = self:DeepCopy(self.db.hiddenTextures or {}),
+            prevFrameAlphas    = self:DeepCopy(self.db.frameAlphas or {}),
+        })
     end
 
     -- First show all currently hidden frames
@@ -151,6 +165,17 @@ function HA:LoadProfile(name)
 
     local count = self:GetHiddenCount()
     self:FeedbackProfileLoaded(name, count)
+
+    -- Improvement #2: Warn about unavailable frames in loaded profile
+    local unavailable = 0
+    if profile.hiddenFrames then
+        for frameName, _ in pairs(profile.hiddenFrames) do
+            if not self:GetFrameByName(frameName) then unavailable = unavailable + 1 end
+        end
+    end
+    if unavailable > 0 then
+        self:Print((self.L["IMPORT_UNAVAILABLE"] or "|cffff8800Warning|r: %d items may not exist in this WoW version."):format(unavailable))
+    end
 
     -- Refresh UI if open
     if self.RefreshFrameList then
@@ -238,7 +263,17 @@ function HA:ListProfiles()
         end
 
         local active = (self.db.activeProfile == name) and " |cff00ff00<active>|r" or ""
-        self:Print(L["PROFILE_LIST_ENTRY"]:format(i, name .. active, frameCount))
+        -- Improvement #12: Show saved time
+        local timeStr = ""
+        if data.savedTime then
+            local ago = time() - data.savedTime
+            if ago < 60 then timeStr = " |cff888888(just now)|r"
+            elseif ago < 3600 then timeStr = (" |cff888888(%dm ago)|r"):format(math.floor(ago / 60))
+            elseif ago < 86400 then timeStr = (" |cff888888(%dh ago)|r"):format(math.floor(ago / 3600))
+            else timeStr = (" |cff888888(%dd ago)|r"):format(math.floor(ago / 86400))
+            end
+        end
+        self:Print(L["PROFILE_LIST_ENTRY"]:format(i, name .. active .. timeStr, frameCount))
         i = i + 1
     end
 end

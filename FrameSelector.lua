@@ -135,7 +135,7 @@ local elapsed = 0
 local lastMouseX, lastMouseY = 0, 0
 picker:SetScript("OnUpdate", function(self, dt)
     elapsed = elapsed + dt
-    if elapsed < 0.05 then return end
+    if elapsed < 0.1 then return end  -- Improvement #16: 100ms throttle (was 50ms)
     elapsed = 0
 
     -- Combat check - auto-deactivate if combat starts

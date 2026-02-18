@@ -137,6 +137,18 @@ SlashCmdList["HIDEANYTHING"] = function(msg)
             end
         end
 
+    -- Improvement #14: debug mode toggle
+    elseif cmd == "debug" then
+        HA:ToggleDebug()
+
+    -- Improvement #23: wildcard hide
+    elseif cmd == "hideall" or cmd == "hidepattern" then
+        if args == "" then
+            HA:Print("|cff00cc66/hide hideall <pattern>|r - Hide frames matching a wildcard pattern (e.g. Player*)")
+        else
+            HA:HideByPattern(args)
+        end
+
     else
         HA:Print(L["ERROR_UNKNOWN_CMD"]:format(cmd))
     end
@@ -165,6 +177,8 @@ function HA:PrintHelp()
     self:Print(L["HELP_REDO"] or "|cff00cc66/hide redo|r - Redo last undone action")
     self:Print(L["HELP_PICKER"] or "|cff00cc66/hide picker|r - Toggle frame picker mode")
     self:Print(L["HELP_PRESET"] or "|cff00cc66/hide preset <name>|r - Apply a preset profile")
+    self:Print(L["HELP_HIDEALL"] or "|cff00cc66/hide hideall <pattern>|r - Hide frames matching wildcard (e.g. Player*)")
+    self:Print(L["HELP_DEBUG"] or "|cff00cc66/hide debug|r - Toggle verbose debug logging")
 end
 
 ---------------------------------------------------------------------------
@@ -186,4 +200,45 @@ function HA:PrintStatus()
 
     local minimapOn = self.db and self.db.minimap and not self.db.minimap.hide
     self:Print(L["STATUS_MINIMAP"]:format(minimapOn and L["STATUS_ON"] or L["STATUS_OFF"]))
+
+    -- Show debug mode status
+    if HA._debugMode then
+        self:Print("|cffffcc00Debug mode|r: |cff00ff00ON|r")
+    end
 end
+
+---------------------------------------------------------------------------
+-- Keyboard shortcut handler (improvement #3)
+-- Ctrl+Z = Undo, Ctrl+Y = Redo, Ctrl+P = Picker
+-- Only active when not typing in an edit box
+---------------------------------------------------------------------------
+local shortcutFrame = CreateFrame("Frame", "HideAnythingShortcuts", UIParent)
+shortcutFrame:EnableKeyboard(true)
+shortcutFrame:SetPropagateKeyboardInput(true)
+shortcutFrame:SetScript("OnKeyDown", function(self, key)
+    -- Don't steal input from edit boxes / chat
+    local focus = GetCurrentKeyBoardFocus()
+    if focus then
+        self:SetPropagateKeyboardInput(true)
+        return
+    end
+
+    local ctrl = IsControlKeyDown()
+    if not ctrl then
+        self:SetPropagateKeyboardInput(true)
+        return
+    end
+
+    if key == "Z" then
+        self:SetPropagateKeyboardInput(false)
+        HA:Undo()
+    elseif key == "Y" then
+        self:SetPropagateKeyboardInput(false)
+        HA:Redo()
+    elseif key == "P" then
+        self:SetPropagateKeyboardInput(false)
+        HA:ToggleFramePicker()
+    else
+        self:SetPropagateKeyboardInput(true)
+    end
+end)
