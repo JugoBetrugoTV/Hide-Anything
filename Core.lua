@@ -37,6 +37,26 @@ local pendingQueue = {} -- frames to hide/show after combat ends
 HA.inCombat = false
 
 ---------------------------------------------------------------------------
+-- Undo / Redo stack
+---------------------------------------------------------------------------
+HA._undoStack = {}
+HA._redoStack = {}
+local UNDO_MAX = 30
+
+local function PushUndo(action)
+    table.insert(HA._undoStack, action)
+    if #HA._undoStack > UNDO_MAX then
+        table.remove(HA._undoStack, 1)
+    end
+    wipe(HA._redoStack) -- clear redo on new action
+end
+
+---------------------------------------------------------------------------
+-- Catalog index (O(1) lookup by name/cvar/texture)
+---------------------------------------------------------------------------
+HA._catalogIndex = {} -- built once after FRAME_CATALOG is available
+
+---------------------------------------------------------------------------
 -- Event handler
 ---------------------------------------------------------------------------
 HA.eventFrame:SetScript("OnEvent", function(self, event, ...)
@@ -87,6 +107,17 @@ function HA:OnInitialize()
         -- Initialize LDB data object
         if self.InitLDB then
             self:InitLDB()
+        end
+
+        -- Build catalog index (O(1) lookup)
+        for _, entry in ipairs(self.FRAME_CATALOG) do
+            if entry.name then
+                self._catalogIndex[entry.name] = entry
+            elseif entry.cvar then
+                self._catalogIndex[entry.cvar] = entry
+            elseif entry.texture then
+                self._catalogIndex[entry.texture] = entry
+            end
         end
 
         -- Mark init as done (for startup diagnostic in Locales.lua)
@@ -315,6 +346,7 @@ function HA:HideFrame(frameName)
     if success then
         self.db.hiddenFrames[frameName] = true
         self:FeedbackHide(frameName)
+        PushUndo({ type = "frame", action = "hide", name = frameName })
         if self.RefreshFrameList then
             self:RefreshFrameList()
         end
@@ -370,6 +402,7 @@ function HA:ShowFrame(frameName)
     end
 
     self:FeedbackShow(frameName)
+    PushUndo({ type = "frame", action = "show", name = frameName })
 
     if self.RefreshFrameList then
         self:RefreshFrameList()
@@ -394,14 +427,11 @@ function HA:HideCVar(cvarName)
 
     self.db.hiddenCVars[cvarName] = true
 
-    local displayName = cvarName
-    for _, entry in ipairs(self.FRAME_CATALOG) do
-        if entry.cvar == cvarName then
-            displayName = self:GetCatalogLabel(entry)
-            break
-        end
-    end
+    local entry = self._catalogIndex[cvarName]
+    local displayName = entry and self:GetCatalogLabel(entry) or cvarName
     self:FeedbackHide(displayName)
+
+    PushUndo({ type = "cvar", action = "hide", cvar = cvarName })
 
     if self.RefreshFrameList then
         self:RefreshFrameList()
@@ -420,14 +450,11 @@ function HA:ShowCVar(cvarName)
     pcall(SetCVar, cvarName, "1")
     self.db.hiddenCVars[cvarName] = nil
 
-    local displayName = cvarName
-    for _, entry in ipairs(self.FRAME_CATALOG) do
-        if entry.cvar == cvarName then
-            displayName = self:GetCatalogLabel(entry)
-            break
-        end
-    end
+    local entry = self._catalogIndex[cvarName]
+    local displayName = entry and self:GetCatalogLabel(entry) or cvarName
     self:FeedbackShow(displayName)
+
+    PushUndo({ type = "cvar", action = "show", cvar = cvarName })
 
     if self.RefreshFrameList then
         self:RefreshFrameList()
@@ -929,14 +956,10 @@ function HA:HideTexture(textureName)
     self.db.hiddenTextures[textureName] = true
     self:HookTexture(region, textureName)
 
-    local displayName = textureName
-    for _, entry in ipairs(self.FRAME_CATALOG) do
-        if entry.texture == textureName then
-            displayName = self:GetCatalogLabel(entry)
-            break
-        end
-    end
+    local entry = self._catalogIndex[textureName]
+    local displayName = entry and self:GetCatalogLabel(entry) or textureName
     self:FeedbackHide(displayName)
+    PushUndo({ type = "texture", action = "hide", texture = textureName })
     if self.RefreshFrameList then self:RefreshFrameList() end
     return true
 end
@@ -956,14 +979,10 @@ function HA:ShowTexture(textureName)
         end)
     end
 
-    local displayName = textureName
-    for _, entry in ipairs(self.FRAME_CATALOG) do
-        if entry.texture == textureName then
-            displayName = self:GetCatalogLabel(entry)
-            break
-        end
-    end
+    local entry = self._catalogIndex[textureName]
+    local displayName = entry and self:GetCatalogLabel(entry) or textureName
     self:FeedbackShow(displayName)
+    PushUndo({ type = "texture", action = "show", texture = textureName })
     if self.RefreshFrameList then self:RefreshFrameList() end
     return true
 end
@@ -995,4 +1014,195 @@ function HA:ReapplyHiddenTextures()
             end
         end)
     end
+end
+
+---------------------------------------------------------------------------
+-- Undo / Redo public API
+---------------------------------------------------------------------------
+function HA:Undo()
+    local L = self.L
+    if #self._undoStack == 0 then
+        self:Print(L["UNDO_EMPTY"] or "Nothing to undo.")
+        return false
+    end
+
+    local action = table.remove(self._undoStack)
+    table.insert(self._redoStack, action)
+
+    -- Reverse the action silently (no new undo push)
+    if action.type == "frame" then
+        if action.action == "hide" then
+            -- Undo a hide → show the frame
+            self.db.hiddenFrames[action.name] = nil
+            local frame = self:GetFrameByName(action.name)
+            if frame then self:SecureShowFrame(frame, action.name) end
+            self:ChatMsg((L["UNDO_SHOWN"] or "Undo: shown |cff00ff00%s|r"):format(action.name))
+        else
+            -- Undo a show → hide the frame
+            local frame = self:GetFrameByName(action.name)
+            if frame then self:SecureHideFrame(frame, action.name) end
+            self.db.hiddenFrames[action.name] = true
+            self:ChatMsg((L["UNDO_HIDDEN"] or "Undo: hidden |cffff8800%s|r"):format(action.name))
+        end
+    elseif action.type == "cvar" then
+        if action.action == "hide" then
+            pcall(SetCVar, action.cvar, "1")
+            self.db.hiddenCVars[action.cvar] = nil
+            self:ChatMsg((L["UNDO_SHOWN"] or "Undo: shown |cff00ff00%s|r"):format(action.cvar))
+        else
+            pcall(SetCVar, action.cvar, "0")
+            self.db.hiddenCVars[action.cvar] = true
+            self:ChatMsg((L["UNDO_HIDDEN"] or "Undo: hidden |cffff8800%s|r"):format(action.cvar))
+        end
+    elseif action.type == "texture" then
+        if action.action == "hide" then
+            self:ShowTexture(action.texture)
+        else
+            self:HideTexture(action.texture)
+        end
+    end
+
+    if self.RefreshFrameList then self:RefreshFrameList() end
+    return true
+end
+
+function HA:Redo()
+    local L = self.L
+    if #self._redoStack == 0 then
+        self:Print(L["REDO_EMPTY"] or "Nothing to redo.")
+        return false
+    end
+
+    local action = table.remove(self._redoStack)
+    table.insert(self._undoStack, action)
+
+    -- Re-apply the action
+    if action.type == "frame" then
+        if action.action == "hide" then
+            local frame = self:GetFrameByName(action.name)
+            if frame then self:SecureHideFrame(frame, action.name) end
+            self.db.hiddenFrames[action.name] = true
+            self:ChatMsg((L["REDO_HIDDEN"] or "Redo: hidden |cffff8800%s|r"):format(action.name))
+        else
+            self.db.hiddenFrames[action.name] = nil
+            local frame = self:GetFrameByName(action.name)
+            if frame then self:SecureShowFrame(frame, action.name) end
+            self:ChatMsg((L["REDO_SHOWN"] or "Redo: shown |cff00ff00%s|r"):format(action.name))
+        end
+    elseif action.type == "cvar" then
+        if action.action == "hide" then
+            pcall(SetCVar, action.cvar, "0")
+            self.db.hiddenCVars[action.cvar] = true
+            self:ChatMsg((L["REDO_HIDDEN"] or "Redo: hidden |cffff8800%s|r"):format(action.cvar))
+        else
+            pcall(SetCVar, action.cvar, "1")
+            self.db.hiddenCVars[action.cvar] = nil
+            self:ChatMsg((L["REDO_SHOWN"] or "Redo: shown |cff00ff00%s|r"):format(action.cvar))
+        end
+    elseif action.type == "texture" then
+        if action.action == "hide" then
+            self:HideTexture(action.texture)
+        else
+            self:ShowTexture(action.texture)
+        end
+    end
+
+    if self.RefreshFrameList then self:RefreshFrameList() end
+    return true
+end
+
+---------------------------------------------------------------------------
+-- Preset profiles
+---------------------------------------------------------------------------
+HA.PRESET_PROFILES = {
+    {
+        id = "minimalist",
+        label = "Minimalist UI",
+        labelDE = "Minimalistische UI",
+        labelFR = "Interface minimaliste",
+        labelES = "Interfaz minimalista",
+        labelRU = "Минимальный интерфейс",
+        labelIT = "Interfaccia minimalista",
+        frames = {
+            "MinimapCluster", "BuffFrame", "DebuffFrame",
+            "ChatFrame1", "GeneralDockManager", "ChatFrameMenuButton",
+            "DurabilityFrame", "QueueStatusButton",
+            "MicroMenuContainer", "BagBar",
+            "ObjectiveTrackerFrame",
+        },
+    },
+    {
+        id = "pvp_clean",
+        label = "PvP Clean",
+        labelDE = "PvP Aufgeräumt",
+        labelFR = "JcJ épuré",
+        labelES = "JcJ limpio",
+        labelRU = "PvP чисто",
+        labelIT = "PvP pulito",
+        frames = {
+            "BuffFrame", "DebuffFrame", "ObjectiveTrackerFrame",
+            "ChatFrame1", "GeneralDockManager",
+            "BossBanner", "AlertFrame", "ZoneTextFrame", "SubZoneTextFrame",
+            "DurabilityFrame", "UIErrorsFrame",
+        },
+    },
+    {
+        id = "healer",
+        label = "Healer Setup",
+        labelDE = "Heiler Setup",
+        labelFR = "Configuration guérisseur",
+        labelES = "Configuración sanador",
+        labelRU = "Настройка хилера",
+        labelIT = "Configurazione guaritore",
+        frames = {
+            "ObjectiveTrackerFrame", "BossBanner",
+            "ZoneTextFrame", "SubZoneTextFrame",
+            "ChatFrame1", "GeneralDockManager",
+            "DurabilityFrame", "UIErrorsFrame", "RaidWarningFrame",
+        },
+    },
+    {
+        id = "screenshot",
+        label = "Screenshot Mode",
+        labelDE = "Screenshot-Modus",
+        labelFR = "Mode capture d'écran",
+        labelES = "Modo captura de pantalla",
+        labelRU = "Режим скриншота",
+        labelIT = "Modalità screenshot",
+        frames = {
+            "PlayerFrame", "TargetFrame", "FocusFrame", "PetFrame",
+            "MainMenuBar", "MultiBarBottomLeft", "MultiBarBottomRight",
+            "MultiBarRight", "MultiBarLeft",
+            "MinimapCluster", "BuffFrame", "DebuffFrame",
+            "ChatFrame1", "GeneralDockManager", "ChatFrameMenuButton",
+            "ObjectiveTrackerFrame", "MicroMenuContainer", "BagBar",
+            "StanceBar", "DurabilityFrame",
+        },
+    },
+}
+
+function HA:GetPresetLabel(preset)
+    local lang = self._currentLanguage or "enUS"
+    if lang == "deDE" and preset.labelDE then return preset.labelDE end
+    if lang == "frFR" and preset.labelFR then return preset.labelFR end
+    if lang == "esES" and preset.labelES then return preset.labelES end
+    if lang == "ruRU" and preset.labelRU then return preset.labelRU end
+    if lang == "itIT" and preset.labelIT then return preset.labelIT end
+    return preset.label
+end
+
+function HA:ApplyPreset(presetId)
+    for _, preset in ipairs(self.PRESET_PROFILES) do
+        if preset.id == presetId then
+            -- Show all current hidden frames first
+            self:ShowAllFrames()
+            -- Apply preset frames
+            for _, frameName in ipairs(preset.frames) do
+                self:HideFrame(frameName)
+            end
+            self:ChatMsg((self.L["PRESET_APPLIED"] or "Preset |cff00cc66%s|r applied."):format(self:GetPresetLabel(preset)))
+            return true
+        end
+    end
+    return false
 end

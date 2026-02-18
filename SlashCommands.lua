@@ -116,6 +116,27 @@ SlashCmdList["HIDEANYTHING"] = function(msg)
     elseif cmd == "minimap" then
         HA:ToggleMinimapButton()
 
+    elseif cmd == "undo" or cmd == "z" then
+        HA:Undo()
+
+    elseif cmd == "redo" or cmd == "y" then
+        HA:Redo()
+
+    elseif cmd == "picker" or cmd == "pick" or cmd == "select" then
+        HA:ToggleFramePicker()
+
+    elseif cmd == "preset" then
+        if args == "" then
+            HA:Print("|cff00cc66Available presets:|r")
+            for _, preset in ipairs(HA.PRESET_PROFILES) do
+                HA:Print("  |cff00cc66/hide preset " .. preset.id .. "|r - " .. HA:GetPresetLabel(preset))
+            end
+        else
+            if not HA:ApplyPreset(args) then
+                HA:Print(L["ERROR_UNKNOWN_CMD"]:format("preset " .. args))
+            end
+        end
+
     else
         HA:Print(L["ERROR_UNKNOWN_CMD"]:format(cmd))
     end
@@ -140,6 +161,10 @@ function HA:PrintHelp()
     self:Print(L["HELP_STATUS"])
     self:Print(L["HELP_MINIMAP"])
     self:Print(L["HELP_ALPHA"])
+    self:Print(L["HELP_UNDO"] or "|cff00cc66/hide undo|r - Undo last action")
+    self:Print(L["HELP_REDO"] or "|cff00cc66/hide redo|r - Redo last undone action")
+    self:Print(L["HELP_PICKER"] or "|cff00cc66/hide picker|r - Toggle frame picker mode")
+    self:Print(L["HELP_PRESET"] or "|cff00cc66/hide preset <name>|r - Apply a preset profile")
 end
 
 ---------------------------------------------------------------------------

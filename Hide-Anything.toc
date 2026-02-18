@@ -24,6 +24,7 @@ Config.lua
 Feedback.lua
 Core.lua
 Highlight.lua
+FrameSelector.lua
 
 Tooltips.lua
 Minimap.lua

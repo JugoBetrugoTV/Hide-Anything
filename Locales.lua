@@ -55,6 +55,10 @@ HA.LOCALES["enUS"] = {
     HELP_STATUS              = "|cff00cc66/hide status|r - Show addon status",
     HELP_MINIMAP             = "|cff00cc66/hide minimap|r - Toggle minimap button",
     HELP_ALPHA               = "|cff00cc66/hide alpha <frame> <0-100>|r - Set frame opacity",
+    HELP_UNDO                = "|cff00cc66/hide undo|r - Undo last action (Ctrl+Z)",
+    HELP_REDO                = "|cff00cc66/hide redo|r - Redo last undone action (Ctrl+Y)",
+    HELP_PICKER              = "|cff00cc66/hide picker|r - Toggle frame picker mode (Ctrl+P)",
+    HELP_PRESET              = "|cff00cc66/hide preset <name>|r - Apply a preset profile",
 
     -- Hide / Show
     FRAME_HIDDEN             = "Hidden: |cffff8800%s|r",
@@ -136,6 +140,7 @@ HA.LOCALES["enUS"] = {
     MINIMAP_HIDDEN           = "Minimap button |cffff4444hidden|r.",
     MINIMAP_TOOLTIP_TITLE    = "|cff00cc66Hide|rAnything",
     MINIMAP_TOOLTIP_LEFT     = "|cff00cc66Left-Click|r: Toggle options",
+    MINIMAP_TOOLTIP_RIGHT    = "|cff00cc66Right-Click|r: Frame Picker",
     MINIMAP_TOOLTIP_SHIFT    = "|cff8888ffShift-Click|r: Show all hidden frames",
     MINIMAP_TOOLTIP_DRAG     = "|cff888888Drag|r to move",
 
@@ -210,6 +215,23 @@ HA.LOCALES["enUS"] = {
     ABOUT_STATS_HIDDEN       = "Hidden: |cffffffff%d|r",
     ABOUT_STATS_PROFILES     = "Profiles: |cffffffff%d|r",
     ABOUT_STATS_CATALOG      = "Catalog: |cffffffff%d+|r",
+
+    -- Undo / Redo
+    UNDO_EMPTY               = "Nothing to undo.",
+    REDO_EMPTY               = "Nothing to redo.",
+    UNDO_SHOWN               = "Undo: shown |cff00ff00%s|r",
+    UNDO_HIDDEN              = "Undo: hidden |cffff8800%s|r",
+    REDO_SHOWN               = "Redo: shown |cff00ff00%s|r",
+    REDO_HIDDEN              = "Redo: hidden |cffff8800%s|r",
+
+    -- Frame Picker
+    PICKER_ACTIVATED         = "|cff00c761Frame Picker|r activated. Click a frame to hide it.",
+    PICKER_HOVER_HINT        = "Hover over a UI element...",
+    PICKER_INSTRUCTIONS      = "|cff00c761Left-Click|r to hide  |  |cffff4444Right-Click|r or |cffff4444ESC|r to cancel",
+
+    -- Presets
+    PRESETS_HEADER           = "Presets",
+    PRESET_APPLIED           = "Preset |cff00cc66%s|r applied.",
 }
 
 ---------------------------------------------------------------------------
@@ -389,6 +411,29 @@ HA.LOCALES["deDE"] = {
     ABOUT_STATS_HIDDEN       = "Versteckt: |cffffffff%d|r",
     ABOUT_STATS_PROFILES     = "Profile: |cffffffff%d|r",
     ABOUT_STATS_CATALOG      = "Katalog: |cffffffff%d+|r",
+
+    -- Undo / Redo
+    UNDO_EMPTY               = "Nichts rückgängig zu machen.",
+    REDO_EMPTY               = "Nichts wiederherzustellen.",
+    UNDO_SHOWN               = "Rückgängig: |cff00ff00%s|r angezeigt",
+    UNDO_HIDDEN              = "Rückgängig: |cffff8800%s|r versteckt",
+    REDO_SHOWN               = "Wiederherstellen: |cff00ff00%s|r angezeigt",
+    REDO_HIDDEN              = "Wiederherstellen: |cffff8800%s|r versteckt",
+
+    -- Frame Picker
+    PICKER_ACTIVATED         = "|cff00c761Frame-Picker|r aktiviert. Klicke einen Frame um ihn zu verstecken.",
+    PICKER_HOVER_HINT        = "Fahre über ein UI-Element...",
+    PICKER_INSTRUCTIONS      = "|cff00c761Linksklick|r zum Verstecken  |  |cffff4444Rechtsklick|r oder |cffff4444ESC|r zum Abbrechen",
+
+    -- Presets
+    PRESETS_HEADER           = "Vorlagen",
+    PRESET_APPLIED           = "Vorlage |cff00cc66%s|r angewendet.",
+
+    MINIMAP_TOOLTIP_RIGHT    = "|cff00cc66Rechtsklick|r: Frame-Picker",
+    HELP_UNDO                = "|cff00cc66/hide undo|r - Letzte Aktion rückgängig machen (Strg+Z)",
+    HELP_REDO                = "|cff00cc66/hide redo|r - Letzte Aktion wiederherstellen (Strg+Y)",
+    HELP_PICKER              = "|cff00cc66/hide picker|r - Frame-Picker umschalten (Strg+P)",
+    HELP_PRESET              = "|cff00cc66/hide preset <name>|r - Vorlage anwenden",
 }
 
 ---------------------------------------------------------------------------
@@ -568,6 +613,19 @@ HA.LOCALES["frFR"] = {
     ABOUT_STATS_HIDDEN       = "Masqués : |cffffffff%d|r",
     ABOUT_STATS_PROFILES     = "Profils : |cffffffff%d|r",
     ABOUT_STATS_CATALOG      = "Catalogue : |cffffffff%d+|r",
+
+    UNDO_EMPTY               = "Rien à annuler.",
+    REDO_EMPTY               = "Rien à rétablir.",
+    UNDO_SHOWN               = "Annulé : |cff00ff00%s|r affiché",
+    UNDO_HIDDEN              = "Annulé : |cffff8800%s|r masqué",
+    REDO_SHOWN               = "Rétabli : |cff00ff00%s|r affiché",
+    REDO_HIDDEN              = "Rétabli : |cffff8800%s|r masqué",
+    PICKER_ACTIVATED         = "|cff00c761Sélecteur|r activé. Cliquez sur un cadre pour le masquer.",
+    PICKER_HOVER_HINT        = "Survolez un élément d'interface...",
+    PICKER_INSTRUCTIONS      = "|cff00c761Clic gauche|r masquer  |  |cffff4444Clic droit|r ou |cffff4444ÉCHAP|r annuler",
+    PRESETS_HEADER           = "Préréglages",
+    PRESET_APPLIED           = "Préréglage |cff00cc66%s|r appliqué.",
+    MINIMAP_TOOLTIP_RIGHT    = "|cff00cc66Clic droit|r : Sélecteur de cadre",
 }
 
 ---------------------------------------------------------------------------
@@ -747,6 +805,19 @@ HA.LOCALES["esES"] = {
     ABOUT_STATS_HIDDEN       = "Ocultos: |cffffffff%d|r",
     ABOUT_STATS_PROFILES     = "Perfiles: |cffffffff%d|r",
     ABOUT_STATS_CATALOG      = "Catálogo: |cffffffff%d+|r",
+
+    UNDO_EMPTY               = "Nada que deshacer.",
+    REDO_EMPTY               = "Nada que rehacer.",
+    UNDO_SHOWN               = "Deshacer: |cff00ff00%s|r mostrado",
+    UNDO_HIDDEN              = "Deshacer: |cffff8800%s|r oculto",
+    REDO_SHOWN               = "Rehacer: |cff00ff00%s|r mostrado",
+    REDO_HIDDEN              = "Rehacer: |cffff8800%s|r oculto",
+    PICKER_ACTIVATED         = "|cff00c761Selector|r activado. Haz clic en un marco para ocultarlo.",
+    PICKER_HOVER_HINT        = "Pasa sobre un elemento de interfaz...",
+    PICKER_INSTRUCTIONS      = "|cff00c761Clic izquierdo|r ocultar  |  |cffff4444Clic derecho|r o |cffff4444ESC|r cancelar",
+    PRESETS_HEADER           = "Preajustes",
+    PRESET_APPLIED           = "Preajuste |cff00cc66%s|r aplicado.",
+    MINIMAP_TOOLTIP_RIGHT    = "|cff00cc66Clic derecho|r: Selector de marco",
 }
 
 ---------------------------------------------------------------------------
@@ -926,6 +997,19 @@ HA.LOCALES["ruRU"] = {
     ABOUT_STATS_HIDDEN       = "Скрыто: |cffffffff%d|r",
     ABOUT_STATS_PROFILES     = "Профили: |cffffffff%d|r",
     ABOUT_STATS_CATALOG      = "Каталог: |cffffffff%d+|r",
+
+    UNDO_EMPTY               = "Нечего отменять.",
+    REDO_EMPTY               = "Нечего повторять.",
+    UNDO_SHOWN               = "Отмена: |cff00ff00%s|r показан",
+    UNDO_HIDDEN              = "Отмена: |cffff8800%s|r скрыт",
+    REDO_SHOWN               = "Повтор: |cff00ff00%s|r показан",
+    REDO_HIDDEN              = "Повтор: |cffff8800%s|r скрыт",
+    PICKER_ACTIVATED         = "|cff00c761Выбор фрейма|r активирован. Нажмите на фрейм чтобы скрыть.",
+    PICKER_HOVER_HINT        = "Наведите на элемент интерфейса...",
+    PICKER_INSTRUCTIONS      = "|cff00c761ЛКМ|r скрыть  |  |cffff4444ПКМ|r или |cffff4444ESC|r отмена",
+    PRESETS_HEADER           = "Шаблоны",
+    PRESET_APPLIED           = "Шаблон |cff00cc66%s|r применён.",
+    MINIMAP_TOOLTIP_RIGHT    = "|cff00cc66ПКМ|r: Выбор фрейма",
 }
 
 ---------------------------------------------------------------------------
@@ -1105,6 +1189,19 @@ HA.LOCALES["itIT"] = {
     ABOUT_STATS_HIDDEN       = "Nascosti: |cffffffff%d|r",
     ABOUT_STATS_PROFILES     = "Profili: |cffffffff%d|r",
     ABOUT_STATS_CATALOG      = "Catalogo: |cffffffff%d+|r",
+
+    UNDO_EMPTY               = "Nulla da annullare.",
+    REDO_EMPTY               = "Nulla da ripetere.",
+    UNDO_SHOWN               = "Annullato: |cff00ff00%s|r mostrato",
+    UNDO_HIDDEN              = "Annullato: |cffff8800%s|r nascosto",
+    REDO_SHOWN               = "Ripeti: |cff00ff00%s|r mostrato",
+    REDO_HIDDEN              = "Ripeti: |cffff8800%s|r nascosto",
+    PICKER_ACTIVATED         = "|cff00c761Selettore|r attivato. Clicca su un riquadro per nasconderlo.",
+    PICKER_HOVER_HINT        = "Passa sopra un elemento dell'interfaccia...",
+    PICKER_INSTRUCTIONS      = "|cff00c761Clic sinistro|r nascondi  |  |cffff4444Clic destro|r o |cffff4444ESC|r annulla",
+    PRESETS_HEADER           = "Predefiniti",
+    PRESET_APPLIED           = "Predefinito |cff00cc66%s|r applicato.",
+    MINIMAP_TOOLTIP_RIGHT    = "|cff00cc66Clic destro|r: Selettore riquadro",
 }
 
 ---------------------------------------------------------------------------

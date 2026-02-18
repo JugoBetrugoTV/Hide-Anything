@@ -29,6 +29,11 @@ local ACCENT_DIM_R, ACCENT_DIM_G, ACCENT_DIM_B = 0, 0.55, 0.27
 local tabContents = {}
 local activeTab = nil
 local searchFilter = ""  -- current search text
+local collapsedSections = {} -- collapsed section state (by label)
+
+-- Debounce timer for RefreshFrameList
+local refreshPending = false
+local REFRESH_THROTTLE = 0.05
 
 ---------------------------------------------------------------------------
 -- Reusable backdrop tables (avoid garbage)
@@ -71,6 +76,124 @@ local BD_CARD = {
     edgeSize = 10,
     insets   = { left = 2, right = 2, top = 2, bottom = 2 },
 }
+
+---------------------------------------------------------------------------
+-- Search highlighting helper
+---------------------------------------------------------------------------
+local function HighlightSearch(text, filter)
+    if not filter or filter == "" then return text end
+    local lower = strlower(text)
+    local start, stop = strfind(lower, filter, 1, true)
+    if not start then return text end
+    local before = strsub(text, 1, start - 1)
+    local match  = strsub(text, start, stop)
+    local after  = strsub(text, stop + 1)
+    return before .. "|cffFFFF00" .. match .. "|r" .. after
+end
+
+---------------------------------------------------------------------------
+-- Right-click context menu
+---------------------------------------------------------------------------
+local contextMenu = CreateFrame("Frame", "HideAnythingContextMenu", UIParent, "BackdropTemplate")
+contextMenu:SetSize(180, 10)
+contextMenu:SetFrameStrata("FULLSCREEN_DIALOG")
+contextMenu:SetFrameLevel(300)
+contextMenu:SetBackdrop(BD_POPUP)
+contextMenu:SetBackdropColor(0.08, 0.08, 0.10, 0.97)
+contextMenu:SetBackdropBorderColor(0.30, 0.30, 0.33, 1)
+contextMenu:EnableMouse(true)
+contextMenu:Hide()
+contextMenu._items = {}
+
+local function ClearContextMenu()
+    for _, item in ipairs(contextMenu._items) do
+        item:Hide()
+    end
+    wipe(contextMenu._items)
+    contextMenu:Hide()
+end
+
+local function AddContextItem(text, onClick)
+    local idx = #contextMenu._items + 1
+    local item = CreateFrame("Button", nil, contextMenu)
+    item:SetSize(170, 22)
+    item:SetPoint("TOPLEFT", contextMenu, "TOPLEFT", 5, -5 - (idx - 1) * 22)
+
+    local lbl = item:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    lbl:SetPoint("LEFT", 6, 0)
+    lbl:SetText(text)
+    lbl:SetTextColor(0.85, 0.85, 0.88)
+
+    local hover = item:CreateTexture(nil, "BACKGROUND")
+    hover:SetAllPoints()
+    hover:SetTexture("Interface\\Buttons\\WHITE8X8")
+    hover:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 0)
+
+    item:SetScript("OnEnter", function() hover:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 0.15) end)
+    item:SetScript("OnLeave", function() hover:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 0) end)
+    item:SetScript("OnClick", function()
+        ClearContextMenu()
+        if onClick then onClick() end
+    end)
+
+    contextMenu._items[idx] = item
+    contextMenu:SetHeight(10 + idx * 22)
+end
+
+local function ShowContextMenu(frameName, anchor)
+    ClearContextMenu()
+
+    local L = HA.L
+    local isHidden = HA.db.hiddenFrames[frameName]
+    local isCombat = HA.db.combatHideFrames[frameName]
+
+    if isHidden then
+        AddContextItem("|cff00ff00" .. (L["UI_BTN_SHOW"] or "Show") .. "|r", function()
+            HA:ShowFrame(frameName)
+        end)
+    else
+        AddContextItem("|cffff4444" .. (L["UI_BTN_HIDE"] or "Hide") .. "|r", function()
+            HA:HideFrame(frameName)
+        end)
+    end
+
+    AddContextItem((isCombat and "|cff00ff00@|r " or "|cff555560@|r ") .. (L["CFG_COMBAT_HIDE"] or "Combat Auto-Hide"), function()
+        if isCombat then
+            HA.db.combatHideFrames[frameName] = nil
+        else
+            HA.db.combatHideFrames[frameName] = true
+        end
+        HA:RefreshFrameList()
+    end)
+
+    AddContextItem((L["ALPHA_TITLE"] or "Opacity") .. "...", function()
+        HA:ShowAlphaPopup(frameName, anchor)
+    end)
+
+    AddContextItem("|cffff8888" .. (L["ALPHA_RESET"] and "Reset Alpha" or "Reset Alpha") .. "|r", function()
+        HA:SetFrameAlpha(frameName, 1.0)
+        HA:RefreshFrameList()
+    end)
+
+    contextMenu:ClearAllPoints()
+    if anchor then
+        contextMenu:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, 0)
+    else
+        local x, y = GetCursorPosition()
+        local scale = UIParent:GetEffectiveScale()
+        contextMenu:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x / scale, y / scale)
+    end
+    contextMenu:Show()
+end
+
+-- Hide context menu when clicking elsewhere
+contextMenu:SetScript("OnLeave", function(self)
+    C_Timer.After(0.3, function()
+        if not self:IsMouseOver() then
+            ClearContextMenu()
+        end
+    end)
+end)
 
 ---------------------------------------------------------------------------
 -- Frame pool for catalog rows
@@ -343,6 +466,27 @@ end)
 
 panel:SetScript("OnHide", function()
     HA:UnhighlightFrame()
+end)
+
+-- Resize grip (bottom-right corner)
+panel:SetResizable(true)
+panel:SetResizeBounds(440, 400, 900, 900)
+
+local resizeGrip = CreateFrame("Button", nil, panel)
+resizeGrip:SetSize(16, 16)
+resizeGrip:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -4, 4)
+resizeGrip:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+resizeGrip:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+resizeGrip:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+resizeGrip:SetScript("OnMouseDown", function()
+    panel:StartSizing("BOTTOMRIGHT")
+end)
+resizeGrip:SetScript("OnMouseUp", function()
+    panel:StopMovingOrSizing()
+    -- Refresh layout after resize
+    if panel.initialized then
+        HA:RefreshFrameList()
+    end
 end)
 
 ---------------------------------------------------------------------------
@@ -788,6 +932,16 @@ local function BuildFramesTab(parent)
 end
 
 function HA:RefreshFrameList()
+    -- Debounce: coalesce rapid calls
+    if refreshPending then return end
+    refreshPending = true
+    C_Timer.After(REFRESH_THROTTLE, function()
+        refreshPending = false
+        HA:DoRefreshFrameList()
+    end)
+end
+
+function HA:DoRefreshFrameList()
     local L = self.L
     local tc = tabContents[1]
     if not tc or not tc.listParent then return end
@@ -864,6 +1018,7 @@ function HA:RefreshFrameList()
     y = y - 26
 
     local rowIndex = 0
+    local currentSection = nil
 
     for catIndex, entry in ipairs(self.FRAME_CATALOG) do
 
@@ -871,27 +1026,50 @@ function HA:RefreshFrameList()
         if not entry.section and not self:IsEntryAvailable(entry) then
             -- skip
 
+        -- Skip entries in collapsed sections
+        elseif not entry.section and currentSection and collapsedSections[currentSection] and searchFilter == "" then
+            -- skip collapsed children (but don't collapse when searching)
+
         -- Section header
         elseif entry.section then
             if SectionHasVisibleChildren(self.FRAME_CATALOG, catIndex, searchFilter) then
                 y = y - 8
                 local sectionLabel = self:GetCatalogLabel(entry)
+                local sectionKey = entry.label -- use English label as key
+                local isCollapsed = collapsedSections[sectionKey]
 
                 local secBg = AcquireMiscFrame(parent)
-                secBg:SetSize(parent:GetWidth(), 20)
+                secBg:SetSize(parent:GetWidth(), 22)
                 secBg:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, y)
+                secBg:EnableMouse(true)
 
+                -- Collapse/expand arrow
+                local arrow = isCollapsed and "|cff70a890>|r " or "|cff70a890v|r "
                 local secHeader = AcquireFont(parent, "GameFontNormalSmall")
                 secHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, y - 3)
-                secHeader:SetText("|cff70a890" .. sectionLabel .. "|r")
+                secHeader:SetText(arrow .. "|cff70a890" .. sectionLabel .. "|r")
 
                 local secLine = AcquireTexture(parent)
                 secLine:SetHeight(1)
                 secLine:SetPoint("TOPLEFT", secHeader, "BOTTOMLEFT", 0, -2)
                 secLine:SetPoint("RIGHT", parent, "RIGHT", -10, 0)
                 secLine:SetColorTexture(0.35, 0.55, 0.45, 0.25)
-                y = y - 20
+
+                -- Click to collapse/expand
+                secBg:SetScript("OnMouseDown", function()
+                    collapsedSections[sectionKey] = not collapsedSections[sectionKey]
+                    HA:RefreshFrameList()
+                end)
+                secBg:SetScript("OnEnter", function(self)
+                    secHeader:SetText(arrow .. "|cffaaddbb" .. sectionLabel .. "|r")
+                end)
+                secBg:SetScript("OnLeave", function(self)
+                    secHeader:SetText(arrow .. "|cff70a890" .. sectionLabel .. "|r")
+                end)
+
+                y = y - 22
             end
+            currentSection = entry.label
 
         -- CVar-based toggle
         elseif entry.cvar then
@@ -909,7 +1087,7 @@ function HA:RefreshFrameList()
                     row:SetBackdropColor(0.12, 0.12, 0.14, 0.35)
                 end
 
-                row._label:SetText(displayLabel)
+                row._label:SetText(HighlightSearch(displayLabel, searchFilter))
                 row._label:SetTextColor(0.85, 0.85, 0.88)
                 row._label:SetWidth(parent:GetWidth() * 0.42)
 
@@ -977,12 +1155,20 @@ function HA:RefreshFrameList()
                 end
 
                 if not frameExists then
-                    row._label:SetText("|cff555560" .. displayLabel .. "|r")
+                    row._label:SetText("|cff555560" .. HighlightSearch(displayLabel, searchFilter) .. "|r")
                 else
-                    row._label:SetText(displayLabel)
+                    row._label:SetText(HighlightSearch(displayLabel, searchFilter))
                     row._label:SetTextColor(0.85, 0.85, 0.88)
                 end
                 row._label:SetWidth(parent:GetWidth() * 0.33)
+
+                -- Right-click context menu
+                row:RegisterForDrag()
+                row:SetScript("OnMouseDown", function(self, button)
+                    if button == "RightButton" and frameExists then
+                        ShowContextMenu(frameName, self)
+                    end
+                end)
 
                 -- Edition tag + frame name
                 local edTag, edColor = self:GetEditionTag(entry)
@@ -1160,9 +1346,9 @@ function HA:RefreshFrameList()
                 end
 
                 if not regionExists then
-                    row._label:SetText("|cff555560" .. displayLabel .. "|r")
+                    row._label:SetText("|cff555560" .. HighlightSearch(displayLabel, searchFilter) .. "|r")
                 else
-                    row._label:SetText(displayLabel)
+                    row._label:SetText(HighlightSearch(displayLabel, searchFilter))
                     row._label:SetTextColor(0.85, 0.85, 0.88)
                 end
                 row._label:SetWidth(parent:GetWidth() * 0.42)
@@ -1476,12 +1662,30 @@ local function BuildProfilesTab(parent)
     end)
     btn5:SetPoint("LEFT", btn4, "RIGHT", 6, 0)
 
+    -- Preset profiles section
+    local presetLabel = inputCard:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    presetLabel:SetPoint("TOPLEFT", inputCard, "TOPLEFT", 12, btnY - 6)
+    presetLabel:SetText("|cff00c761" .. (L["PRESETS_HEADER"] or "Presets") .. ":|r")
+
+    local presetX = 0
+    for _, preset in ipairs(HA.PRESET_PROFILES) do
+        local presetBtn = CreateStyledButton(inputCard, 110, 22, HA:GetPresetLabel(preset), function()
+            HA:ApplyPreset(preset.id)
+        end)
+        if presetX == 0 then
+            presetBtn:SetPoint("LEFT", presetLabel, "RIGHT", 8, 0)
+        else
+            presetBtn:SetPoint("TOPLEFT", inputCard, "TOPLEFT", 10 + presetX, btnY - 6)
+        end
+        presetX = presetX + 116
+    end
+
     -- Profile list area
     local profileListHeader = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    profileListHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -124)
+    profileListHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -156)
     tabContents[2].profileListHeader = profileListHeader
     tabContents[2].listParent = parent
-    tabContents[2].listStartY = -148
+    tabContents[2].listStartY = -180
     tabContents[2].rows = {}
 end
 
@@ -1986,3 +2190,42 @@ end
 -- ESC to close
 ---------------------------------------------------------------------------
 tinsert(UISpecialFrames, "HideAnythingOptionsFrame")
+
+---------------------------------------------------------------------------
+-- Keyboard navigation
+---------------------------------------------------------------------------
+panel:EnableKeyboard(true)
+panel:SetPropagateKeyboardInput(true)
+
+panel:SetScript("OnKeyDown", function(self, key)
+    -- Only handle when panel is shown and no editbox is focused
+    if not self:IsShown() then return end
+    local focus = GetCurrentKeyBoardFocus()
+    if focus then
+        self:SetPropagateKeyboardInput(true)
+        return
+    end
+
+    if key == "TAB" then
+        -- Cycle tabs
+        self:SetPropagateKeyboardInput(false)
+        local nextTab = (activeTab or 1) % 3 + 1
+        HA:SelectTab(nextTab)
+    elseif key == "F" and IsControlKeyDown() then
+        -- Focus search box
+        self:SetPropagateKeyboardInput(false)
+        local searchBox = _G["HideAnythingSearchBox"]
+        if searchBox then searchBox:SetFocus() end
+    elseif key == "Z" and IsControlKeyDown() then
+        self:SetPropagateKeyboardInput(false)
+        HA:Undo()
+    elseif key == "Y" and IsControlKeyDown() then
+        self:SetPropagateKeyboardInput(false)
+        HA:Redo()
+    elseif key == "P" and IsControlKeyDown() then
+        self:SetPropagateKeyboardInput(false)
+        HA:ToggleFramePicker()
+    else
+        self:SetPropagateKeyboardInput(true)
+    end
+end)
