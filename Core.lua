@@ -52,6 +52,25 @@ local function PushUndo(action)
 end
 
 ---------------------------------------------------------------------------
+-- Recently Hidden tracking (most recent first, max 10)
+---------------------------------------------------------------------------
+HA._recentlyHidden = {}
+local RECENT_MAX = 10
+
+local function PushRecent(itemName)
+    -- Remove if already in list
+    for i = #HA._recentlyHidden, 1, -1 do
+        if HA._recentlyHidden[i] == itemName then
+            table.remove(HA._recentlyHidden, i)
+        end
+    end
+    table.insert(HA._recentlyHidden, 1, itemName)
+    if #HA._recentlyHidden > RECENT_MAX then
+        table.remove(HA._recentlyHidden)
+    end
+end
+
+---------------------------------------------------------------------------
 -- Catalog index (O(1) lookup by name/cvar/texture)
 ---------------------------------------------------------------------------
 HA._catalogIndex = {} -- built once after FRAME_CATALOG is available
@@ -69,6 +88,7 @@ HA.eventFrame:SetScript("OnEvent", function(self, event, ...)
     elseif event == "PLAYER_ENTERING_WORLD" then
         -- Always reapply hidden frames and CVars on login/reload
         C_Timer.After(0.5, function()
+            if not HA.db then return end
             HA:ReapplyHiddenFrames()
             HA:ReapplyHiddenCVars()
             HA:ReapplyFrameAlphas()
@@ -118,6 +138,11 @@ function HA:OnInitialize()
             elseif entry.texture then
                 self._catalogIndex[entry.texture] = entry
             end
+        end
+
+        -- Discover EditMode frames (Retail 10.0+)
+        if self.DiscoverEditModeFrames then
+            self:DiscoverEditModeFrames()
         end
 
         -- Mark init as done (for startup diagnostic in Locales.lua)
@@ -347,6 +372,7 @@ function HA:HideFrame(frameName)
         self.db.hiddenFrames[frameName] = true
         self:FeedbackHide(frameName)
         PushUndo({ type = "frame", action = "hide", name = frameName })
+        PushRecent(frameName)
         if self.RefreshFrameList then
             self:RefreshFrameList()
         end
@@ -432,6 +458,7 @@ function HA:HideCVar(cvarName)
     self:FeedbackHide(displayName)
 
     PushUndo({ type = "cvar", action = "hide", cvar = cvarName })
+    PushRecent(cvarName)
 
     if self.RefreshFrameList then
         self:RefreshFrameList()
@@ -447,7 +474,10 @@ function HA:ShowCVar(cvarName)
 
     if not self.db.hiddenCVars[cvarName] then return false end
 
-    pcall(SetCVar, cvarName, "1")
+    local ok = pcall(SetCVar, cvarName, "1")
+    if not ok then
+        self:FeedbackError("ERROR_CVAR_FAILED", cvarName)
+    end
     self.db.hiddenCVars[cvarName] = nil
 
     local entry = self._catalogIndex[cvarName]
@@ -557,6 +587,7 @@ function HA:ReapplyHiddenFrames()
     -- Retry failed frames after a short delay
     if #failed > 0 then
         C_Timer.After(2.0, function()
+            if not HA.db then return end
             for _, frameName in ipairs(failed) do
                 local frame = self:GetFrameByName(frameName)
                 if frame then
@@ -859,6 +890,7 @@ function HA:RequestReset()
         self:Print(L["RESET_CONFIRM"])
         self.resetPending = true
         C_Timer.After(15, function()
+            if not HA then return end
             HA.resetPending = false
         end)
     end
@@ -960,6 +992,7 @@ function HA:HideTexture(textureName)
     local displayName = entry and self:GetCatalogLabel(entry) or textureName
     self:FeedbackHide(displayName)
     PushUndo({ type = "texture", action = "hide", texture = textureName })
+    PushRecent(textureName)
     if self.RefreshFrameList then self:RefreshFrameList() end
     return true
 end
@@ -1005,6 +1038,7 @@ function HA:ReapplyHiddenTextures()
     -- Retry failed textures after a short delay
     if #failed > 0 then
         C_Timer.After(2.0, function()
+            if not HA.db then return end
             for _, textureName in ipairs(failed) do
                 local region = HA:GetRegionByName(textureName)
                 if region then
@@ -1019,96 +1053,76 @@ end
 ---------------------------------------------------------------------------
 -- Undo / Redo public API
 ---------------------------------------------------------------------------
-function HA:Undo()
-    local L = self.L
-    if #self._undoStack == 0 then
-        self:Print(L["UNDO_EMPTY"] or "Nothing to undo.")
+local function DoUndoRedo(srcStack, dstStack, isUndo)
+    local L = HA.L
+    if #srcStack == 0 then
+        local emptyKey = isUndo and "UNDO_EMPTY" or "REDO_EMPTY"
+        local emptyFallback = isUndo and "Nothing to undo." or "Nothing to redo."
+        HA:Print(L[emptyKey] or emptyFallback)
         return false
     end
 
-    local action = table.remove(self._undoStack)
-    table.insert(self._redoStack, action)
+    local action = table.remove(srcStack)
+    table.insert(dstStack, action)
 
-    -- Reverse the action silently (no new undo push)
+    -- For undo: reverse the action (hide->show, show->hide)
+    -- For redo: re-apply the action as-is
+    local effectiveAction
+    if isUndo then
+        effectiveAction = (action.action == "hide") and "show" or "hide"
+    else
+        effectiveAction = action.action
+    end
+
+    local hiddenKey = isUndo and "UNDO_HIDDEN" or "REDO_HIDDEN"
+    local shownKey  = isUndo and "UNDO_SHOWN"  or "REDO_SHOWN"
+    local hiddenFallback = isUndo and "Undo: hidden |cffff8800%s|r" or "Redo: hidden |cffff8800%s|r"
+    local shownFallback  = isUndo and "Undo: shown |cff00ff00%s|r"  or "Redo: shown |cff00ff00%s|r"
+
     if action.type == "frame" then
-        if action.action == "hide" then
-            -- Undo a hide → show the frame
-            self.db.hiddenFrames[action.name] = nil
-            local frame = self:GetFrameByName(action.name)
-            if frame then self:SecureShowFrame(frame, action.name) end
-            self:ChatMsg((L["UNDO_SHOWN"] or "Undo: shown |cff00ff00%s|r"):format(action.name))
+        if effectiveAction == "show" then
+            HA.db.hiddenFrames[action.name] = nil
+            local frame = HA:GetFrameByName(action.name)
+            if frame then HA:SecureShowFrame(frame, action.name) end
+            HA:ChatMsg((L[shownKey] or shownFallback):format(action.name))
         else
-            -- Undo a show → hide the frame
-            local frame = self:GetFrameByName(action.name)
-            if frame then self:SecureHideFrame(frame, action.name) end
-            self.db.hiddenFrames[action.name] = true
-            self:ChatMsg((L["UNDO_HIDDEN"] or "Undo: hidden |cffff8800%s|r"):format(action.name))
+            local frame = HA:GetFrameByName(action.name)
+            if frame then HA:SecureHideFrame(frame, action.name) end
+            HA.db.hiddenFrames[action.name] = true
+            HA:ChatMsg((L[hiddenKey] or hiddenFallback):format(action.name))
         end
     elseif action.type == "cvar" then
-        if action.action == "hide" then
+        if effectiveAction == "show" then
             pcall(SetCVar, action.cvar, "1")
-            self.db.hiddenCVars[action.cvar] = nil
-            self:ChatMsg((L["UNDO_SHOWN"] or "Undo: shown |cff00ff00%s|r"):format(action.cvar))
+            HA.db.hiddenCVars[action.cvar] = nil
+            HA:ChatMsg((L[shownKey] or shownFallback):format(action.cvar))
         else
             pcall(SetCVar, action.cvar, "0")
-            self.db.hiddenCVars[action.cvar] = true
-            self:ChatMsg((L["UNDO_HIDDEN"] or "Undo: hidden |cffff8800%s|r"):format(action.cvar))
+            HA.db.hiddenCVars[action.cvar] = true
+            HA:ChatMsg((L[hiddenKey] or hiddenFallback):format(action.cvar))
         end
     elseif action.type == "texture" then
-        if action.action == "hide" then
-            self:ShowTexture(action.texture)
+        if effectiveAction == "show" then
+            HA:ShowTexture(action.texture)
         else
-            self:HideTexture(action.texture)
+            HA:HideTexture(action.texture)
         end
     end
 
-    if self.RefreshFrameList then self:RefreshFrameList() end
+    if HA.RefreshFrameList then HA:RefreshFrameList() end
     return true
 end
 
+function HA:Undo()
+    return DoUndoRedo(self._undoStack, self._redoStack, true)
+end
+
 function HA:Redo()
-    local L = self.L
-    if #self._redoStack == 0 then
-        self:Print(L["REDO_EMPTY"] or "Nothing to redo.")
-        return false
-    end
+    return DoUndoRedo(self._redoStack, self._undoStack, false)
+end
 
-    local action = table.remove(self._redoStack)
-    table.insert(self._undoStack, action)
-
-    -- Re-apply the action
-    if action.type == "frame" then
-        if action.action == "hide" then
-            local frame = self:GetFrameByName(action.name)
-            if frame then self:SecureHideFrame(frame, action.name) end
-            self.db.hiddenFrames[action.name] = true
-            self:ChatMsg((L["REDO_HIDDEN"] or "Redo: hidden |cffff8800%s|r"):format(action.name))
-        else
-            self.db.hiddenFrames[action.name] = nil
-            local frame = self:GetFrameByName(action.name)
-            if frame then self:SecureShowFrame(frame, action.name) end
-            self:ChatMsg((L["REDO_SHOWN"] or "Redo: shown |cff00ff00%s|r"):format(action.name))
-        end
-    elseif action.type == "cvar" then
-        if action.action == "hide" then
-            pcall(SetCVar, action.cvar, "0")
-            self.db.hiddenCVars[action.cvar] = true
-            self:ChatMsg((L["REDO_HIDDEN"] or "Redo: hidden |cffff8800%s|r"):format(action.cvar))
-        else
-            pcall(SetCVar, action.cvar, "1")
-            self.db.hiddenCVars[action.cvar] = nil
-            self:ChatMsg((L["REDO_SHOWN"] or "Redo: shown |cff00ff00%s|r"):format(action.cvar))
-        end
-    elseif action.type == "texture" then
-        if action.action == "hide" then
-            self:HideTexture(action.texture)
-        else
-            self:ShowTexture(action.texture)
-        end
-    end
-
-    if self.RefreshFrameList then self:RefreshFrameList() end
-    return true
+function HA:GetRecentlyHidden()
+    return self._recentlyHidden
 end
 
 ---------------------------------------------------------------------------

@@ -8,15 +8,41 @@
 local AddonName, HA = ...
 
 ---------------------------------------------------------------------------
+-- Profile name validation
+---------------------------------------------------------------------------
+local function ValidateProfileName(name)
+    if not name or name == "" then return false, "PROFILE_NAME_REQUIRED" end
+    name = strtrim(name)
+    if name == "" then return false, "PROFILE_NAME_REQUIRED" end
+    if #name > 30 then return false, "PROFILE_NAME_TOO_LONG" end
+    if strfind(name, "|") or strfind(name, "\n") or strfind(name, "\r") then
+        return false, "PROFILE_NAME_INVALID"
+    end
+    return true, name
+end
+
+---------------------------------------------------------------------------
+-- Export delimiter encoding/decoding
+---------------------------------------------------------------------------
+local function EncodeDelimiters(s)
+    return s:gsub("%%", "%%25"):gsub("|", "%%7C"):gsub(",", "%%2C")
+end
+local function DecodeDelimiters(s)
+    return s:gsub("%%2C", ","):gsub("%%7C", "|"):gsub("%%25", "%%")
+end
+
+---------------------------------------------------------------------------
 -- Save current hidden frames as a profile
 ---------------------------------------------------------------------------
 function HA:SaveProfile(name, overwrite)
     local L = self.L
 
-    if not name or name == "" then
-        self:Print(L["PROFILE_NAME_REQUIRED"])
+    local valid, result = ValidateProfileName(name)
+    if not valid then
+        self:Print(L[result] or result)
         return
     end
+    name = result
 
     -- Check if profile already exists
     if self.db.profiles[name] and not overwrite then
@@ -48,10 +74,12 @@ end
 function HA:LoadProfile(name)
     local L = self.L
 
-    if not name or name == "" then
-        self:Print(L["PROFILE_NAME_REQUIRED"])
+    local valid, result = ValidateProfileName(name)
+    if not valid then
+        self:Print(L[result] or result)
         return
     end
+    name = result
 
     local profile = self.db.profiles[name]
     if not profile then
@@ -136,17 +164,36 @@ end
 ---------------------------------------------------------------------------
 -- Delete a profile
 ---------------------------------------------------------------------------
-function HA:DeleteProfile(name)
+function HA:DeleteProfile(name, confirmed)
     local L = self.L
 
-    if not name or name == "" then
-        self:Print(L["PROFILE_NAME_REQUIRED"])
+    local valid, result = ValidateProfileName(name)
+    if not valid then
+        self:Print(L[result] or result)
         return
     end
+    name = result
 
     if not self.db.profiles[name] then
         self:Print(L["PROFILE_NOT_FOUND"]:format(name))
         return
+    end
+
+    -- Confirmation step
+    if not confirmed then
+        if self._pendingDeleteName == name then
+            -- Second call for same name = confirmed
+            self._pendingDeleteName = nil
+        else
+            self._pendingDeleteName = name
+            self:Print((L["PROFILE_DELETE_CONFIRM"] or "Delete profile |cffff4444%s|r? Repeat to confirm."):format(name))
+            C_Timer.After(10, function()
+                if HA._pendingDeleteName == name then
+                    HA._pendingDeleteName = nil
+                end
+            end)
+            return
+        end
     end
 
     self.db.profiles[name] = nil
@@ -204,10 +251,12 @@ end
 function HA:ExportProfile(name)
     local L = self.L
 
-    if not name or name == "" then
-        self:Print(L["PROFILE_NAME_REQUIRED"])
+    local valid, result = ValidateProfileName(name)
+    if not valid then
+        self:Print(L[result] or result)
         return
     end
+    name = result
 
     local profile = self.db.profiles[name]
     if not profile then
@@ -219,7 +268,7 @@ function HA:ExportProfile(name)
     local frames = {}
     if profile.hiddenFrames then
         for frameName, _ in pairs(profile.hiddenFrames) do
-            table.insert(frames, frameName)
+            table.insert(frames, EncodeDelimiters(frameName))
         end
     end
 
@@ -227,7 +276,7 @@ function HA:ExportProfile(name)
     local cvars = {}
     if profile.hiddenCVars then
         for cvarName, _ in pairs(profile.hiddenCVars) do
-            table.insert(cvars, cvarName)
+            table.insert(cvars, EncodeDelimiters(cvarName))
         end
     end
 
@@ -235,7 +284,7 @@ function HA:ExportProfile(name)
     local textures = {}
     if profile.hiddenTextures then
         for textureName, _ in pairs(profile.hiddenTextures) do
-            table.insert(textures, textureName)
+            table.insert(textures, EncodeDelimiters(textureName))
         end
     end
 
@@ -243,7 +292,7 @@ function HA:ExportProfile(name)
     local alphas = {}
     if profile.frameAlphas then
         for frameName, alpha in pairs(profile.frameAlphas) do
-            table.insert(alphas, frameName .. "=" .. math.floor(alpha * 100))
+            table.insert(alphas, EncodeDelimiters(frameName) .. "=" .. math.floor(alpha * 100))
         end
     end
 
@@ -319,7 +368,7 @@ function HA:ImportProfileHA1(data)
     if frameList and frameList ~= "" then
         local frameNames = { strsplit(",", frameList) }
         for _, frameName in ipairs(frameNames) do
-            frameName = strtrim(frameName)
+            frameName = DecodeDelimiters(strtrim(frameName))
             if frameName ~= "" then
                 hiddenFrames[frameName] = true
             end
@@ -340,6 +389,15 @@ function HA:ImportProfileHA1(data)
     }
 
     self:Print(L["PROFILE_IMPORTED"]:format(name, frameCount))
+
+    -- Warn about unavailable items
+    local unavailable = 0
+    for frameName, _ in pairs(hiddenFrames) do
+        if not HA:GetFrameByName(frameName) then unavailable = unavailable + 1 end
+    end
+    if unavailable > 0 then
+        self:Print((L["IMPORT_UNAVAILABLE"] or "|cffff8800Warning|r: %d items may not exist in this WoW version."):format(unavailable))
+    end
 
     if self.RefreshProfileList then
         self:RefreshProfileList()
@@ -387,7 +445,7 @@ function HA:ImportProfileHA2(data)
             -- Frames
             local frameNames = { strsplit(",", segData) }
             for _, frameName in ipairs(frameNames) do
-                frameName = strtrim(frameName)
+                frameName = DecodeDelimiters(strtrim(frameName))
                 if frameName ~= "" then
                     hiddenFrames[frameName] = true
                 end
@@ -397,7 +455,7 @@ function HA:ImportProfileHA2(data)
             -- CVars
             local cvarNames = { strsplit(",", segData) }
             for _, cvarName in ipairs(cvarNames) do
-                cvarName = strtrim(cvarName)
+                cvarName = DecodeDelimiters(strtrim(cvarName))
                 if cvarName ~= "" then
                     hiddenCVars[cvarName] = true
                 end
@@ -407,7 +465,7 @@ function HA:ImportProfileHA2(data)
             -- Textures
             local textureNames = { strsplit(",", segData) }
             for _, textureName in ipairs(textureNames) do
-                textureName = strtrim(textureName)
+                textureName = DecodeDelimiters(strtrim(textureName))
                 if textureName ~= "" then
                     hiddenTextures[textureName] = true
                 end
@@ -420,7 +478,7 @@ function HA:ImportProfileHA2(data)
                 entry = strtrim(entry)
                 local aName, aPct = strsplit("=", entry, 2)
                 if aName and aPct then
-                    aName = strtrim(aName)
+                    aName = DecodeDelimiters(strtrim(aName))
                     aPct = tonumber(strtrim(aPct))
                     if aName ~= "" and aPct then
                         frameAlphas[aName] = aPct / 100
@@ -447,6 +505,15 @@ function HA:ImportProfileHA2(data)
     }
 
     self:Print(L["PROFILE_IMPORTED"]:format(name, frameCount))
+
+    -- Warn about unavailable items
+    local unavailable = 0
+    for frameName, _ in pairs(hiddenFrames) do
+        if not HA:GetFrameByName(frameName) then unavailable = unavailable + 1 end
+    end
+    if unavailable > 0 then
+        self:Print((L["IMPORT_UNAVAILABLE"] or "|cffff8800Warning|r: %d items may not exist in this WoW version."):format(unavailable))
+    end
 
     if self.RefreshProfileList then
         self:RefreshProfileList()

@@ -232,6 +232,25 @@ HA.LOCALES["enUS"] = {
     -- Presets
     PRESETS_HEADER           = "Presets",
     PRESET_APPLIED           = "Preset |cff00cc66%s|r applied.",
+
+    -- New UI keys (batch 2)
+    UI_FILTER_HIDDEN_ONLY    = "Show only hidden",
+    UI_RECENTLY_HIDDEN       = "Recently Hidden",
+    UI_RESET_ALPHA           = "Reset Alpha",
+    UI_PROFILE_NAME          = "Profile Name:",
+    UI_FRAMES_LOWER          = "frames",
+    UI_BTN_LOAD              = "Load",
+    UI_BTN_DEL               = "Del",
+    UI_BTN_STATUS            = "Status",
+    UI_EXPORT_TITLE          = "Export Profile",
+    UI_IMPORT_TITLE          = "Import Profile",
+    UI_EXPORT_HINT           = "to copy",
+    UI_CONFIRM_DELETE_PROFILE = "Delete profile |cffff4444%s|r?",
+    ABOUT_AUTHOR             = "Author:",
+    PROFILE_NAME_TOO_LONG    = "Profile name is too long (max 30 characters).",
+    PROFILE_NAME_INVALID     = "Profile name contains invalid characters.",
+    IMPORT_UNAVAILABLE       = "|cffff8800Warning|r: %d items may not exist in this WoW version.",
+    PROFILE_DELETE_CONFIRM   = "Delete profile |cffff4444%s|r? Repeat to confirm.",
 }
 
 ---------------------------------------------------------------------------
@@ -434,6 +453,25 @@ HA.LOCALES["deDE"] = {
     HELP_REDO                = "|cff00cc66/hide redo|r - Letzte Aktion wiederherstellen (Strg+Y)",
     HELP_PICKER              = "|cff00cc66/hide picker|r - Frame-Picker umschalten (Strg+P)",
     HELP_PRESET              = "|cff00cc66/hide preset <name>|r - Vorlage anwenden",
+
+    -- New UI keys (batch 2)
+    UI_FILTER_HIDDEN_ONLY    = "Nur versteckte anzeigen",
+    UI_RECENTLY_HIDDEN       = "Kürzlich versteckt",
+    UI_RESET_ALPHA           = "Deckkraft zurücksetzen",
+    UI_PROFILE_NAME          = "Profilname:",
+    UI_FRAMES_LOWER          = "Frames",
+    UI_BTN_LOAD              = "Laden",
+    UI_BTN_DEL               = "Lösch.",
+    UI_BTN_STATUS            = "Status",
+    UI_EXPORT_TITLE          = "Profil exportieren",
+    UI_IMPORT_TITLE          = "Profil importieren",
+    UI_EXPORT_HINT           = "zum Kopieren",
+    UI_CONFIRM_DELETE_PROFILE = "Profil |cffff4444%s|r löschen?",
+    ABOUT_AUTHOR             = "Autor:",
+    PROFILE_NAME_TOO_LONG    = "Profilname ist zu lang (max. 30 Zeichen).",
+    PROFILE_NAME_INVALID     = "Profilname enthält ungültige Zeichen.",
+    IMPORT_UNAVAILABLE       = "|cffff8800Warnung|r: %d Elemente existieren möglicherweise nicht in dieser WoW-Version.",
+    PROFILE_DELETE_CONFIRM   = "Profil |cffff4444%s|r löschen? Wiederholen zum Bestätigen.",
 }
 
 ---------------------------------------------------------------------------
@@ -626,6 +664,25 @@ HA.LOCALES["frFR"] = {
     PRESETS_HEADER           = "Préréglages",
     PRESET_APPLIED           = "Préréglage |cff00cc66%s|r appliqué.",
     MINIMAP_TOOLTIP_RIGHT    = "|cff00cc66Clic droit|r : Sélecteur de cadre",
+
+    -- New UI keys (batch 2)
+    UI_FILTER_HIDDEN_ONLY    = "Afficher masqués uniquement",
+    UI_RECENTLY_HIDDEN       = "Récemment masqués",
+    UI_RESET_ALPHA           = "Réinitialiser l'opacité",
+    UI_PROFILE_NAME          = "Nom du profil :",
+    UI_FRAMES_LOWER          = "cadres",
+    UI_BTN_LOAD              = "Charger",
+    UI_BTN_DEL               = "Suppr.",
+    UI_BTN_STATUS            = "Statut",
+    UI_EXPORT_TITLE          = "Exporter le profil",
+    UI_IMPORT_TITLE          = "Importer un profil",
+    UI_EXPORT_HINT           = "pour copier",
+    UI_CONFIRM_DELETE_PROFILE = "Supprimer le profil |cffff4444%s|r ?",
+    ABOUT_AUTHOR             = "Auteur :",
+    PROFILE_NAME_TOO_LONG    = "Le nom du profil est trop long (30 caractères max.).",
+    PROFILE_NAME_INVALID     = "Le nom du profil contient des caractères invalides.",
+    IMPORT_UNAVAILABLE       = "|cffff8800Attention|r : %d éléments n'existent peut-être pas dans cette version de WoW.",
+    PROFILE_DELETE_CONFIRM   = "Supprimer le profil |cffff4444%s|r ? Répétez pour confirmer.",
 }
 
 ---------------------------------------------------------------------------
@@ -818,6 +875,25 @@ HA.LOCALES["esES"] = {
     PRESETS_HEADER           = "Preajustes",
     PRESET_APPLIED           = "Preajuste |cff00cc66%s|r aplicado.",
     MINIMAP_TOOLTIP_RIGHT    = "|cff00cc66Clic derecho|r: Selector de marco",
+
+    -- New UI keys (batch 2)
+    UI_FILTER_HIDDEN_ONLY    = "Mostrar solo ocultos",
+    UI_RECENTLY_HIDDEN       = "Ocultados recientemente",
+    UI_RESET_ALPHA           = "Restablecer opacidad",
+    UI_PROFILE_NAME          = "Nombre del perfil:",
+    UI_FRAMES_LOWER          = "marcos",
+    UI_BTN_LOAD              = "Cargar",
+    UI_BTN_DEL               = "Elim.",
+    UI_BTN_STATUS            = "Estado",
+    UI_EXPORT_TITLE          = "Exportar perfil",
+    UI_IMPORT_TITLE          = "Importar perfil",
+    UI_EXPORT_HINT           = "para copiar",
+    UI_CONFIRM_DELETE_PROFILE = "¿Eliminar perfil |cffff4444%s|r?",
+    ABOUT_AUTHOR             = "Autor:",
+    PROFILE_NAME_TOO_LONG    = "El nombre del perfil es demasiado largo (máx. 30 caracteres).",
+    PROFILE_NAME_INVALID     = "El nombre del perfil contiene caracteres no válidos.",
+    IMPORT_UNAVAILABLE       = "|cffff8800Advertencia|r: %d elementos pueden no existir en esta versión de WoW.",
+    PROFILE_DELETE_CONFIRM   = "¿Eliminar perfil |cffff4444%s|r? Repite para confirmar.",
 }
 
 ---------------------------------------------------------------------------
@@ -1010,6 +1086,25 @@ HA.LOCALES["ruRU"] = {
     PRESETS_HEADER           = "Шаблоны",
     PRESET_APPLIED           = "Шаблон |cff00cc66%s|r применён.",
     MINIMAP_TOOLTIP_RIGHT    = "|cff00cc66ПКМ|r: Выбор фрейма",
+
+    -- New UI keys (batch 2)
+    UI_FILTER_HIDDEN_ONLY    = "Только скрытые",
+    UI_RECENTLY_HIDDEN       = "Недавно скрытые",
+    UI_RESET_ALPHA           = "Сбросить прозрачность",
+    UI_PROFILE_NAME          = "Имя профиля:",
+    UI_FRAMES_LOWER          = "фреймов",
+    UI_BTN_LOAD              = "Загрузить",
+    UI_BTN_DEL               = "Удал.",
+    UI_BTN_STATUS            = "Статус",
+    UI_EXPORT_TITLE          = "Экспорт профиля",
+    UI_IMPORT_TITLE          = "Импорт профиля",
+    UI_EXPORT_HINT           = "для копирования",
+    UI_CONFIRM_DELETE_PROFILE = "Удалить профиль |cffff4444%s|r?",
+    ABOUT_AUTHOR             = "Автор:",
+    PROFILE_NAME_TOO_LONG    = "Имя профиля слишком длинное (макс. 30 символов).",
+    PROFILE_NAME_INVALID     = "Имя профиля содержит недопустимые символы.",
+    IMPORT_UNAVAILABLE       = "|cffff8800Предупреждение|r: %d элементов могут не существовать в этой версии WoW.",
+    PROFILE_DELETE_CONFIRM   = "Удалить профиль |cffff4444%s|r? Повторите для подтверждения.",
 }
 
 ---------------------------------------------------------------------------
@@ -1202,6 +1297,25 @@ HA.LOCALES["itIT"] = {
     PRESETS_HEADER           = "Predefiniti",
     PRESET_APPLIED           = "Predefinito |cff00cc66%s|r applicato.",
     MINIMAP_TOOLTIP_RIGHT    = "|cff00cc66Clic destro|r: Selettore riquadro",
+
+    -- New UI keys (batch 2)
+    UI_FILTER_HIDDEN_ONLY    = "Mostra solo nascosti",
+    UI_RECENTLY_HIDDEN       = "Nascosti di recente",
+    UI_RESET_ALPHA           = "Ripristina opacità",
+    UI_PROFILE_NAME          = "Nome profilo:",
+    UI_FRAMES_LOWER          = "riquadri",
+    UI_BTN_LOAD              = "Carica",
+    UI_BTN_DEL               = "Elim.",
+    UI_BTN_STATUS            = "Stato",
+    UI_EXPORT_TITLE          = "Esporta profilo",
+    UI_IMPORT_TITLE          = "Importa profilo",
+    UI_EXPORT_HINT           = "per copiare",
+    UI_CONFIRM_DELETE_PROFILE = "Eliminare il profilo |cffff4444%s|r?",
+    ABOUT_AUTHOR             = "Autore:",
+    PROFILE_NAME_TOO_LONG    = "Il nome del profilo è troppo lungo (max 30 caratteri).",
+    PROFILE_NAME_INVALID     = "Il nome del profilo contiene caratteri non validi.",
+    IMPORT_UNAVAILABLE       = "|cffff8800Attenzione|r: %d elementi potrebbero non esistere in questa versione di WoW.",
+    PROFILE_DELETE_CONFIRM   = "Eliminare il profilo |cffff4444%s|r? Ripeti per confermare.",
 }
 
 ---------------------------------------------------------------------------

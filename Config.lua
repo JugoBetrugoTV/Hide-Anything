@@ -555,3 +555,57 @@ function HA:GetCatalogLabel(entry)
     if lang == "itIT" and entry.labelIT then return entry.labelIT end
     return entry.label
 end
+
+---------------------------------------------------------------------------
+-- EditMode frame discovery (Retail 10.0+)
+-- Scans EditModeManagerFrame for managed child systems at runtime
+---------------------------------------------------------------------------
+function HA:DiscoverEditModeFrames()
+    if not EditModeManagerFrame then return end
+
+    local discovered = {}
+    local existing = {}
+    for _, entry in ipairs(self.FRAME_CATALOG) do
+        if entry.name then existing[entry.name] = true end
+    end
+
+    -- EditMode exposes registeredSystemFrames in Retail 10.0+
+    local systems = EditModeManagerFrame.registeredSystemFrames
+    if systems and type(systems) == "table" then
+        for _, sysFrame in pairs(systems) do
+            if sysFrame and sysFrame.GetName then
+                local name = sysFrame:GetName()
+                if name and name ~= "" and not existing[name] then
+                    table.insert(discovered, {
+                        name  = name,
+                        label = name:gsub("(%l)(%u)", "%1 %2"), -- CamelCase to spaced
+                        _discovered = true,
+                    })
+                    existing[name] = true
+                end
+            end
+        end
+    end
+
+    -- Append discovered frames to catalog (under a new section)
+    if #discovered > 0 then
+        table.insert(self.FRAME_CATALOG, {
+            section = true,
+            label = "EditMode Discovered",
+            labelDE = "EditMode Entdeckt",
+            labelFR = "EditMode Découvert",
+            labelES = "EditMode Descubierto",
+            labelRU = "EditMode Обнаружено",
+            labelIT = "EditMode Scoperto",
+        })
+        for _, entry in ipairs(discovered) do
+            table.insert(self.FRAME_CATALOG, entry)
+            -- Also add to catalog index
+            if self._catalogIndex then
+                self._catalogIndex[entry.name] = entry
+            end
+        end
+    end
+
+    return #discovered
+end

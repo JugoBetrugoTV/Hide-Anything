@@ -57,7 +57,8 @@ function HA:HighlightFrame(frameName)
         -- If frame is hidden, show a faint outline at its position if possible
         if frame and frame.GetRect then
             local left, bottom, width, height = frame:GetRect()
-            if left and width and width > 0 and height > 0 then
+            if not left or not bottom or not width or not height then return end
+            if width > 0 and height > 0 then
                 highlighter:ClearAllPoints()
                 highlighter:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", left - 4, bottom - 4)
                 highlighter:SetSize(width + 8, height + 8)
@@ -74,7 +75,11 @@ function HA:HighlightFrame(frameName)
     end
 
     local left, bottom, width, height = frame:GetRect()
-    if not left or not width or width == 0 or height == 0 then
+    if not left or not bottom or not width or not height then
+        self:UnhighlightFrame()
+        return
+    end
+    if width == 0 or height == 0 then
         self:UnhighlightFrame()
         return
     end

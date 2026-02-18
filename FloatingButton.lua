@@ -137,6 +137,7 @@ function HA:InitFloatingButton()
 
         -- Stop pulsing after 6 seconds and shrink to normal size
         C_Timer.After(6, function()
+            if not btn or not pulseGroup then return end
             pulseGroup:Stop()
             btn:SetSize(36, 36)
             label:SetFontObject(GameFontNormalSmall)

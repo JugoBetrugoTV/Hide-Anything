@@ -132,10 +132,25 @@ end
 -- OnUpdate (throttled)
 ---------------------------------------------------------------------------
 local elapsed = 0
+local lastMouseX, lastMouseY = 0, 0
 picker:SetScript("OnUpdate", function(self, dt)
     elapsed = elapsed + dt
     if elapsed < 0.05 then return end
     elapsed = 0
+
+    -- Combat check - auto-deactivate if combat starts
+    if InCombatLockdown() then
+        HA:DeactivateFramePicker()
+        return
+    end
+
+    -- Only run expensive highlight logic when the mouse actually moved
+    local cx, cy = GetCursorPosition()
+    local scale = UIParent:GetEffectiveScale()
+    cx, cy = cx / scale, cy / scale
+    if cx == lastMouseX and cy == lastMouseY then return end
+    lastMouseX, lastMouseY = cx, cy
+
     UpdateHighlight()
 end)
 

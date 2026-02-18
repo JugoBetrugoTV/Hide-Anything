@@ -29,6 +29,7 @@ local ACCENT_DIM_R, ACCENT_DIM_G, ACCENT_DIM_B = 0, 0.55, 0.27
 local tabContents = {}
 local activeTab = nil
 local searchFilter = ""  -- current search text
+local showHiddenOnly = false  -- filter to show only hidden items
 local collapsedSections = {} -- collapsed section state (by label)
 
 -- Debounce timer for RefreshFrameList
@@ -76,6 +77,22 @@ local BD_CARD = {
     edgeSize = 10,
     insets   = { left = 2, right = 2, top = 2, bottom = 2 },
 }
+
+---------------------------------------------------------------------------
+-- Text truncation helper
+---------------------------------------------------------------------------
+local MAX_LABEL_CHARS = 32
+
+local function TruncateText(text, maxLen)
+    maxLen = maxLen or MAX_LABEL_CHARS
+    if not text then return "" end
+    -- Strip color codes for length check
+    local plain = text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+    if #plain <= maxLen then return text end
+    -- Truncate the plain text and re-apply
+    local truncated = strsub(plain, 1, maxLen - 2) .. ".."
+    return truncated
+end
 
 ---------------------------------------------------------------------------
 -- Search highlighting helper
@@ -170,7 +187,7 @@ local function ShowContextMenu(frameName, anchor)
         HA:ShowAlphaPopup(frameName, anchor)
     end)
 
-    AddContextItem("|cffff8888" .. (L["ALPHA_RESET"] and "Reset Alpha" or "Reset Alpha") .. "|r", function()
+    AddContextItem("|cffff8888" .. (L["UI_RESET_ALPHA"] or "Reset Alpha") .. "|r", function()
         HA:SetFrameAlpha(frameName, 1.0)
         HA:RefreshFrameList()
     end)
@@ -291,6 +308,7 @@ local function ReleaseAllRows()
         row:Hide()
         row:SetScript("OnEnter", nil)
         row:SetScript("OnLeave", nil)
+        row:SetScript("OnMouseDown", nil)
         row._label:SetText("")
         row._techName:SetText("")
         row._combatBtn:SetScript("OnClick", nil)
@@ -702,12 +720,25 @@ local function MatchesFilter(entry, filter)
     return false
 end
 
+local function IsEntryHidden(entry)
+    if entry.name then
+        return HA.db and HA.db.hiddenFrames and HA.db.hiddenFrames[entry.name] == true
+    elseif entry.cvar then
+        return HA.db and HA.db.hiddenCVars and HA.db.hiddenCVars[entry.cvar] == true
+    elseif entry.texture then
+        return HA.db and HA.db.hiddenTextures and HA.db.hiddenTextures[entry.texture] == true
+    end
+    return false
+end
+
 local function SectionHasVisibleChildren(catalog, sectionIndex, filter)
     for i = sectionIndex + 1, #catalog do
         local entry = catalog[i]
         if entry.section then break end
         if not HA:IsEntryAvailable(entry) then
             -- skip entries not for this edition
+        elseif showHiddenOnly and not IsEntryHidden(entry) then
+            -- skip non-hidden when filter active
         elseif filter == "" or MatchesFilter(entry, filter) then
             return true
         end
@@ -914,7 +945,37 @@ local function CreateSettingsBlock(parent)
         searchBg:SetBackdropBorderColor(0.22, 0.22, 0.25, 0.8)
     end)
 
-    y = y - 38
+    -- "Hidden Only" filter toggle
+    y = y - 32
+    local filterRow = CreateFrame("Frame", nil, block)
+    filterRow:SetSize(block:GetWidth() - 20, 24)
+    filterRow:SetPoint("TOPLEFT", block, "TOPLEFT", 10, y)
+
+    local filterLabel = filterRow:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    filterLabel:SetPoint("LEFT", filterRow, "LEFT", 6, 0)
+    filterLabel:SetText("|cff888890" .. (L["UI_FILTER_HIDDEN_ONLY"] or "Show only hidden") .. "|r")
+
+    local filterToggleBg = CreateFrame("Button", nil, filterRow, "BackdropTemplate")
+    filterToggleBg:SetSize(TOGGLE_W - 6, TOGGLE_H - 4)
+    filterToggleBg:SetPoint("LEFT", filterLabel, "RIGHT", 8, 0)
+    filterToggleBg:SetBackdrop(BD_TOGGLE)
+    local filterKnob = filterToggleBg:CreateTexture(nil, "OVERLAY")
+    filterKnob:SetSize(TOGGLE_H - 10, TOGGLE_H - 10)
+    filterKnob:SetTexture("Interface\\Buttons\\WHITE8X8")
+    SetToggleState(filterToggleBg, filterKnob, showHiddenOnly)
+
+    filterToggleBg:SetScript("OnClick", function()
+        showHiddenOnly = not showHiddenOnly
+        SetToggleState(filterToggleBg, filterKnob, showHiddenOnly)
+        if showHiddenOnly then
+            filterLabel:SetText("|cffff8800" .. (L["UI_FILTER_HIDDEN_ONLY"] or "Show only hidden") .. "|r")
+        else
+            filterLabel:SetText("|cff888890" .. (L["UI_FILTER_HIDDEN_ONLY"] or "Show only hidden") .. "|r")
+        end
+        HA:RefreshFrameList()
+    end)
+
+    y = y - 10
 
     block:SetHeight(math.abs(y) + 4)
     return block, y
@@ -1006,6 +1067,62 @@ function HA:DoRefreshFrameList()
 
     y = y - 36
 
+    -- Recently Hidden quick access
+    local recent = HA.GetRecentlyHidden and HA:GetRecentlyHidden() or {}
+    if #recent > 0 and searchFilter == "" and not showHiddenOnly then
+        local recentHdr = AcquireFont(parent, "GameFontNormalSmall")
+        recentHdr:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, y)
+        recentHdr:SetText("|cff888890" .. (L["UI_RECENTLY_HIDDEN"] or "Recently Hidden") .. ":|r")
+        y = y - 16
+
+        for ri = 1, math.min(5, #recent) do
+            local recentName = recent[ri]
+            local isStillHidden = (self.db.hiddenFrames[recentName] == true) or (self.db.hiddenCVars and self.db.hiddenCVars[recentName] == true) or (self.db.hiddenTextures and self.db.hiddenTextures[recentName] == true)
+            local recentRow = AcquireMiscFrame(parent)
+            recentRow:SetSize(parent:GetWidth(), 20)
+            recentRow:SetPoint("TOPLEFT", parent, "TOPLEFT", 14, y)
+            recentRow:EnableMouse(true)
+
+            local rLabel = AcquireFont(parent, "GameFontNormalSmall")
+            rLabel:SetPoint("LEFT", recentRow, "LEFT", 0, 0)
+            if isStillHidden then
+                rLabel:SetText("|cffff8800" .. TruncateText(recentName, 35) .. "|r")
+            else
+                rLabel:SetText("|cff555560" .. TruncateText(recentName, 35) .. "|r")
+            end
+
+            local rBtn = AcquireFont(parent, "GameFontNormalSmall")
+            rBtn:SetPoint("RIGHT", recentRow, "RIGHT", -10, 0)
+            if isStillHidden then
+                rBtn:SetText("|cff00ff66" .. (L["UI_BTN_SHOW"] or "Show") .. "|r")
+            else
+                rBtn:SetText("|cff555560-|r")
+            end
+
+            recentRow:SetScript("OnMouseDown", function()
+                if isStillHidden then
+                    -- Try showing as frame first, then cvar, then texture
+                    if self.db.hiddenFrames[recentName] then
+                        HA:ShowFrame(recentName)
+                    elseif self.db.hiddenCVars and self.db.hiddenCVars[recentName] then
+                        HA:ShowCVar(recentName)
+                    elseif self.db.hiddenTextures and self.db.hiddenTextures[recentName] then
+                        HA:ShowTexture(recentName)
+                    end
+                end
+            end)
+
+            y = y - 20
+        end
+
+        local recentLine = AcquireTexture(parent)
+        recentLine:SetHeight(1)
+        recentLine:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, y - 2)
+        recentLine:SetPoint("RIGHT", parent, "RIGHT", -10, 0)
+        recentLine:SetColorTexture(0.25, 0.25, 0.28, 0.4)
+        y = y - 8
+    end
+
     -- Section: Frame Catalog header
     local catHdr = AcquireFont(parent, "GameFontNormal")
     catHdr:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, y)
@@ -1073,7 +1190,9 @@ function HA:DoRefreshFrameList()
 
         -- CVar-based toggle
         elseif entry.cvar then
-            if MatchesFilter(entry, searchFilter) then
+            if showHiddenOnly and not IsEntryHidden(entry) then
+                -- skip non-hidden when filter active
+            elseif MatchesFilter(entry, searchFilter) then
                 local cvarName = entry.cvar
                 local displayLabel = self:GetCatalogLabel(entry)
                 local isHidden = self.db.hiddenCVars[cvarName] == true
@@ -1138,7 +1257,9 @@ function HA:DoRefreshFrameList()
 
         -- Frame-based toggle
         elseif entry.name then
-            if MatchesFilter(entry, searchFilter) then
+            if showHiddenOnly and not IsEntryHidden(entry) then
+                -- skip non-hidden when filter active
+            elseif MatchesFilter(entry, searchFilter) then
                 local frameName = entry.name
                 local displayLabel = self:GetCatalogLabel(entry)
                 local isHidden = self.db.hiddenFrames[frameName] == true
@@ -1330,7 +1451,9 @@ function HA:DoRefreshFrameList()
             end
         -- Texture/Region toggle
         elseif entry.texture then
-            if MatchesFilter(entry, searchFilter) then
+            if showHiddenOnly and not IsEntryHidden(entry) then
+                -- skip non-hidden when filter active
+            elseif MatchesFilter(entry, searchFilter) then
                 local textureName = entry.texture
                 local displayLabel = self:GetCatalogLabel(entry)
                 local isHidden = self.db.hiddenTextures and self.db.hiddenTextures[textureName] == true
@@ -1452,7 +1575,8 @@ function HA:DoRefreshFrameList()
                 row:SetBackdropColor(0.12, 0.12, 0.14, 0.35)
             end
 
-            row._label:SetText("|cffcc8800" .. frameName .. "|r")
+            local truncName = TruncateText(frameName, 40)
+            row._label:SetText("|cffcc8800" .. truncName .. "|r")
             row._label:SetWidth(parent:GetWidth() - 100)
             row._techName:SetText("")
             row._eyeBtn:Hide()
@@ -1465,7 +1589,14 @@ function HA:DoRefreshFrameList()
                 HA:ShowFrame(frameName)
             end)
 
-            row:SetScript("OnEnter", RowOnEnter)
+            row:SetScript("OnEnter", function(self)
+                RowOnEnter(self)
+                if truncName ~= frameName then
+                    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                    GameTooltip:AddLine(frameName, 0.8, 0.53, 0)
+                    GameTooltip:Show()
+                end
+            end)
             row:SetScript("OnLeave", RowOnLeave)
 
             y = y - (ROW_HEIGHT + 1)
@@ -1587,7 +1718,7 @@ local function BuildProfilesTab(parent)
 
     local inputLabel = inputCard:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     inputLabel:SetPoint("TOPLEFT", inputCard, "TOPLEFT", 12, -10)
-    inputLabel:SetText("|cff00c761Profile Name:|r")
+    inputLabel:SetText("|cff00c761" .. (L["UI_PROFILE_NAME"] or "Profile Name:") .. "|r")
 
     local inputBg = CreateFrame("Frame", nil, inputCard, "BackdropTemplate")
     inputBg:SetSize(parent:GetWidth() - 140, 28)
@@ -1633,7 +1764,12 @@ local function BuildProfilesTab(parent)
 
     local btn3 = CreateStyledButton(inputCard, btnW, 26, L["UI_BTN_DELETE_PROFILE"], function()
         local name = inputBox:GetText()
-        if name and name ~= "" then HA:DeleteProfile(name); HA:RefreshProfileList()
+        if name and name ~= "" then
+            HA._pendingDeleteProfile = name
+            StaticPopupDialogs["HIDEANYTHING_CONFIRM_DELETE_PROFILE"].text = (L["UI_CONFIRM_DELETE_PROFILE"] or "Delete profile |cffff4444%s|r?"):format(name)
+            StaticPopupDialogs["HIDEANYTHING_CONFIRM_DELETE_PROFILE"].button1 = L["UI_CONFIRM_YES"]
+            StaticPopupDialogs["HIDEANYTHING_CONFIRM_DELETE_PROFILE"].button2 = L["UI_CONFIRM_NO"]
+            StaticPopup_Show("HIDEANYTHING_CONFIRM_DELETE_PROFILE")
         else HA:Print(L["PROFILE_NAME_REQUIRED"]) end
     end)
     btn3:SetPoint("LEFT", btn2, "RIGHT", 6, 0)
@@ -1753,18 +1889,21 @@ function HA:RefreshProfileList()
         local active = (self.db.activeProfile == profileName) and " |cff00ff66*|r" or ""
         local nameLabel = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         nameLabel:SetPoint("LEFT", row, "LEFT", 12, 0)
-        nameLabel:SetText("|cff00c761" .. profileName .. "|r" .. active .. " |cff555560(" .. frameCount .. " frames)|r")
+        nameLabel:SetText("|cff00c761" .. profileName .. "|r" .. active .. " |cff555560(" .. frameCount .. " " .. (L["UI_FRAMES_LOWER"] or "frames") .. ")|r")
 
-        local loadBtn = CreateStyledButton(row, 56, 22, "Load", function()
+        local loadBtn = CreateStyledButton(row, 56, 22, L["UI_BTN_LOAD"] or "Load", function()
             HA:LoadProfile(profileName)
             if tc.inputBox then tc.inputBox:SetText(profileName) end
             HA:RefreshProfileList()
         end)
         loadBtn:SetPoint("RIGHT", row, "RIGHT", -66, 0)
 
-        local delBtn = CreateStyledButton(row, 56, 22, "Del", function()
-            HA:DeleteProfile(profileName)
-            HA:RefreshProfileList()
+        local delBtn = CreateStyledButton(row, 56, 22, L["UI_BTN_DEL"] or "Del", function()
+            HA._pendingDeleteProfile = profileName
+            StaticPopupDialogs["HIDEANYTHING_CONFIRM_DELETE_PROFILE"].text = (L["UI_CONFIRM_DELETE_PROFILE"] or "Delete profile |cffff4444%s|r?"):format(profileName)
+            StaticPopupDialogs["HIDEANYTHING_CONFIRM_DELETE_PROFILE"].button1 = L["UI_CONFIRM_YES"]
+            StaticPopupDialogs["HIDEANYTHING_CONFIRM_DELETE_PROFILE"].button2 = L["UI_CONFIRM_NO"]
+            StaticPopup_Show("HIDEANYTHING_CONFIRM_DELETE_PROFILE")
         end)
         delBtn:SetPoint("RIGHT", row, "RIGHT", -6, 0)
         delBtn:SetBackdropBorderColor(0.45, 0.2, 0.2, 1)
@@ -1831,7 +1970,7 @@ local function BuildAboutTab(parent)
 
     local authorLabel = titleCard:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     authorLabel:SetPoint("TOPLEFT", titleCard, "TOPLEFT", 14, -38)
-    authorLabel:SetText("|cff888890Author:|r  |cffffffffJugoBetrugoTV|r")
+    authorLabel:SetText("|cff888890" .. (L["ABOUT_AUTHOR"] or "Author:") .. "|r  |cffffffffJugoBetrugoTV|r")
 
     -- Edition display (prominent)
     local edName = HA.EDITION_NAMES[HA.edition] or "Unknown"
@@ -2006,7 +2145,7 @@ local function BuildAboutTab(parent)
     end)
     btnShowAll:SetPoint("LEFT", btnConfig, "RIGHT", 8, 0)
 
-    local btnStatus = CreateStyledButton(actRow, 140, 28, "Status", function()
+    local btnStatus = CreateStyledButton(actRow, 140, 28, L["UI_BTN_STATUS"] or "Status", function()
         HA:PrintStatus()
     end)
     btnStatus:SetPoint("LEFT", btnShowAll, "RIGHT", 8, 0)
@@ -2055,6 +2194,23 @@ end
 ---------------------------------------------------------------------------
 -- Static popup for reset confirmation
 ---------------------------------------------------------------------------
+StaticPopupDialogs["HIDEANYTHING_CONFIRM_DELETE_PROFILE"] = {
+    text    = "",
+    button1 = "",
+    button2 = "",
+    OnAccept = function()
+        if HA._pendingDeleteProfile then
+            HA:DeleteProfile(HA._pendingDeleteProfile, true)
+            HA:RefreshProfileList()
+            HA._pendingDeleteProfile = nil
+        end
+    end,
+    timeout        = 0,
+    whileDead      = true,
+    hideOnEscape   = true,
+    preferredIndex = 3,
+}
+
 StaticPopupDialogs["HIDEANYTHING_CONFIRM_RESET"] = {
     text    = "",
     button1 = "",
@@ -2114,7 +2270,7 @@ function HA:ShowExportDialog(data)
 
     local title = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     title:SetPoint("TOP", 0, -16)
-    title:SetText("|cff00c761Export Profile|r")
+    title:SetText("|cff00c761" .. (L["UI_EXPORT_TITLE"] or "Export Profile") .. "|r")
 
     local sf = CreateFrame("ScrollFrame", nil, dialog, "UIPanelScrollFrameTemplate")
     sf:SetPoint("TOPLEFT", 16, -44)
@@ -2128,6 +2284,16 @@ function HA:ShowExportDialog(data)
     eb:HighlightText()
     eb:SetAutoFocus(true)
     sf:SetScrollChild(eb)
+
+    -- Re-select all text whenever user clicks into the editbox
+    eb:SetScript("OnEditFocusGained", function(self)
+        self:HighlightText()
+    end)
+
+    -- Hint label
+    local hint = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    hint:SetPoint("BOTTOMLEFT", 16, 46)
+    hint:SetText("|cff555560Ctrl+C " .. (HA.L["UI_EXPORT_HINT"] or "to copy") .. "|r")
 
     local btn = CreateStyledButton(dialog, 90, 26, HA.L["UI_BTN_CLOSE"], function()
         dialog:Hide()
@@ -2158,7 +2324,7 @@ function HA:ShowImportDialog()
 
     local title = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     title:SetPoint("TOP", 0, -16)
-    title:SetText("|cff00c761Import Profile|r")
+    title:SetText("|cff00c761" .. (HA.L["UI_IMPORT_TITLE"] or "Import Profile") .. "|r")
 
     local sf = CreateFrame("ScrollFrame", nil, dialog, "UIPanelScrollFrameTemplate")
     sf:SetPoint("TOPLEFT", 16, -44)
