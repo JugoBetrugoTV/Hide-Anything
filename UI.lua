@@ -1726,7 +1726,7 @@ local function BuildProfilesTab(parent)
 
     -- Profile name input area
     local inputCard = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    inputCard:SetSize(parent:GetWidth(), 110)
+    inputCard:SetSize(parent:GetWidth(), 144)
     inputCard:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -4)
     inputCard:SetBackdrop(BD_SECTION)
     inputCard:SetBackdropColor(0.10, 0.10, 0.12, 0.5)
@@ -1813,9 +1813,10 @@ local function BuildProfilesTab(parent)
     end)
     btn5:SetPoint("LEFT", btn4, "RIGHT", 6, 0)
 
-    -- Preset profiles section
+    -- Preset profiles section (row 3)
+    btnY = btnY - 32
     local presetLabel = inputCard:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    presetLabel:SetPoint("TOPLEFT", inputCard, "TOPLEFT", 12, btnY - 6)
+    presetLabel:SetPoint("TOPLEFT", inputCard, "TOPLEFT", 12, btnY - 2)
     presetLabel:SetText("|cff00c761" .. (L["PRESETS_HEADER"] or "Presets") .. ":|r")
 
     local presetX = 0
@@ -1826,17 +1827,17 @@ local function BuildProfilesTab(parent)
         if presetX == 0 then
             presetBtn:SetPoint("LEFT", presetLabel, "RIGHT", 8, 0)
         else
-            presetBtn:SetPoint("TOPLEFT", inputCard, "TOPLEFT", 10 + presetX, btnY - 6)
+            presetBtn:SetPoint("TOPLEFT", inputCard, "TOPLEFT", 10 + presetX, btnY - 2)
         end
         presetX = presetX + 116
     end
 
     -- Profile list area
     local profileListHeader = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    profileListHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -156)
+    profileListHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -190)
     tabContents[2].profileListHeader = profileListHeader
     tabContents[2].listParent = parent
-    tabContents[2].listStartY = -180
+    tabContents[2].listStartY = -214
     tabContents[2].rows = {}
 end
 
@@ -2149,19 +2150,20 @@ local function BuildAboutTab(parent)
     actRow:SetSize(w - 8, 34)
     actRow:SetPoint("TOPLEFT", parent, "TOPLEFT", 4, y)
 
-    local btnConfig = CreateStyledButton(actRow, 140, 28, "|cff00c761/hide toggle|r", function()
-        panel:Hide()
-        HA:ToggleOptionsPanel()
+    local btnConfig = CreateStyledButton(actRow, 140, 28, "|cff00c761" .. (L["UI_FRAMES"] or "Frames") .. "|r", function()
+        HA:SelectTab(1)
     end)
     btnConfig:SetPoint("LEFT", actRow, "LEFT", 4, 0)
 
     local btnShowAll = CreateStyledButton(actRow, 140, 28, L["UI_BTN_SHOW_ALL"], function()
         HA:ShowAllFrames()
+        panel:Hide()
     end)
     btnShowAll:SetPoint("LEFT", btnConfig, "RIGHT", 8, 0)
 
     local btnStatus = CreateStyledButton(actRow, 140, 28, L["UI_BTN_STATUS"] or "Status", function()
         HA:PrintStatus()
+        panel:Hide()
     end)
     btnStatus:SetPoint("LEFT", btnShowAll, "RIGHT", 8, 0)
 
