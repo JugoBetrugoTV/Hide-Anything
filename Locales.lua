@@ -277,6 +277,8 @@ HA.LOCALES["enUS"] = {
 ---------------------------------------------------------------------------
 HA.LOCALES["deDE"] = {
     -- General
+    ADDON_NAME               = "HideAnything",
+    VERSION                  = "Version",
     ADDON_LOADED             = "|cff00cc66Hide|rAnything|r v%s geladen. Tippe |cff00cc66/hide|r für Hilfe.",
 
     -- Slash command help
@@ -515,6 +517,8 @@ HA.LOCALES["deDE"] = {
 ---------------------------------------------------------------------------
 HA.LOCALES["frFR"] = {
     -- General
+    ADDON_NAME               = "HideAnything",
+    VERSION                  = "Version",
     ADDON_LOADED             = "|cff00cc66Hide|rAnything|r v%s chargé. Tapez |cff00cc66/hide|r pour l'aide.",
 
     -- Slash command help
@@ -532,6 +536,10 @@ HA.LOCALES["frFR"] = {
     HELP_STATUS              = "|cff00cc66/hide status|r - Afficher le statut de l'addon",
     HELP_MINIMAP             = "|cff00cc66/hide minimap|r - Afficher/masquer le bouton minicarte",
     HELP_ALPHA               = "|cff00cc66/hide alpha <cadre> <0-100>|r - Définir l'opacité du cadre",
+    HELP_UNDO                = "|cff00cc66/hide undo|r - Annuler la dernière action (Ctrl+Z)",
+    HELP_REDO                = "|cff00cc66/hide redo|r - Rétablir la dernière action (Ctrl+Y)",
+    HELP_PICKER              = "|cff00cc66/hide picker|r - Activer/désactiver le sélecteur de cadre (Ctrl+P)",
+    HELP_PRESET              = "|cff00cc66/hide preset <nom>|r - Appliquer un préréglage",
 
     -- Hide / Show
     FRAME_HIDDEN             = "Masqué : |cffff8800%s|r",
@@ -743,6 +751,8 @@ HA.LOCALES["frFR"] = {
 ---------------------------------------------------------------------------
 HA.LOCALES["esES"] = {
     -- General
+    ADDON_NAME               = "HideAnything",
+    VERSION                  = "Versión",
     ADDON_LOADED             = "|cff00cc66Hide|rAnything|r v%s cargado. Escribe |cff00cc66/hide|r para ayuda.",
 
     -- Slash command help
@@ -760,6 +770,10 @@ HA.LOCALES["esES"] = {
     HELP_STATUS              = "|cff00cc66/hide status|r - Mostrar estado del addon",
     HELP_MINIMAP             = "|cff00cc66/hide minimap|r - Mostrar/ocultar botón del minimapa",
     HELP_ALPHA               = "|cff00cc66/hide alpha <marco> <0-100>|r - Establecer opacidad del marco",
+    HELP_UNDO                = "|cff00cc66/hide undo|r - Deshacer última acción (Ctrl+Z)",
+    HELP_REDO                = "|cff00cc66/hide redo|r - Rehacer última acción (Ctrl+Y)",
+    HELP_PICKER              = "|cff00cc66/hide picker|r - Activar/desactivar selector de marco (Ctrl+P)",
+    HELP_PRESET              = "|cff00cc66/hide preset <nombre>|r - Aplicar un preajuste",
 
     -- Hide / Show
     FRAME_HIDDEN             = "Oculto: |cffff8800%s|r",
@@ -971,6 +985,8 @@ HA.LOCALES["esES"] = {
 ---------------------------------------------------------------------------
 HA.LOCALES["ruRU"] = {
     -- General
+    ADDON_NAME               = "HideAnything",
+    VERSION                  = "Версия",
     ADDON_LOADED             = "|cff00cc66Hide|rAnything|r v%s загружен. Введите |cff00cc66/hide|r для справки.",
 
     -- Slash command help
@@ -988,6 +1004,10 @@ HA.LOCALES["ruRU"] = {
     HELP_STATUS              = "|cff00cc66/hide status|r - Показать статус аддона",
     HELP_MINIMAP             = "|cff00cc66/hide minimap|r - Переключить кнопку миникарты",
     HELP_ALPHA               = "|cff00cc66/hide alpha <фрейм> <0-100>|r - Установить прозрачность фрейма",
+    HELP_UNDO                = "|cff00cc66/hide undo|r - Отменить последнее действие (Ctrl+Z)",
+    HELP_REDO                = "|cff00cc66/hide redo|r - Повторить последнее действие (Ctrl+Y)",
+    HELP_PICKER              = "|cff00cc66/hide picker|r - Переключить выбор фрейма (Ctrl+P)",
+    HELP_PRESET              = "|cff00cc66/hide preset <имя>|r - Применить шаблон",
 
     -- Hide / Show
     FRAME_HIDDEN             = "Скрыт: |cffff8800%s|r",
@@ -1199,6 +1219,8 @@ HA.LOCALES["ruRU"] = {
 ---------------------------------------------------------------------------
 HA.LOCALES["itIT"] = {
     -- General
+    ADDON_NAME               = "HideAnything",
+    VERSION                  = "Versione",
     ADDON_LOADED             = "|cff00cc66Hide|rAnything|r v%s caricato. Digita |cff00cc66/hide|r per aiuto.",
 
     -- Slash command help
@@ -1216,6 +1238,10 @@ HA.LOCALES["itIT"] = {
     HELP_STATUS              = "|cff00cc66/hide status|r - Mostra lo stato dell'addon",
     HELP_MINIMAP             = "|cff00cc66/hide minimap|r - Mostra/nascondi il pulsante minimappa",
     HELP_ALPHA               = "|cff00cc66/hide alpha <riquadro> <0-100>|r - Imposta l'opacità del riquadro",
+    HELP_UNDO                = "|cff00cc66/hide undo|r - Annulla l'ultima azione (Ctrl+Z)",
+    HELP_REDO                = "|cff00cc66/hide redo|r - Ripristina l'ultima azione (Ctrl+Y)",
+    HELP_PICKER              = "|cff00cc66/hide picker|r - Attiva/disattiva il selettore di riquadro (Ctrl+P)",
+    HELP_PRESET              = "|cff00cc66/hide preset <nome>|r - Applica un predefinito",
 
     -- Hide / Show
     FRAME_HIDDEN             = "Nascosto: |cffff8800%s|r",
