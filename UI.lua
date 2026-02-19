@@ -1045,17 +1045,137 @@ local function CreateSettingsBlock(parent)
             if val then HA:ShowFloatingButton() else HA:HideFloatingButton() end
         end)
 
-    y = MakeSettingsToggle(y, L["CFG_KEY_UNDO"], L["CFG_KEY_UNDO_TT"],
-        function() return HA:GetSetting("keyUndo") ~= false end,
-        function() HA:SetSetting("keyUndo", not (HA:GetSetting("keyUndo") ~= false)) end)
+    ---------------------------------------------------------------------------
+    -- Keybind capture widget factory
+    ---------------------------------------------------------------------------
+    local activeKeybindCapture = nil  -- only one capture active at a time
 
-    y = MakeSettingsToggle(y, L["CFG_KEY_REDO"], L["CFG_KEY_REDO_TT"],
-        function() return HA:GetSetting("keyRedo") ~= false end,
-        function() HA:SetSetting("keyRedo", not (HA:GetSetting("keyRedo") ~= false)) end)
+    local function FormatKeybind(str)
+        if not str or str == "" then return L["CFG_KEY_NONE"] or "None" end
+        return str:gsub("%-", "+")
+    end
 
-    y = MakeSettingsToggle(y, L["CFG_KEY_PICKER"], L["CFG_KEY_PICKER_TT"],
-        function() return HA:GetSetting("keyPicker") ~= false end,
-        function() HA:SetSetting("keyPicker", not (HA:GetSetting("keyPicker") ~= false)) end)
+    local IGNORED_KEYS = {
+        LSHIFT = true, RSHIFT = true, LCTRL = true, RCTRL = true,
+        LALT = true, RALT = true, UNKNOWN = true,
+    }
+
+    local function MakeKeybindRow(yPos, labelText, descText, settingKey)
+        local rowHeight = 38
+        local row = CreateFrame("Frame", nil, block)
+        row:SetSize(block:GetWidth() - 20, rowHeight)
+        row:SetPoint("TOPLEFT", block, "TOPLEFT", 10, yPos)
+
+        local lbl = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        lbl:SetPoint("TOPLEFT", row, "TOPLEFT", 6, -4)
+        lbl:SetText(labelText)
+        lbl:SetTextColor(0.9, 0.9, 0.92)
+
+        local desc = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        desc:SetPoint("TOPLEFT", lbl, "BOTTOMLEFT", 0, -2)
+        desc:SetText("|cff555560" .. descText .. "|r")
+        desc:SetWidth(row:GetWidth() - 120)
+        desc:SetJustifyH("LEFT")
+
+        -- Keybind button (shows current binding, click to capture)
+        local kbBtn = CreateFrame("Button", nil, row, "BackdropTemplate")
+        kbBtn:SetSize(100, 22)
+        kbBtn:SetPoint("RIGHT", row, "RIGHT", -6, 0)
+        kbBtn:SetBackdrop({
+            bgFile   = "Interface\\Buttons\\WHITE8X8",
+            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+            edgeSize = 8,
+            insets   = { left = 2, right = 2, top = 2, bottom = 2 },
+        })
+        kbBtn:SetBackdropColor(0.1, 0.1, 0.12, 0.9)
+        kbBtn:SetBackdropBorderColor(0.3, 0.3, 0.35, 0.8)
+
+        local kbText = kbBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        kbText:SetPoint("CENTER", 0, 0)
+
+        local function RefreshLabel()
+            local cur = HA:GetSetting(settingKey) or ""
+            if cur == "" then
+                kbText:SetText("|cff666666" .. (L["CFG_KEY_NONE"] or "None") .. "|r")
+            else
+                kbText:SetText("|cff00cc66" .. FormatKeybind(cur) .. "|r")
+            end
+        end
+        RefreshLabel()
+
+        -- Capture frame (hidden, only shown during binding)
+        local captureFrame = CreateFrame("Frame", nil, kbBtn)
+        captureFrame:SetAllPoints()
+        captureFrame:EnableKeyboard(true)
+        captureFrame:SetPropagateKeyboardInput(false)
+        captureFrame:Hide()
+
+        local capturing = false
+
+        local function StopCapture()
+            capturing = false
+            captureFrame:Hide()
+            captureFrame:EnableKeyboard(false)
+            kbBtn:SetBackdropBorderColor(0.3, 0.3, 0.35, 0.8)
+            RefreshLabel()
+            activeKeybindCapture = nil
+        end
+
+        captureFrame:SetScript("OnKeyDown", function(self, key)
+            self:SetPropagateKeyboardInput(false)
+            if key == "ESCAPE" then
+                StopCapture()
+                return
+            end
+            if IGNORED_KEYS[key] then return end
+
+            -- Build the keybind string
+            local parts = {}
+            if IsControlKeyDown() then parts[#parts + 1] = "CTRL" end
+            if IsShiftKeyDown()   then parts[#parts + 1] = "SHIFT" end
+            if IsAltKeyDown()     then parts[#parts + 1] = "ALT" end
+            parts[#parts + 1] = key:upper()
+            local bind = table.concat(parts, "-")
+
+            HA:SetSetting(settingKey, bind)
+            StopCapture()
+        end)
+
+        kbBtn:SetScript("OnClick", function(self, button)
+            if button == "RightButton" then
+                -- Right-click clears the keybind
+                HA:SetSetting(settingKey, "")
+                RefreshLabel()
+                return
+            end
+            if capturing then
+                StopCapture()
+                return
+            end
+            -- Cancel any other active capture
+            if activeKeybindCapture then activeKeybindCapture() end
+            capturing = true
+            activeKeybindCapture = StopCapture
+            kbBtn:SetBackdropBorderColor(ACCENT_R, ACCENT_G, ACCENT_B, 1)
+            kbText:SetText("|cffffcc00" .. (L["CFG_KEY_PRESS"] or "Press a key...") .. "|r")
+            captureFrame:EnableKeyboard(true)
+            captureFrame:Show()
+        end)
+        kbBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+
+        -- Separator line
+        local sep = row:CreateTexture(nil, "ARTWORK")
+        sep:SetHeight(1)
+        sep:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 0, 0)
+        sep:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", 0, 0)
+        sep:SetColorTexture(0.18, 0.18, 0.20, 0.5)
+
+        return yPos - rowHeight
+    end
+
+    y = MakeKeybindRow(y, L["CFG_KEY_UNDO"], L["CFG_KEY_UNDO_TT"], "keybindUndo")
+    y = MakeKeybindRow(y, L["CFG_KEY_REDO"], L["CFG_KEY_REDO_TT"], "keybindRedo")
+    y = MakeKeybindRow(y, L["CFG_KEY_PICKER"], L["CFG_KEY_PICKER_TT"], "keybindPicker")
 
     y = MakeSettingsToggle(y, L["CFG_LOCK_MODE"], L["CFG_LOCK_MODE_TT"],
         function() return HA:GetSetting("locked") end,

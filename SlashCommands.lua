@@ -209,10 +209,26 @@ end
 
 ---------------------------------------------------------------------------
 -- Keyboard shortcut handler (improvement #3)
--- Ctrl+Z = Undo, Ctrl+Y = Redo, Ctrl+P = Picker
--- Each shortcut can be individually disabled in settings
+-- Keybinds are fully customisable via settings (format "MOD-KEY")
 -- Only active when not typing in an edit box
 ---------------------------------------------------------------------------
+
+-- Parse a keybind string like "CTRL-Z", "ALT-P", "SHIFT-F1" into {mod, key}
+local function ParseKeybind(str)
+    if not str or str == "" then return nil, nil end
+    local mod, key = str:match("^(%a+)%-(.+)$")
+    if mod then return mod:upper(), key:upper() end
+    return nil, str:upper()  -- no modifier, just a key
+end
+
+-- Check whether the current modifier state matches the requested modifier
+local function ModifierHeld(mod)
+    if mod == "CTRL"  then return IsControlKeyDown() end
+    if mod == "SHIFT" then return IsShiftKeyDown() end
+    if mod == "ALT"   then return IsAltKeyDown() end
+    return false
+end
+
 local shortcutFrame = CreateFrame("Frame", "HideAnythingShortcuts", UIParent)
 shortcutFrame:EnableKeyboard(true)
 shortcutFrame:SetPropagateKeyboardInput(true)
@@ -224,22 +240,25 @@ shortcutFrame:SetScript("OnKeyDown", function(self, key)
         return
     end
 
-    local ctrl = IsControlKeyDown()
-    if not ctrl then
-        self:SetPropagateKeyboardInput(true)
-        return
+    local upperKey = key:upper()
+
+    -- Check each configurable keybind
+    local binds = {
+        { setting = "keybindUndo",   action = function() HA:Undo() end },
+        { setting = "keybindRedo",   action = function() HA:Redo() end },
+        { setting = "keybindPicker", action = function() HA:ToggleFramePicker() end },
+    }
+
+    for _, bind in ipairs(binds) do
+        local mod, bKey = ParseKeybind(HA:GetSetting(bind.setting))
+        if bKey and bKey == upperKey then
+            if (mod and ModifierHeld(mod)) or (not mod) then
+                self:SetPropagateKeyboardInput(false)
+                bind.action()
+                return
+            end
+        end
     end
 
-    if key == "Z" and HA:GetSetting("keyUndo") ~= false then
-        self:SetPropagateKeyboardInput(false)
-        HA:Undo()
-    elseif key == "Y" and HA:GetSetting("keyRedo") ~= false then
-        self:SetPropagateKeyboardInput(false)
-        HA:Redo()
-    elseif key == "P" and HA:GetSetting("keyPicker") ~= false then
-        self:SetPropagateKeyboardInput(false)
-        HA:ToggleFramePicker()
-    else
-        self:SetPropagateKeyboardInput(true)
-    end
+    self:SetPropagateKeyboardInput(true)
 end)
