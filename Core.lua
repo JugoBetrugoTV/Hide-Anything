@@ -232,7 +232,7 @@ function HA:FadeOutAndHide(frame, frameName)
     local startAlpha = frame:GetAlpha()
     if startAlpha <= 0 then
         self:SecureHideFrame(frame, frameName)
-        self.db.hiddenFrames[frameName] = true
+        if self.db then self.db.hiddenFrames[frameName] = true end
         if self.RefreshFrameList then self:RefreshFrameList() end
         return
     end
@@ -245,7 +245,7 @@ function HA:FadeOutAndHide(frame, frameName)
         duration   = self.FADE_DURATION,
         onFinish   = function()
             HA:SecureHideFrame(frame, frameName)
-            HA.db.hiddenFrames[frameName] = true
+            if HA.db then HA.db.hiddenFrames[frameName] = true end
             if HA.RefreshFrameList then HA:RefreshFrameList() end
         end,
     }
@@ -380,6 +380,8 @@ function HA:HideFrame(frameName)
     if self:GetSetting("fadeEnabled") then
         self:FeedbackHide(frameName)
         self:FadeOutAndHide(frame, frameName)
+        PushUndo({ type = "frame", action = "hide", name = frameName })
+        PushRecent(frameName)
         return true
     end
 
@@ -1034,6 +1036,7 @@ end
 -- Hide a texture/region by name
 function HA:HideTexture(textureName)
     if not textureName or textureName == "" then return false end
+    if not self.db or not self.db.hiddenTextures then return false end
     if self.db.hiddenTextures[textureName] then return false end
 
     local region = self:GetRegionByName(textureName)
@@ -1063,6 +1066,7 @@ end
 -- Show a texture/region by name
 function HA:ShowTexture(textureName)
     if not textureName or textureName == "" then return false end
+    if not self.db or not self.db.hiddenTextures then return false end
     if not self.db.hiddenTextures[textureName] then return false end
 
     self.db.hiddenTextures[textureName] = nil
