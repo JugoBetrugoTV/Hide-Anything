@@ -553,11 +553,11 @@ function HA:ShowAllFrames()
         wipe(self.db.frameAlphas)
     end
 
+    -- Collect frame names, then clear DB BEFORE showing frames
+    -- so the re-hide hooks (which check hiddenFrames) don't re-hide them
+    local framesToShow = {}
     for frameName, _ in pairs(self.db.hiddenFrames) do
-        local frame = self:GetFrameByName(frameName)
-        if frame then
-            self:SecureShowFrame(frame, frameName)
-        end
+        table.insert(framesToShow, frameName)
         count = count + 1
     end
 
@@ -568,6 +568,13 @@ function HA:ShowAllFrames()
 
     wipe(self.db.hiddenFrames)
 
+    for _, frameName in ipairs(framesToShow) do
+        local frame = self:GetFrameByName(frameName)
+        if frame then
+            self:SecureShowFrame(frame, frameName)
+        end
+    end
+
     -- Also restore all hidden CVars
     if self.db.hiddenCVars then
         for cvarName, _ in pairs(self.db.hiddenCVars) do
@@ -577,16 +584,20 @@ function HA:ShowAllFrames()
         wipe(self.db.hiddenCVars)
     end
 
-    -- Also restore all hidden textures
+    -- Also restore all hidden textures (clear DB first to prevent re-hide hooks)
     if self.db.hiddenTextures then
+        local texturesToShow = {}
         for textureName, _ in pairs(self.db.hiddenTextures) do
+            table.insert(texturesToShow, textureName)
+            count = count + 1
+        end
+        wipe(self.db.hiddenTextures)
+        for _, textureName in ipairs(texturesToShow) do
             local region = self:GetRegionByName(textureName)
             if region then
                 pcall(function() region:SetAlpha(1); region:Show() end)
             end
-            count = count + 1
         end
-        wipe(self.db.hiddenTextures)
     end
 
     self:FeedbackShowAll(count)
@@ -1342,6 +1353,68 @@ function HA:DeleteCustomPreset(presetId)
 end
 
 ---------------------------------------------------------------------------
+-- Get the effective frames list for a preset (custom override or default)
+---------------------------------------------------------------------------
+function HA:GetPresetFrames(presetId)
+    -- Custom override takes priority
+    if self.db and self.db.customPresets and self.db.customPresets[presetId] then
+        return self.db.customPresets[presetId].frames or {}
+    end
+    -- Fall back to built-in
+    for _, preset in ipairs(self.PRESET_PROFILES) do
+        if preset.id == presetId then
+            return preset.frames
+        end
+    end
+    return {}
+end
+
+---------------------------------------------------------------------------
+-- Update frames list for a preset (creates custom override for built-ins)
+---------------------------------------------------------------------------
+function HA:UpdatePresetFrames(presetId, frames)
+    if not self.db then return false end
+
+    -- For built-in presets: create/update a custom override
+    if not self.db.customPresets[presetId] then
+        -- Find the built-in preset to get label
+        local label = presetId
+        for _, preset in ipairs(self.PRESET_PROFILES) do
+            if preset.id == presetId then
+                label = self:GetPresetLabel(preset)
+                break
+            end
+        end
+        self.db.customPresets[presetId] = { label = label, frames = {} }
+    end
+    self.db.customPresets[presetId].frames = frames
+    return true
+end
+
+---------------------------------------------------------------------------
+-- Reset a built-in preset to its default frames
+---------------------------------------------------------------------------
+function HA:ResetPresetToDefault(presetId)
+    if not self.db or not self.db.customPresets then return false end
+    -- Only makes sense for built-in presets that have a custom override
+    for _, preset in ipairs(self.PRESET_PROFILES) do
+        if preset.id == presetId then
+            self.db.customPresets[presetId] = nil
+            self:ChatMsg((self.L["PRESET_RESET"] or "Preset |cff00cc66%s|r reset to default."):format(self:GetPresetLabel(preset)))
+            return true
+        end
+    end
+    return false
+end
+
+---------------------------------------------------------------------------
+-- Check if a built-in preset has a custom override
+---------------------------------------------------------------------------
+function HA:IsPresetCustomized(presetId)
+    return self.db and self.db.customPresets and self.db.customPresets[presetId] ~= nil
+end
+
+---------------------------------------------------------------------------
 -- Apply a preset (built-in or custom)
 ---------------------------------------------------------------------------
 function HA:ApplyPreset(presetId, confirmed)
@@ -1379,8 +1452,9 @@ function HA:ApplyPreset(presetId, confirmed)
 
     -- Show all current hidden frames first
     self:ShowAllFrames()
-    -- Apply preset frames
-    for _, frameName in ipairs(preset.frames) do
+    -- Apply preset frames (use GetPresetFrames for custom overrides)
+    local frames = self:GetPresetFrames(presetId)
+    for _, frameName in ipairs(frames) do
         self:HideFrame(frameName)
     end
     self:ChatMsg((self.L["PRESET_APPLIED"] or "Preset |cff00cc66%s|r applied."):format(self:GetPresetLabel(preset)))

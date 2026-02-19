@@ -2075,11 +2075,26 @@ function HA:RefreshPresetButtons()
             y = y - (rowH + 4)
         end
 
-        -- Preset apply button
-        local presetBtn = CreateStyledButton(container, btnW, rowH, label, function()
-            self:ApplyPreset(preset.id, true)
+        -- Preset apply button (left-click = apply, right-click = edit)
+        local presetBtn = CreateStyledButton(container, btnW, rowH, label, nil)
+        presetBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+        local pid = preset.id
+        presetBtn:SetScript("OnClick", function(_, button)
+            if button == "RightButton" then
+                HA:ShowPresetEditDialog(pid)
+            else
+                HA:ApplyPreset(pid, true)
+            end
         end)
         presetBtn:SetPoint("TOPLEFT", container, "TOPLEFT", x, y)
+
+        -- Show customized indicator for built-in presets with overrides
+        if not preset.custom and HA:IsPresetCustomized(pid) then
+            local modIcon = presetBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            modIcon:SetPoint("TOPRIGHT", presetBtn, "TOPRIGHT", -3, -2)
+            modIcon:SetText("|cffffcc00*|r")
+        end
+
         table.insert(tc.presetWidgets, presetBtn)
 
         -- Custom preset: mark with accent color and add delete "x" button
@@ -2118,6 +2133,171 @@ function HA:RefreshPresetButtons()
         tc.profileListHeader:SetPoint("TOPLEFT", tc.listParent, "TOPLEFT", 10, listY)
     end
     tc.listStartY = listY - 24
+end
+
+---------------------------------------------------------------------------
+-- Preset Edit Dialog (right-click a preset to configure its frames)
+---------------------------------------------------------------------------
+local presetEditDialog = nil
+
+function HA:ShowPresetEditDialog(presetId)
+    local L = self.L
+
+    -- Find preset info
+    local presetLabel, isBuiltIn
+    for _, p in ipairs(self.PRESET_PROFILES) do
+        if p.id == presetId then
+            presetLabel = self:GetPresetLabel(p)
+            isBuiltIn = true
+            break
+        end
+    end
+    if not presetLabel and self.db.customPresets[presetId] then
+        presetLabel = self.db.customPresets[presetId].label or presetId
+        isBuiltIn = false
+    end
+    if not presetLabel then return end
+
+    -- Get effective frames for this preset
+    local presetFrames = self:GetPresetFrames(presetId)
+    local frameSet = {}
+    for _, f in ipairs(presetFrames) do
+        frameSet[f] = true
+    end
+
+    -- Reuse or create dialog
+    if presetEditDialog then
+        presetEditDialog:Hide()
+    end
+
+    local dialog = CreateFrame("Frame", "HideAnythingPresetEditFrame", UIParent, "BackdropTemplate")
+    dialog:SetSize(420, 460)
+    dialog:SetPoint("CENTER")
+    dialog:SetFrameStrata("FULLSCREEN_DIALOG")
+    dialog:SetBackdrop(BD_POPUP)
+    dialog:SetBackdropColor(0.08, 0.08, 0.10, 0.97)
+    dialog:SetBackdropBorderColor(0.25, 0.25, 0.28, 1)
+    dialog:SetMovable(true)
+    dialog:EnableMouse(true)
+    dialog:SetClampedToScreen(true)
+    dialog:RegisterForDrag("LeftButton")
+    dialog:SetScript("OnDragStart", dialog.StartMoving)
+    dialog:SetScript("OnDragStop", dialog.StopMovingOrSizing)
+    presetEditDialog = dialog
+
+    -- Accent stripe
+    local stripe = dialog:CreateTexture(nil, "OVERLAY")
+    stripe:SetHeight(2)
+    stripe:SetPoint("TOPLEFT", dialog, "TOPLEFT", 4, -4)
+    stripe:SetPoint("TOPRIGHT", dialog, "TOPRIGHT", -4, -4)
+    stripe:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 0.9)
+
+    -- Title
+    local title = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    title:SetPoint("TOP", 0, -14)
+    title:SetText("|cff00c761" .. (L["PRESET_EDIT_TITLE"] or "Edit Preset") .. "|r")
+
+    -- Subtitle: preset name
+    local subtitle = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    subtitle:SetPoint("TOP", title, "BOTTOM", 0, -4)
+    subtitle:SetText("|cffffffff" .. presetLabel .. "|r")
+
+    -- Hint text
+    local hint = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    hint:SetPoint("TOP", subtitle, "BOTTOM", 0, -4)
+    hint:SetText("|cff888888" .. (L["PRESET_EDIT_HINT"] or "Check frames to include in this preset") .. "|r")
+
+    -- Scrollframe for checkbox list
+    local sf = CreateFrame("ScrollFrame", nil, dialog, "UIPanelScrollFrameTemplate")
+    sf:SetPoint("TOPLEFT", 12, -62)
+    sf:SetPoint("BOTTOMRIGHT", -30, 48)
+
+    local content = CreateFrame("Frame", nil, sf)
+    content:SetWidth(sf:GetWidth())
+    sf:SetScrollChild(content)
+
+    -- Build checkbox list from FRAME_CATALOG (only frame entries)
+    local checkboxes = {}
+    local y = 0
+    for _, entry in ipairs(self.FRAME_CATALOG) do
+        if entry.section then
+            -- Section header
+            local header = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            header:SetPoint("TOPLEFT", content, "TOPLEFT", 4, y)
+            header:SetText("|cff00c761" .. (self:GetCatalogLabel(entry) or entry.label or "") .. "|r")
+            y = y - 18
+        elseif entry.name then
+            local frameName = entry.name
+            local displayLabel = self:GetCatalogLabel(entry) or frameName
+
+            local cb = CreateFrame("CheckButton", nil, content, "UICheckButtonTemplate")
+            cb:SetSize(24, 24)
+            cb:SetPoint("TOPLEFT", content, "TOPLEFT", 4, y)
+            cb:SetChecked(frameSet[frameName] == true)
+
+            local lbl = cb:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            lbl:SetPoint("LEFT", cb, "RIGHT", 2, 0)
+            lbl:SetText(displayLabel)
+            lbl:SetTextColor(0.88, 0.88, 0.92)
+
+            local tech = cb:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            tech:SetPoint("LEFT", lbl, "RIGHT", 6, 0)
+            tech:SetText("|cff666666" .. frameName .. "|r")
+
+            cb:SetScript("OnClick", function(self)
+                if self:GetChecked() then
+                    frameSet[frameName] = true
+                else
+                    frameSet[frameName] = nil
+                end
+            end)
+
+            table.insert(checkboxes, { cb = cb, name = frameName })
+            y = y - 24
+        end
+    end
+    content:SetHeight(math.abs(y) + 10)
+
+    -- Bottom buttons
+    local btnSave = CreateStyledButton(dialog, 100, 26, L["UI_BTN_SAVE"] or "Save", function()
+        local newFrames = {}
+        for name, _ in pairs(frameSet) do
+            table.insert(newFrames, name)
+        end
+        table.sort(newFrames)
+        HA:UpdatePresetFrames(presetId, newFrames)
+        HA:ChatMsg((L["PRESET_SAVED"] or "Preset |cff00cc66%s|r saved with %d frames."):format(presetLabel, #newFrames))
+        HA:RefreshPresetButtons()
+        dialog:Hide()
+    end)
+    btnSave:SetPoint("BOTTOMLEFT", dialog, "BOTTOMLEFT", 12, 12)
+
+    local btnClose = CreateStyledButton(dialog, 80, 26, L["UI_BTN_CLOSE"] or "Close", function()
+        dialog:Hide()
+    end)
+    btnClose:SetPoint("BOTTOMRIGHT", dialog, "BOTTOMRIGHT", -12, 12)
+
+    -- Reset to Default button (only for built-in presets that have been customized)
+    if isBuiltIn and self:IsPresetCustomized(presetId) then
+        local btnReset = CreateStyledButton(dialog, 130, 26, L["PRESET_RESET_BTN"] or "Reset to Default", function()
+            HA:ResetPresetToDefault(presetId)
+            HA:RefreshPresetButtons()
+            dialog:Hide()
+        end)
+        btnReset:SetPoint("BOTTOM", dialog, "BOTTOM", 0, 12)
+        btnReset._stripe:SetColorTexture(0.9, 0.5, 0.1, 0.5)
+    end
+
+    dialog:SetScript("OnKeyDown", function(self, key)
+        if key == "ESCAPE" then
+            self:SetPropagateKeyboardInput(false)
+            self:Hide()
+        else
+            self:SetPropagateKeyboardInput(true)
+        end
+    end)
+
+    dialog:Show()
 end
 
 function HA:RefreshProfileList()

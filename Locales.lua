@@ -236,6 +236,11 @@ HA.LOCALES["enUS"] = {
     PRESET_DELETED           = "Preset |cffff4444%s|r deleted.",
     PRESET_SAVE_EMPTY        = "No hidden frames to save as preset.",
     PRESET_SAVE_CURRENT      = "Save current as Preset",
+    PRESET_EDIT_TITLE        = "Edit Preset",
+    PRESET_EDIT_HINT         = "Check frames to include in this preset. Right-click any preset to edit.",
+    PRESET_RESET             = "Preset |cff00cc66%s|r reset to default.",
+    PRESET_RESET_BTN         = "Reset to Default",
+    UI_BTN_SAVE              = "Save",
 
     -- New UI keys (batch 2)
     UI_FILTER_HIDDEN_ONLY    = "Show only hidden",
@@ -464,6 +469,11 @@ HA.LOCALES["deDE"] = {
     PRESET_DELETED           = "Vorlage |cffff4444%s|r gelöscht.",
     PRESET_SAVE_EMPTY        = "Keine versteckten Frames zum Speichern als Vorlage.",
     PRESET_SAVE_CURRENT      = "Aktuelle als Vorlage",
+    PRESET_EDIT_TITLE        = "Vorlage bearbeiten",
+    PRESET_EDIT_HINT         = "Frames auswählen die in dieser Vorlage enthalten sein sollen. Rechtsklick zum Bearbeiten.",
+    PRESET_RESET             = "Vorlage |cff00cc66%s|r auf Standard zurückgesetzt.",
+    PRESET_RESET_BTN         = "Auf Standard zurücksetzen",
+    UI_BTN_SAVE              = "Speichern",
 
     MINIMAP_TOOLTIP_RIGHT    = "|cff00cc66Rechtsklick|r: Frame-Picker",
     HELP_UNDO                = "|cff00cc66/hide undo|r - Letzte Aktion rückgängig machen (Strg+Z)",
@@ -691,6 +701,11 @@ HA.LOCALES["frFR"] = {
     PRESET_DELETED           = "Préréglage |cffff4444%s|r supprimé.",
     PRESET_SAVE_EMPTY        = "Aucun cadre caché à sauvegarder.",
     PRESET_SAVE_CURRENT      = "Sauver comme préréglage",
+    PRESET_EDIT_TITLE        = "Modifier le préréglage",
+    PRESET_EDIT_HINT         = "Cochez les cadres à inclure. Clic droit sur un préréglage pour modifier.",
+    PRESET_RESET             = "Préréglage |cff00cc66%s|r réinitialisé.",
+    PRESET_RESET_BTN         = "Réinitialiser",
+    UI_BTN_SAVE              = "Enregistrer",
     MINIMAP_TOOLTIP_RIGHT    = "|cff00cc66Clic droit|r : Sélecteur de cadre",
 
     -- New UI keys (batch 2)
@@ -913,6 +928,11 @@ HA.LOCALES["esES"] = {
     PRESET_DELETED           = "Preajuste |cffff4444%s|r eliminado.",
     PRESET_SAVE_EMPTY        = "No hay marcos ocultos para guardar.",
     PRESET_SAVE_CURRENT      = "Guardar actual como preset",
+    PRESET_EDIT_TITLE        = "Editar preajuste",
+    PRESET_EDIT_HINT         = "Marca los marcos a incluir. Clic derecho en un preajuste para editar.",
+    PRESET_RESET             = "Preajuste |cff00cc66%s|r restablecido.",
+    PRESET_RESET_BTN         = "Restablecer",
+    UI_BTN_SAVE              = "Guardar",
     MINIMAP_TOOLTIP_RIGHT    = "|cff00cc66Clic derecho|r: Selector de marco",
 
     -- New UI keys (batch 2)
@@ -1135,6 +1155,11 @@ HA.LOCALES["ruRU"] = {
     PRESET_DELETED           = "Шаблон |cffff4444%s|r удалён.",
     PRESET_SAVE_EMPTY        = "Нет скрытых фреймов для сохранения.",
     PRESET_SAVE_CURRENT      = "Сохранить как шаблон",
+    PRESET_EDIT_TITLE        = "Редактировать шаблон",
+    PRESET_EDIT_HINT         = "Отметьте фреймы для включения. ПКМ на шаблон для редактирования.",
+    PRESET_RESET             = "Шаблон |cff00cc66%s|r сброшен.",
+    PRESET_RESET_BTN         = "Сбросить",
+    UI_BTN_SAVE              = "Сохранить",
     MINIMAP_TOOLTIP_RIGHT    = "|cff00cc66ПКМ|r: Выбор фрейма",
 
     -- New UI keys (batch 2)
@@ -1357,6 +1382,11 @@ HA.LOCALES["itIT"] = {
     PRESET_DELETED           = "Predefinito |cffff4444%s|r eliminato.",
     PRESET_SAVE_EMPTY        = "Nessun riquadro nascosto da salvare.",
     PRESET_SAVE_CURRENT      = "Salva come predefinito",
+    PRESET_EDIT_TITLE        = "Modifica predefinito",
+    PRESET_EDIT_HINT         = "Seleziona i riquadri da includere. Clic destro su un predefinito per modificarlo.",
+    PRESET_RESET             = "Predefinito |cff00cc66%s|r ripristinato.",
+    PRESET_RESET_BTN         = "Ripristina",
+    UI_BTN_SAVE              = "Salva",
     MINIMAP_TOOLTIP_RIGHT    = "|cff00cc66Clic destro|r: Selettore riquadro",
 
     -- New UI keys (batch 2)
