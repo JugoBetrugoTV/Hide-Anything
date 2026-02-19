@@ -183,6 +183,18 @@ function HA:InitFloatingButton()
         end
     end)
 
-    btn:Show()
+    if self:GetSetting("showFloatingBtn") == false then
+        btn:Hide()
+    else
+        btn:Show()
+    end
     self:UpdateFloatingBadge()
+end
+
+function HA:ShowFloatingButton()
+    btn:Show()
+end
+
+function HA:HideFloatingButton()
+    btn:Hide()
 end

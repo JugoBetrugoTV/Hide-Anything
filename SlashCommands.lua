@@ -210,6 +210,7 @@ end
 ---------------------------------------------------------------------------
 -- Keyboard shortcut handler (improvement #3)
 -- Ctrl+Z = Undo, Ctrl+Y = Redo, Ctrl+P = Picker
+-- Each shortcut can be individually disabled in settings
 -- Only active when not typing in an edit box
 ---------------------------------------------------------------------------
 local shortcutFrame = CreateFrame("Frame", "HideAnythingShortcuts", UIParent)
@@ -229,13 +230,13 @@ shortcutFrame:SetScript("OnKeyDown", function(self, key)
         return
     end
 
-    if key == "Z" then
+    if key == "Z" and HA:GetSetting("keyUndo") ~= false then
         self:SetPropagateKeyboardInput(false)
         HA:Undo()
-    elseif key == "Y" then
+    elseif key == "Y" and HA:GetSetting("keyRedo") ~= false then
         self:SetPropagateKeyboardInput(false)
         HA:Redo()
-    elseif key == "P" then
+    elseif key == "P" and HA:GetSetting("keyPicker") ~= false then
         self:SetPropagateKeyboardInput(false)
         HA:ToggleFramePicker()
     else

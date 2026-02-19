@@ -1037,6 +1037,26 @@ local function CreateSettingsBlock(parent)
             if val then HA:ShowMinimapButton() else HA:HideMinimapButton() end
         end)
 
+    y = MakeSettingsToggle(y, L["CFG_FLOATING_BTN"], L["CFG_FLOATING_BTN_TT"],
+        function() return HA:GetSetting("showFloatingBtn") ~= false end,
+        function()
+            local val = not (HA:GetSetting("showFloatingBtn") ~= false)
+            HA:SetSetting("showFloatingBtn", val)
+            if val then HA:ShowFloatingButton() else HA:HideFloatingButton() end
+        end)
+
+    y = MakeSettingsToggle(y, L["CFG_KEY_UNDO"], L["CFG_KEY_UNDO_TT"],
+        function() return HA:GetSetting("keyUndo") ~= false end,
+        function() HA:SetSetting("keyUndo", not (HA:GetSetting("keyUndo") ~= false)) end)
+
+    y = MakeSettingsToggle(y, L["CFG_KEY_REDO"], L["CFG_KEY_REDO_TT"],
+        function() return HA:GetSetting("keyRedo") ~= false end,
+        function() HA:SetSetting("keyRedo", not (HA:GetSetting("keyRedo") ~= false)) end)
+
+    y = MakeSettingsToggle(y, L["CFG_KEY_PICKER"], L["CFG_KEY_PICKER_TT"],
+        function() return HA:GetSetting("keyPicker") ~= false end,
+        function() HA:SetSetting("keyPicker", not (HA:GetSetting("keyPicker") ~= false)) end)
+
     y = MakeSettingsToggle(y, L["CFG_LOCK_MODE"], L["CFG_LOCK_MODE_TT"],
         function() return HA:GetSetting("locked") end,
         function() HA:SetSetting("locked", not HA:GetSetting("locked")) end)
