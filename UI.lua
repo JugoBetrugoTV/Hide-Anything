@@ -2022,7 +2022,7 @@ local function BuildProfilesTab(parent)
     local presetX = 10
     for _, preset in ipairs(HA.PRESET_PROFILES) do
         local presetBtn = CreateStyledButton(inputCard, 120, 22, HA:GetPresetLabel(preset), function()
-            HA:ApplyPreset(preset.id)
+            HA:ApplyPreset(preset.id, true)
         end)
         presetBtn:SetPoint("TOPLEFT", inputCard, "TOPLEFT", presetX, btnY)
         presetX = presetX + 126
