@@ -207,6 +207,7 @@ HA.LOCALES["enUS"] = {
     ABOUT_F8                 = "LibDataBroker plugin for bar addons",
     ABOUT_F9                 = "Combat protection & secure hooks",
     ABOUT_F10                = "Texture & decoration hiding",
+    ABOUT_F11                = "Configurable presets: edit, create & customize",
     ABOUT_COMMANDS_LABEL     = "Commands:",
     ABOUT_CONFIG_LABEL       = "Config:",
 
@@ -440,6 +441,7 @@ HA.LOCALES["deDE"] = {
     ABOUT_F8                 = "LibDataBroker-Plugin für Leistenaddons",
     ABOUT_F9                 = "Kampfschutz & sichere Hooks",
     ABOUT_F10                = "Texturen & Dekorationen verstecken",
+    ABOUT_F11                = "Konfigurierbare Vorlagen: bearbeiten, erstellen & anpassen",
     ABOUT_COMMANDS_LABEL     = "Befehle:",
     ABOUT_CONFIG_LABEL       = "Konfiguration:",
 
@@ -677,6 +679,7 @@ HA.LOCALES["frFR"] = {
     ABOUT_F8                 = "Plugin LibDataBroker pour les barres d'addons",
     ABOUT_F9                 = "Protection de combat & hooks sécurisés",
     ABOUT_F10                = "Masquage des textures & décorations",
+    ABOUT_F11                = "Préréglages configurables : modifier, créer & personnaliser",
     ABOUT_COMMANDS_LABEL     = "Commandes :",
     ABOUT_CONFIG_LABEL       = "Configuration :",
 
@@ -904,6 +907,7 @@ HA.LOCALES["esES"] = {
     ABOUT_F8                 = "Plugin LibDataBroker para barras de addons",
     ABOUT_F9                 = "Protección de combate y hooks seguros",
     ABOUT_F10                = "Ocultación de texturas y decoraciones",
+    ABOUT_F11                = "Preajustes configurables: editar, crear y personalizar",
     ABOUT_COMMANDS_LABEL     = "Comandos:",
     ABOUT_CONFIG_LABEL       = "Configuración:",
 
@@ -1131,6 +1135,7 @@ HA.LOCALES["ruRU"] = {
     ABOUT_F8                 = "Плагин LibDataBroker для панелей аддонов",
     ABOUT_F9                 = "Защита в бою и безопасные хуки",
     ABOUT_F10                = "Скрытие текстур и декораций",
+    ABOUT_F11                = "Настраиваемые шаблоны: редактирование, создание и настройка",
     ABOUT_COMMANDS_LABEL     = "Команды:",
     ABOUT_CONFIG_LABEL       = "Настройка:",
 
@@ -1358,6 +1363,7 @@ HA.LOCALES["itIT"] = {
     ABOUT_F8                 = "Plugin LibDataBroker per barre addon",
     ABOUT_F9                 = "Protezione combattimento e hook sicuri",
     ABOUT_F10                = "Nascondere texture e decorazioni",
+    ABOUT_F11                = "Predefiniti configurabili: modifica, crea e personalizza",
     ABOUT_COMMANDS_LABEL     = "Comandi:",
     ABOUT_CONFIG_LABEL       = "Configurazione:",
 

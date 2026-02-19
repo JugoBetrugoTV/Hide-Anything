@@ -2575,6 +2575,7 @@ local function BuildAboutTab(parent)
         L["ABOUT_F7"], L["ABOUT_F8"], L["ABOUT_F9"],
     }
     if L["ABOUT_F10"] then table.insert(features, L["ABOUT_F10"]) end
+    if L["ABOUT_F11"] then table.insert(features, L["ABOUT_F11"]) end
 
     local fy = -32
     for _, feat in ipairs(features) do

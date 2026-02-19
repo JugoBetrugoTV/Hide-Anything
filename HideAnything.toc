@@ -3,7 +3,7 @@
 ## Notes: Hide any UI element with a simple toggle. Frame list, profiles, combat protection.
 ## Notes-deDE: Verstecke jedes UI-Element per einfachem Toggle. Frame-Liste, Profile, Kampfschutz.
 ## Author: JugoBetrugoTV
-## Version: 1.1.0
+## Version: 1.2.0
 ## SavedVariables: HideAnythingDB
 ## DefaultState: enabled
 ## IconTexture: Interface\Icons\INV_Misc_Eye_02
