@@ -232,6 +232,10 @@ HA.LOCALES["enUS"] = {
     -- Presets
     PRESETS_HEADER           = "Presets",
     PRESET_APPLIED           = "Preset |cff00cc66%s|r applied.",
+    PRESET_SAVED             = "Preset |cff00cc66%s|r saved with %d frames.",
+    PRESET_DELETED           = "Preset |cffff4444%s|r deleted.",
+    PRESET_SAVE_EMPTY        = "No hidden frames to save as preset.",
+    PRESET_SAVE_CURRENT      = "Save current as Preset",
 
     -- New UI keys (batch 2)
     UI_FILTER_HIDDEN_ONLY    = "Show only hidden",
@@ -456,6 +460,10 @@ HA.LOCALES["deDE"] = {
     -- Presets
     PRESETS_HEADER           = "Vorlagen",
     PRESET_APPLIED           = "Vorlage |cff00cc66%s|r angewendet.",
+    PRESET_SAVED             = "Vorlage |cff00cc66%s|r gespeichert mit %d Frames.",
+    PRESET_DELETED           = "Vorlage |cffff4444%s|r gelöscht.",
+    PRESET_SAVE_EMPTY        = "Keine versteckten Frames zum Speichern als Vorlage.",
+    PRESET_SAVE_CURRENT      = "Aktuelle als Vorlage",
 
     MINIMAP_TOOLTIP_RIGHT    = "|cff00cc66Rechtsklick|r: Frame-Picker",
     HELP_UNDO                = "|cff00cc66/hide undo|r - Letzte Aktion rückgängig machen (Strg+Z)",
@@ -679,6 +687,10 @@ HA.LOCALES["frFR"] = {
     PICKER_INSTRUCTIONS      = "|cff00c761Clic gauche|r masquer  |  |cffff4444Clic droit|r ou |cffff4444ÉCHAP|r annuler",
     PRESETS_HEADER           = "Préréglages",
     PRESET_APPLIED           = "Préréglage |cff00cc66%s|r appliqué.",
+    PRESET_SAVED             = "Préréglage |cff00cc66%s|r sauvegardé avec %d cadres.",
+    PRESET_DELETED           = "Préréglage |cffff4444%s|r supprimé.",
+    PRESET_SAVE_EMPTY        = "Aucun cadre caché à sauvegarder.",
+    PRESET_SAVE_CURRENT      = "Sauver comme préréglage",
     MINIMAP_TOOLTIP_RIGHT    = "|cff00cc66Clic droit|r : Sélecteur de cadre",
 
     -- New UI keys (batch 2)
@@ -897,6 +909,10 @@ HA.LOCALES["esES"] = {
     PICKER_INSTRUCTIONS      = "|cff00c761Clic izquierdo|r ocultar  |  |cffff4444Clic derecho|r o |cffff4444ESC|r cancelar",
     PRESETS_HEADER           = "Preajustes",
     PRESET_APPLIED           = "Preajuste |cff00cc66%s|r aplicado.",
+    PRESET_SAVED             = "Preajuste |cff00cc66%s|r guardado con %d marcos.",
+    PRESET_DELETED           = "Preajuste |cffff4444%s|r eliminado.",
+    PRESET_SAVE_EMPTY        = "No hay marcos ocultos para guardar.",
+    PRESET_SAVE_CURRENT      = "Guardar actual como preset",
     MINIMAP_TOOLTIP_RIGHT    = "|cff00cc66Clic derecho|r: Selector de marco",
 
     -- New UI keys (batch 2)
@@ -1115,6 +1131,10 @@ HA.LOCALES["ruRU"] = {
     PICKER_INSTRUCTIONS      = "|cff00c761ЛКМ|r скрыть  |  |cffff4444ПКМ|r или |cffff4444ESC|r отмена",
     PRESETS_HEADER           = "Шаблоны",
     PRESET_APPLIED           = "Шаблон |cff00cc66%s|r применён.",
+    PRESET_SAVED             = "Шаблон |cff00cc66%s|r сохранён с %d фреймами.",
+    PRESET_DELETED           = "Шаблон |cffff4444%s|r удалён.",
+    PRESET_SAVE_EMPTY        = "Нет скрытых фреймов для сохранения.",
+    PRESET_SAVE_CURRENT      = "Сохранить как шаблон",
     MINIMAP_TOOLTIP_RIGHT    = "|cff00cc66ПКМ|r: Выбор фрейма",
 
     -- New UI keys (batch 2)
@@ -1333,6 +1353,10 @@ HA.LOCALES["itIT"] = {
     PICKER_INSTRUCTIONS      = "|cff00c761Clic sinistro|r nascondi  |  |cffff4444Clic destro|r o |cffff4444ESC|r annulla",
     PRESETS_HEADER           = "Predefiniti",
     PRESET_APPLIED           = "Predefinito |cff00cc66%s|r applicato.",
+    PRESET_SAVED             = "Predefinito |cff00cc66%s|r salvato con %d riquadri.",
+    PRESET_DELETED           = "Predefinito |cffff4444%s|r eliminato.",
+    PRESET_SAVE_EMPTY        = "Nessun riquadro nascosto da salvare.",
+    PRESET_SAVE_CURRENT      = "Salva come predefinito",
     MINIMAP_TOOLTIP_RIGHT    = "|cff00cc66Clic destro|r: Selettore riquadro",
 
     -- New UI keys (batch 2)

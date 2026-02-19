@@ -492,6 +492,9 @@ function HA:InitDB()
     if type(db.hiddenTextures) ~= "table" then
         db.hiddenTextures = {}
     end
+    if type(db.customPresets) ~= "table" then
+        db.customPresets = {}
+    end
 
     self.db = db
 end

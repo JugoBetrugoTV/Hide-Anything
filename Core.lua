@@ -1263,6 +1263,7 @@ HA.PRESET_PROFILES = {
 }
 
 function HA:GetPresetLabel(preset)
+    if preset.custom then return preset.label end
     local lang = self._currentLanguage or "enUS"
     if lang == "deDE" and preset.labelDE then return preset.labelDE end
     if lang == "frFR" and preset.labelFR then return preset.labelFR end
@@ -1272,35 +1273,118 @@ function HA:GetPresetLabel(preset)
     return preset.label
 end
 
-function HA:ApplyPreset(presetId, confirmed)
+---------------------------------------------------------------------------
+-- Get all presets (built-in + custom)
+---------------------------------------------------------------------------
+function HA:GetAllPresets()
+    local all = {}
     for _, preset in ipairs(self.PRESET_PROFILES) do
-        if preset.id == presetId then
-            -- Improvement #13: Confirm before applying preset (destructive action)
-            if not confirmed then
-                if self._pendingPreset == presetId then
-                    self._pendingPreset = nil
-                else
-                    self._pendingPreset = presetId
-                    self:Print((self.L["PRESET_CONFIRM"] or "|cffffcc00Warning|r: This will show all currently hidden frames first. Repeat |cff00cc66/hide preset %s|r to confirm."):format(presetId))
-                    C_Timer.After(10, function()
-                        if HA._pendingPreset == presetId then
-                            HA._pendingPreset = nil
-                        end
-                    end)
-                    return true
+        table.insert(all, preset)
+    end
+    if self.db and self.db.customPresets then
+        for id, data in pairs(self.db.customPresets) do
+            table.insert(all, {
+                id     = id,
+                label  = data.label or id,
+                frames = data.frames or {},
+                custom = true,
+            })
+        end
+    end
+    return all
+end
+
+---------------------------------------------------------------------------
+-- Save current hidden frames as a custom preset
+---------------------------------------------------------------------------
+function HA:SaveCustomPreset(name)
+    local L = self.L
+    if not name or name == "" then
+        self:Print(L["PROFILE_NAME_REQUIRED"] or "Please enter a name.")
+        return false
+    end
+    if not self.db then return false end
+
+    -- Collect currently hidden frame names
+    local frames = {}
+    if self.db.hiddenFrames then
+        for frameName, _ in pairs(self.db.hiddenFrames) do
+            table.insert(frames, frameName)
+        end
+    end
+    if #frames == 0 then
+        self:Print(L["PRESET_SAVE_EMPTY"] or "No hidden frames to save as preset.")
+        return false
+    end
+
+    -- Generate a safe ID from the name
+    local id = "custom_" .. name:gsub("[^%w]", "_"):lower()
+
+    self.db.customPresets[id] = {
+        label  = name,
+        frames = frames,
+    }
+    self:ChatMsg((L["PRESET_SAVED"] or "Preset |cff00cc66%s|r saved with %d frames."):format(name, #frames))
+    return true
+end
+
+---------------------------------------------------------------------------
+-- Delete a custom preset
+---------------------------------------------------------------------------
+function HA:DeleteCustomPreset(presetId)
+    if not self.db or not self.db.customPresets then return false end
+    if not self.db.customPresets[presetId] then return false end
+
+    local name = self.db.customPresets[presetId].label or presetId
+    self.db.customPresets[presetId] = nil
+    self:ChatMsg((self.L["PRESET_DELETED"] or "Preset |cffff4444%s|r deleted."):format(name))
+    return true
+end
+
+---------------------------------------------------------------------------
+-- Apply a preset (built-in or custom)
+---------------------------------------------------------------------------
+function HA:ApplyPreset(presetId, confirmed)
+    -- Search built-in presets
+    local preset
+    for _, p in ipairs(self.PRESET_PROFILES) do
+        if p.id == presetId then
+            preset = p
+            break
+        end
+    end
+    -- Search custom presets
+    if not preset and self.db and self.db.customPresets and self.db.customPresets[presetId] then
+        local data = self.db.customPresets[presetId]
+        preset = { id = presetId, label = data.label or presetId, frames = data.frames or {}, custom = true }
+    end
+
+    if not preset then return false end
+
+    -- Confirm before applying (slash command only, UI passes confirmed=true)
+    if not confirmed then
+        if self._pendingPreset == presetId then
+            self._pendingPreset = nil
+        else
+            self._pendingPreset = presetId
+            self:Print((self.L["PRESET_CONFIRM"] or "|cffffcc00Warning|r: This will show all currently hidden frames first. Repeat |cff00cc66/hide preset %s|r to confirm."):format(presetId))
+            C_Timer.After(10, function()
+                if HA._pendingPreset == presetId then
+                    HA._pendingPreset = nil
                 end
-            end
-            -- Show all current hidden frames first
-            self:ShowAllFrames()
-            -- Apply preset frames
-            for _, frameName in ipairs(preset.frames) do
-                self:HideFrame(frameName)
-            end
-            self:ChatMsg((self.L["PRESET_APPLIED"] or "Preset |cff00cc66%s|r applied."):format(self:GetPresetLabel(preset)))
+            end)
             return true
         end
     end
-    return false
+
+    -- Show all current hidden frames first
+    self:ShowAllFrames()
+    -- Apply preset frames
+    for _, frameName in ipairs(preset.frames) do
+        self:HideFrame(frameName)
+    end
+    self:ChatMsg((self.L["PRESET_APPLIED"] or "Preset |cff00cc66%s|r applied."):format(self:GetPresetLabel(preset)))
+    return true
 end
 
 ---------------------------------------------------------------------------

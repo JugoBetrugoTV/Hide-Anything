@@ -1888,7 +1888,7 @@ local function BuildProfilesTab(parent)
 
     -- Profile name input area
     local inputCard = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    inputCard:SetSize(parent:GetWidth(), 164)
+    inputCard:SetSize(parent:GetWidth(), 134)
     inputCard:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -4)
     inputCard:SetBackdrop(BD_CARD)
     inputCard:SetBackdropColor(0.09, 0.09, 0.11, 0.7)
@@ -2017,30 +2017,116 @@ local function BuildProfilesTab(parent)
     presetLabel:SetPoint("TOPLEFT", inputCard, "TOPLEFT", 12, btnY)
     presetLabel:SetText("|cff00c761" .. (L["PRESETS_HEADER"] or "Presets") .. ":|r")
 
-    -- Preset buttons in a clean row below the label
-    btnY = btnY - 18
-    local presetX = 10
-    for _, preset in ipairs(HA.PRESET_PROFILES) do
-        local presetBtn = CreateStyledButton(inputCard, 120, 22, HA:GetPresetLabel(preset), function()
-            HA:ApplyPreset(preset.id, true)
-        end)
-        presetBtn:SetPoint("TOPLEFT", inputCard, "TOPLEFT", presetX, btnY)
-        presetX = presetX + 126
-    end
+    -- "Save current as preset" button next to label
+    local savePresetBtn = CreateStyledButton(inputCard, 170, 20, L["PRESET_SAVE_CURRENT"] or "Save current as Preset", function()
+        local name = inputBox:GetText()
+        if name and name ~= "" then
+            HA:SaveCustomPreset(name)
+            HA:RefreshPresetButtons()
+        else
+            HA:Print(L["PROFILE_NAME_REQUIRED"])
+        end
+    end)
+    savePresetBtn:SetPoint("LEFT", presetLabel, "RIGHT", 8, 0)
 
-    -- Profile list area
+    -- Dynamic preset container (rebuilt on refresh)
+    local presetContainer = CreateFrame("Frame", nil, parent)
+    presetContainer:SetSize(parent:GetWidth(), 1)
+    presetContainer:SetPoint("TOPLEFT", inputCard, "BOTTOMLEFT", 0, -6)
+    tabContents[2].presetContainer = presetContainer
+    tabContents[2].presetWidgets = {}
+
+    -- Profile list area (positioned dynamically in RefreshPresetButtons)
     local profileListHeader = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    profileListHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -210)
     tabContents[2].profileListHeader = profileListHeader
     tabContents[2].listParent = parent
-    tabContents[2].listStartY = -234
     tabContents[2].rows = {}
+end
+
+---------------------------------------------------------------------------
+-- Refresh preset buttons (dynamic, supports custom presets)
+---------------------------------------------------------------------------
+function HA:RefreshPresetButtons()
+    local tc = tabContents[2]
+    if not tc or not tc.presetContainer then return end
+
+    local L = self.L
+    local container = tc.presetContainer
+
+    -- Clear old widgets
+    for _, widget in ipairs(tc.presetWidgets) do
+        widget:Hide()
+    end
+    wipe(tc.presetWidgets)
+
+    local allPresets = self:GetAllPresets()
+    local y = 0
+    local x = 10
+    local maxW = container:GetWidth() or 500
+    local rowH = 24
+    local btnW = 120
+
+    for _, preset in ipairs(allPresets) do
+        local label = self:GetPresetLabel(preset)
+
+        -- Wrap to next row if needed
+        if x + btnW + (preset.custom and 26 or 0) > maxW then
+            x = 10
+            y = y - (rowH + 4)
+        end
+
+        -- Preset apply button
+        local presetBtn = CreateStyledButton(container, btnW, rowH, label, function()
+            self:ApplyPreset(preset.id, true)
+        end)
+        presetBtn:SetPoint("TOPLEFT", container, "TOPLEFT", x, y)
+        table.insert(tc.presetWidgets, presetBtn)
+
+        -- Custom preset: mark with accent color and add delete "x" button
+        if preset.custom then
+            presetBtn._stripe:SetColorTexture(0.9, 0.65, 0.1, 0.5)
+            presetBtn._label:SetTextColor(1, 0.9, 0.6)
+
+            local delX = CreateFrame("Button", nil, container)
+            delX:SetSize(22, rowH)
+            delX:SetPoint("LEFT", presetBtn, "RIGHT", 2, 0)
+
+            local delLabel = delX:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            delLabel:SetPoint("CENTER")
+            delLabel:SetText("|cffff4444x|r")
+
+            delX:SetScript("OnEnter", function() delLabel:SetText("|cffff6666x|r") end)
+            delX:SetScript("OnLeave", function() delLabel:SetText("|cffff4444x|r") end)
+            delX:SetScript("OnClick", function()
+                HA:DeleteCustomPreset(preset.id)
+                HA:RefreshPresetButtons()
+            end)
+
+            table.insert(tc.presetWidgets, delX)
+            x = x + btnW + 28
+        else
+            x = x + btnW + 6
+        end
+    end
+
+    -- Update container height and reposition profile list
+    local containerHeight = math.abs(y) + rowH + 8
+    container:SetHeight(containerHeight)
+
+    local listY = -(168 + containerHeight + 10)
+    if tc.profileListHeader then
+        tc.profileListHeader:SetPoint("TOPLEFT", tc.listParent, "TOPLEFT", 10, listY)
+    end
+    tc.listStartY = listY - 24
 end
 
 function HA:RefreshProfileList()
     local L = self.L
     local tc = tabContents[2]
     if not tc or not tc.listParent then return end
+
+    -- Refresh preset buttons first (updates dynamic layout)
+    self:RefreshPresetButtons()
 
     local parent = tc.listParent
     local profileCount = 0
