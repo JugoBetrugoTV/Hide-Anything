@@ -79,6 +79,37 @@ local BD_CARD = {
 }
 
 ---------------------------------------------------------------------------
+-- Gradient helper (Retail 10.0+ and Classic compatible)
+---------------------------------------------------------------------------
+local function ApplyGradient(tex, orientation, r1, g1, b1, a1, r2, g2, b2, a2)
+    if tex.SetGradient then
+        local ok = pcall(function()
+            tex:SetGradient(orientation, CreateColor(r1, g1, b1, a1), CreateColor(r2, g2, b2, a2))
+        end)
+        if ok then return end
+    end
+    if tex.SetGradientAlpha then
+        pcall(tex.SetGradientAlpha, tex, orientation, r1, g1, b1, a1, r2, g2, b2, a2)
+    end
+end
+
+-- Helper: create a horizontal gradient bar texture
+local function CreateGradientBar(parent, layer, height, anchor, r, g, b, alphaFrom, alphaTo, orientation)
+    local tex = parent:CreateTexture(nil, layer or "ARTWORK")
+    tex:SetHeight(height or 2)
+    if anchor == "TOP" then
+        tex:SetPoint("TOPLEFT", parent, "TOPLEFT", 3, -3)
+        tex:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -3, -3)
+    elseif anchor == "BOTTOM" then
+        tex:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 3, 3)
+        tex:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -3, 3)
+    end
+    tex:SetColorTexture(1, 1, 1, 1)
+    ApplyGradient(tex, orientation or "VERTICAL", r, g, b, alphaFrom or 0.15, r, g, b, alphaTo or 0)
+    return tex
+end
+
+---------------------------------------------------------------------------
 -- Text truncation helper
 ---------------------------------------------------------------------------
 local MAX_LABEL_CHARS = 32
@@ -457,6 +488,35 @@ accentStripe:SetPoint("TOPLEFT", panel, "TOPLEFT", 4, -4)
 accentStripe:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -4, -4)
 accentStripe:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 0.9)
 
+-- Inner top glow (accent color fading down)
+local topGlow = panel:CreateTexture(nil, "BORDER")
+topGlow:SetHeight(35)
+topGlow:SetPoint("TOPLEFT", panel, "TOPLEFT", 4, -4)
+topGlow:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -4, -4)
+topGlow:SetColorTexture(1, 1, 1, 1)
+ApplyGradient(topGlow, "VERTICAL", ACCENT_R, ACCENT_G, ACCENT_B, 0.07, 0, 0, 0, 0)
+
+-- Inner bottom glow
+local botGlow = panel:CreateTexture(nil, "BORDER")
+botGlow:SetHeight(18)
+botGlow:SetPoint("BOTTOMLEFT", panel, "BOTTOMLEFT", 4, 4)
+botGlow:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -4, 4)
+botGlow:SetColorTexture(1, 1, 1, 1)
+ApplyGradient(botGlow, "VERTICAL", 0, 0, 0, 0, ACCENT_R, ACCENT_G, ACCENT_B, 0.05)
+
+-- Side accent lines
+local leftAccent = panel:CreateTexture(nil, "BORDER")
+leftAccent:SetWidth(1)
+leftAccent:SetPoint("TOPLEFT", panel, "TOPLEFT", 4, -40)
+leftAccent:SetPoint("BOTTOMLEFT", panel, "BOTTOMLEFT", 4, 28)
+leftAccent:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 0.1)
+
+local rightAccent = panel:CreateTexture(nil, "BORDER")
+rightAccent:SetWidth(1)
+rightAccent:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -4, -40)
+rightAccent:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -4, 28)
+rightAccent:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 0.1)
+
 -- Draggable title bar
 local titleBar = CreateFrame("Frame", nil, panel)
 titleBar:SetHeight(40)
@@ -467,13 +527,29 @@ titleBar:RegisterForDrag("LeftButton")
 titleBar:SetScript("OnDragStart", function() panel:StartMoving() end)
 titleBar:SetScript("OnDragStop",  function() panel:StopMovingOrSizing() end)
 
+-- Title area background gradient
+local titleBg = panel:CreateTexture(nil, "BACKGROUND", nil, 1)
+titleBg:SetHeight(40)
+titleBg:SetPoint("TOPLEFT", panel, "TOPLEFT", 4, -4)
+titleBg:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -4, -4)
+titleBg:SetColorTexture(1, 1, 1, 1)
+ApplyGradient(titleBg, "HORIZONTAL", ACCENT_R * 0.3, ACCENT_G * 0.3, ACCENT_B * 0.3, 0.12, 0, 0, 0, 0)
+
 -- Title with colored addon name
 local titleText = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 titleText:SetPoint("TOPLEFT", 16, -14)
 
-local versionText = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-versionText:SetPoint("LEFT", titleText, "RIGHT", 8, 0)
-versionText:SetTextColor(0.45, 0.45, 0.5)
+-- Version badge with accent background
+local verBadge = CreateFrame("Frame", nil, panel, "BackdropTemplate")
+verBadge:SetSize(52, 16)
+verBadge:SetPoint("LEFT", titleText, "RIGHT", 8, 0)
+verBadge:SetBackdrop(BD_TOGGLE)
+verBadge:SetBackdropColor(ACCENT_R, ACCENT_G, ACCENT_B, 0.15)
+verBadge:SetBackdropBorderColor(ACCENT_R, ACCENT_G, ACCENT_B, 0.3)
+
+local versionText = verBadge:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+versionText:SetPoint("CENTER")
+versionText:SetTextColor(ACCENT_R, ACCENT_G, ACCENT_B)
 
 -- Close button
 local closeBtn = CreateFrame("Button", nil, panel, "UIPanelCloseButton")
@@ -518,8 +594,28 @@ statusBar:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -4, 4)
 statusBar:SetBackdrop(BD_SECTION)
 statusBar:SetBackdropColor(0.06, 0.06, 0.08, 0.8)
 
+-- Status bar top accent line
+local statusLine = statusBar:CreateTexture(nil, "OVERLAY")
+statusLine:SetHeight(1)
+statusLine:SetPoint("TOPLEFT", statusBar, "TOPLEFT", 0, 0)
+statusLine:SetPoint("TOPRIGHT", statusBar, "TOPRIGHT", 0, 0)
+statusLine:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 0.25)
+
+-- Status bar gradient glow above
+local statusGlow = statusBar:CreateTexture(nil, "ARTWORK")
+statusGlow:SetHeight(6)
+statusGlow:SetPoint("BOTTOMLEFT", statusBar, "TOPLEFT", 0, 0)
+statusGlow:SetPoint("BOTTOMRIGHT", statusBar, "TOPRIGHT", 0, 0)
+statusGlow:SetColorTexture(1, 1, 1, 1)
+ApplyGradient(statusGlow, "VERTICAL", ACCENT_R, ACCENT_G, ACCENT_B, 0, ACCENT_R, ACCENT_G, ACCENT_B, 0.06)
+
+-- Status bar accent dot
+local statusDot = statusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+statusDot:SetPoint("LEFT", statusBar, "LEFT", 8, 0)
+statusDot:SetText("|cff00c761>|r")
+
 local statusText = statusBar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-statusText:SetPoint("LEFT", statusBar, "LEFT", 10, 0)
+statusText:SetPoint("LEFT", statusDot, "RIGHT", 4, 0)
 statusText:SetTextColor(0.5, 0.5, 0.55)
 
 local function UpdateStatusBar()
@@ -551,16 +647,35 @@ local function CreateTab(index, text)
     underline:Hide()
     tab._underline = underline
 
+    -- Glow behind underline (soft diffused light)
+    local underGlow = tab:CreateTexture(nil, "ARTWORK")
+    underGlow:SetHeight(10)
+    underGlow:SetPoint("BOTTOMLEFT", tab, "BOTTOMLEFT", 4, -2)
+    underGlow:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -4, -2)
+    underGlow:SetColorTexture(1, 1, 1, 1)
+    ApplyGradient(underGlow, "VERTICAL", 0, 0, 0, 0, ACCENT_R, ACCENT_G, ACCENT_B, 0.18)
+    underGlow:Hide()
+    tab._underGlow = underGlow
+
+    -- Hover highlight background
+    local hoverBg = tab:CreateTexture(nil, "BACKGROUND")
+    hoverBg:SetAllPoints(tab)
+    hoverBg:SetColorTexture(1, 1, 1, 0.04)
+    hoverBg:Hide()
+    tab._hoverBg = hoverBg
+
     -- Hover effect
     tab:SetScript("OnEnter", function(self)
         if activeTab ~= index then
             self.label:SetTextColor(0.85, 0.85, 0.85)
+            self._hoverBg:Show()
         end
     end)
     tab:SetScript("OnLeave", function(self)
         if activeTab ~= index then
             self.label:SetTextColor(0.5, 0.5, 0.55)
         end
+        self._hoverBg:Hide()
     end)
 
     tab:SetScript("OnClick", function() HA:SelectTab(index) end)
@@ -590,15 +705,25 @@ tabSeparator:SetPoint("TOPLEFT", panel, "TOPLEFT", 4, -74)
 tabSeparator:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -4, -74)
 tabSeparator:SetColorTexture(0.2, 0.2, 0.22, 0.8)
 
+-- Tab separator glow (subtle gradient below the separator)
+local tabSepGlow = panel:CreateTexture(nil, "BORDER")
+tabSepGlow:SetHeight(8)
+tabSepGlow:SetPoint("TOPLEFT", tabSeparator, "BOTTOMLEFT", 0, 0)
+tabSepGlow:SetPoint("TOPRIGHT", tabSeparator, "BOTTOMRIGHT", 0, 0)
+tabSepGlow:SetColorTexture(1, 1, 1, 1)
+ApplyGradient(tabSepGlow, "VERTICAL", ACCENT_R, ACCENT_G, ACCENT_B, 0.05, 0, 0, 0, 0)
+
 function HA:SelectTab(index)
     for i, tab in pairs(tabs) do
         if i == index then
             tab.label:SetTextColor(1, 1, 1)
             tab._underline:Show()
+            if tab._underGlow then tab._underGlow:Show() end
             tabContents[i].scroll:Show()
         else
             tab.label:SetTextColor(0.5, 0.5, 0.55)
             tab._underline:Hide()
+            if tab._underGlow then tab._underGlow:Hide() end
             tabContents[i].scroll:Hide()
         end
     end
@@ -614,22 +739,52 @@ local function CreateStyledButton(parent, width, height, text, onClick)
     local btn = CreateFrame("Button", nil, parent, "BackdropTemplate")
     btn:SetSize(width, height or 26)
     btn:SetBackdrop(BD_TOGGLE)
-    btn:SetBackdropColor(0.15, 0.15, 0.18, 1)
-    btn:SetBackdropBorderColor(0.3, 0.3, 0.33, 1)
+    btn:SetBackdropColor(0.13, 0.13, 0.16, 1)
+    btn:SetBackdropBorderColor(0.28, 0.28, 0.32, 1)
+
+    -- Left accent stripe
+    local stripe = btn:CreateTexture(nil, "ARTWORK")
+    stripe:SetWidth(2)
+    stripe:SetPoint("TOPLEFT", btn, "TOPLEFT", 2, -2)
+    stripe:SetPoint("BOTTOMLEFT", btn, "BOTTOMLEFT", 2, 2)
+    stripe:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 0.35)
+    btn._stripe = stripe
+
+    -- Top highlight shimmer
+    local shimmer = btn:CreateTexture(nil, "ARTWORK")
+    shimmer:SetHeight(1)
+    shimmer:SetPoint("TOPLEFT", btn, "TOPLEFT", 3, -2)
+    shimmer:SetPoint("TOPRIGHT", btn, "TOPRIGHT", -3, -2)
+    shimmer:SetColorTexture(1, 1, 1, 0.04)
+    btn._shimmer = shimmer
 
     local label = btn:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    label:SetPoint("CENTER")
+    label:SetPoint("CENTER", 2, 0)
     label:SetText(text)
-    label:SetTextColor(0.9, 0.9, 0.9)
+    label:SetTextColor(0.88, 0.88, 0.92)
     btn._label = label
 
     btn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(ACCENT_DIM_R, ACCENT_DIM_G, ACCENT_DIM_B, 0.6)
-        self:SetBackdropBorderColor(ACCENT_R, ACCENT_G, ACCENT_B, 0.8)
+        self:SetBackdropColor(ACCENT_DIM_R, ACCENT_DIM_G, ACCENT_DIM_B, 0.5)
+        self:SetBackdropBorderColor(ACCENT_R, ACCENT_G, ACCENT_B, 0.7)
+        self._stripe:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 0.8)
+        self._shimmer:SetColorTexture(1, 1, 1, 0.08)
+        self._label:SetTextColor(1, 1, 1)
     end)
     btn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.15, 0.15, 0.18, 1)
-        self:SetBackdropBorderColor(0.3, 0.3, 0.33, 1)
+        self:SetBackdropColor(0.13, 0.13, 0.16, 1)
+        self:SetBackdropBorderColor(0.28, 0.28, 0.32, 1)
+        self._stripe:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 0.35)
+        self._shimmer:SetColorTexture(1, 1, 1, 0.04)
+        self._label:SetTextColor(0.88, 0.88, 0.92)
+    end)
+    btn:SetScript("OnMouseDown", function(self)
+        self:SetBackdropColor(ACCENT_R, ACCENT_G, ACCENT_B, 0.3)
+        self._stripe:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 1)
+    end)
+    btn:SetScript("OnMouseUp", function(self)
+        self:SetBackdropColor(ACCENT_DIM_R, ACCENT_DIM_G, ACCENT_DIM_B, 0.5)
+        self._stripe:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 0.8)
     end)
     btn:SetScript("OnClick", onClick)
     return btn
@@ -1681,13 +1836,20 @@ function HA:DoRefreshFrameList()
         -- Red tint for reset
         resetBtn:SetBackdropBorderColor(0.45, 0.2, 0.2, 1)
         resetBtn._label:SetTextColor(1, 0.6, 0.6)
+        resetBtn._stripe:SetColorTexture(0.6, 0.15, 0.15, 0.5)
         resetBtn:SetScript("OnEnter", function(self)
             self:SetBackdropColor(0.35, 0.08, 0.08, 0.8)
             self:SetBackdropBorderColor(0.6, 0.15, 0.15, 1)
+            self._stripe:SetColorTexture(0.8, 0.15, 0.15, 0.9)
+            self._shimmer:SetColorTexture(1, 0.3, 0.3, 0.08)
+            self._label:SetTextColor(1, 0.7, 0.7)
         end)
         resetBtn:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(0.15, 0.15, 0.18, 1)
+            self:SetBackdropColor(0.13, 0.13, 0.16, 1)
             self:SetBackdropBorderColor(0.45, 0.2, 0.2, 1)
+            self._stripe:SetColorTexture(0.6, 0.15, 0.15, 0.5)
+            self._shimmer:SetColorTexture(1, 1, 1, 0.04)
+            self._label:SetTextColor(1, 0.6, 0.6)
         end)
 
         tc.actionRow = actionRow
@@ -1726,10 +1888,33 @@ local function BuildProfilesTab(parent)
 
     -- Profile name input area
     local inputCard = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    inputCard:SetSize(parent:GetWidth(), 144)
+    inputCard:SetSize(parent:GetWidth(), 164)
     inputCard:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -4)
-    inputCard:SetBackdrop(BD_SECTION)
-    inputCard:SetBackdropColor(0.10, 0.10, 0.12, 0.5)
+    inputCard:SetBackdrop(BD_CARD)
+    inputCard:SetBackdropColor(0.09, 0.09, 0.11, 0.7)
+    inputCard:SetBackdropBorderColor(0.20, 0.20, 0.23, 0.6)
+
+    -- Card accent stripe
+    local cardStripe = inputCard:CreateTexture(nil, "OVERLAY")
+    cardStripe:SetHeight(2)
+    cardStripe:SetPoint("TOPLEFT", inputCard, "TOPLEFT", 3, -3)
+    cardStripe:SetPoint("TOPRIGHT", inputCard, "TOPRIGHT", -3, -3)
+    cardStripe:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 0.45)
+
+    -- Left accent bar
+    local cardLeftBar = inputCard:CreateTexture(nil, "OVERLAY")
+    cardLeftBar:SetWidth(2)
+    cardLeftBar:SetPoint("TOPLEFT", inputCard, "TOPLEFT", 3, -5)
+    cardLeftBar:SetPoint("BOTTOMLEFT", inputCard, "BOTTOMLEFT", 3, 3)
+    cardLeftBar:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 0.25)
+
+    -- Inner top glow
+    local cardInnerGlow = inputCard:CreateTexture(nil, "BORDER")
+    cardInnerGlow:SetHeight(12)
+    cardInnerGlow:SetPoint("TOPLEFT", inputCard, "TOPLEFT", 3, -3)
+    cardInnerGlow:SetPoint("TOPRIGHT", inputCard, "TOPRIGHT", -3, -3)
+    cardInnerGlow:SetColorTexture(1, 1, 1, 1)
+    ApplyGradient(cardInnerGlow, "VERTICAL", ACCENT_R, ACCENT_G, ACCENT_B, 0.06, 0, 0, 0, 0)
 
     local inputLabel = inputCard:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     inputLabel:SetPoint("TOPLEFT", inputCard, "TOPLEFT", 12, -10)
@@ -1790,13 +1975,20 @@ local function BuildProfilesTab(parent)
     btn3:SetPoint("LEFT", btn2, "RIGHT", 6, 0)
     btn3:SetBackdropBorderColor(0.45, 0.2, 0.2, 1)
     btn3._label:SetTextColor(1, 0.6, 0.6)
+    btn3._stripe:SetColorTexture(0.6, 0.15, 0.15, 0.5)
     btn3:SetScript("OnEnter", function(self)
         self:SetBackdropColor(0.35, 0.08, 0.08, 0.8)
         self:SetBackdropBorderColor(0.6, 0.15, 0.15, 1)
+        self._stripe:SetColorTexture(0.8, 0.15, 0.15, 0.9)
+        self._shimmer:SetColorTexture(1, 0.3, 0.3, 0.08)
+        self._label:SetTextColor(1, 0.7, 0.7)
     end)
     btn3:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.15, 0.15, 0.18, 1)
+        self:SetBackdropColor(0.13, 0.13, 0.16, 1)
         self:SetBackdropBorderColor(0.45, 0.2, 0.2, 1)
+        self._stripe:SetColorTexture(0.6, 0.15, 0.15, 0.5)
+        self._shimmer:SetColorTexture(1, 1, 1, 0.04)
+        self._label:SetTextColor(1, 0.6, 0.6)
     end)
 
     -- Button row 2
@@ -1813,31 +2005,35 @@ local function BuildProfilesTab(parent)
     end)
     btn5:SetPoint("LEFT", btn4, "RIGHT", 6, 0)
 
-    -- Preset profiles section (row 3)
-    btnY = btnY - 32
+    -- Separator line before presets
+    btnY = btnY - 30
+    local presetSep = inputCard:CreateTexture(nil, "ARTWORK")
+    presetSep:SetHeight(1)
+    presetSep:SetPoint("TOPLEFT", inputCard, "TOPLEFT", 10, btnY + 4)
+    presetSep:SetPoint("TOPRIGHT", inputCard, "TOPRIGHT", -10, btnY + 4)
+    presetSep:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 0.15)
+
     local presetLabel = inputCard:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    presetLabel:SetPoint("TOPLEFT", inputCard, "TOPLEFT", 12, btnY - 2)
+    presetLabel:SetPoint("TOPLEFT", inputCard, "TOPLEFT", 12, btnY)
     presetLabel:SetText("|cff00c761" .. (L["PRESETS_HEADER"] or "Presets") .. ":|r")
 
-    local presetX = 0
+    -- Preset buttons in a clean row below the label
+    btnY = btnY - 18
+    local presetX = 10
     for _, preset in ipairs(HA.PRESET_PROFILES) do
-        local presetBtn = CreateStyledButton(inputCard, 110, 22, HA:GetPresetLabel(preset), function()
+        local presetBtn = CreateStyledButton(inputCard, 120, 22, HA:GetPresetLabel(preset), function()
             HA:ApplyPreset(preset.id)
         end)
-        if presetX == 0 then
-            presetBtn:SetPoint("LEFT", presetLabel, "RIGHT", 8, 0)
-        else
-            presetBtn:SetPoint("TOPLEFT", inputCard, "TOPLEFT", 10 + presetX, btnY - 2)
-        end
-        presetX = presetX + 116
+        presetBtn:SetPoint("TOPLEFT", inputCard, "TOPLEFT", presetX, btnY)
+        presetX = presetX + 126
     end
 
     -- Profile list area
     local profileListHeader = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    profileListHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -190)
+    profileListHeader:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -210)
     tabContents[2].profileListHeader = profileListHeader
     tabContents[2].listParent = parent
-    tabContents[2].listStartY = -214
+    tabContents[2].listStartY = -234
     tabContents[2].rows = {}
 end
 
@@ -1924,13 +2120,20 @@ function HA:RefreshProfileList()
         delBtn:SetPoint("RIGHT", row, "RIGHT", -6, 0)
         delBtn:SetBackdropBorderColor(0.45, 0.2, 0.2, 1)
         delBtn._label:SetTextColor(1, 0.6, 0.6)
+        delBtn._stripe:SetColorTexture(0.6, 0.15, 0.15, 0.5)
         delBtn:SetScript("OnEnter", function(self)
             self:SetBackdropColor(0.35, 0.08, 0.08, 0.8)
             self:SetBackdropBorderColor(0.6, 0.15, 0.15, 1)
+            self._stripe:SetColorTexture(0.8, 0.15, 0.15, 0.9)
+            self._shimmer:SetColorTexture(1, 0.3, 0.3, 0.08)
+            self._label:SetTextColor(1, 0.7, 0.7)
         end)
         delBtn:SetScript("OnLeave", function(self)
-            self:SetBackdropColor(0.15, 0.15, 0.18, 1)
+            self:SetBackdropColor(0.13, 0.13, 0.16, 1)
             self:SetBackdropBorderColor(0.45, 0.2, 0.2, 1)
+            self._stripe:SetColorTexture(0.6, 0.15, 0.15, 0.5)
+            self._shimmer:SetColorTexture(1, 1, 1, 0.04)
+            self._label:SetTextColor(1, 0.6, 0.6)
         end)
 
         table.insert(tc.rows, row)
@@ -1949,7 +2152,7 @@ local function BuildAboutTab(parent)
     local w = parent:GetWidth()
     local y = -8
 
-    -- Helper: create a styled card
+    -- Helper: create a styled card with visual effects
     local function MakeCard(yPos, height)
         local card = CreateFrame("Frame", nil, parent, "BackdropTemplate")
         card:SetSize(w - 8, height)
@@ -1957,11 +2160,29 @@ local function BuildAboutTab(parent)
         card:SetBackdrop(BD_CARD)
         card:SetBackdropColor(0.09, 0.09, 0.11, 0.7)
         card:SetBackdropBorderColor(0.20, 0.20, 0.23, 0.6)
+
+        -- Top accent stripe
         local stripe = card:CreateTexture(nil, "OVERLAY")
         stripe:SetHeight(2)
         stripe:SetPoint("TOPLEFT", card, "TOPLEFT", 3, -3)
         stripe:SetPoint("TOPRIGHT", card, "TOPRIGHT", -3, -3)
         stripe:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 0.5)
+
+        -- Left accent bar
+        local leftBar = card:CreateTexture(nil, "OVERLAY")
+        leftBar:SetWidth(2)
+        leftBar:SetPoint("TOPLEFT", card, "TOPLEFT", 3, -5)
+        leftBar:SetPoint("BOTTOMLEFT", card, "BOTTOMLEFT", 3, 3)
+        leftBar:SetColorTexture(ACCENT_R, ACCENT_G, ACCENT_B, 0.3)
+
+        -- Inner top glow
+        local innerGlow = card:CreateTexture(nil, "BORDER")
+        innerGlow:SetHeight(12)
+        innerGlow:SetPoint("TOPLEFT", card, "TOPLEFT", 3, -3)
+        innerGlow:SetPoint("TOPRIGHT", card, "TOPRIGHT", -3, -3)
+        innerGlow:SetColorTexture(1, 1, 1, 1)
+        ApplyGradient(innerGlow, "VERTICAL", ACCENT_R, ACCENT_G, ACCENT_B, 0.06, 0, 0, 0, 0)
+
         return card
     end
 
