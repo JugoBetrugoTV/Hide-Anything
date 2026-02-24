@@ -1106,8 +1106,7 @@ local function CreateSettingsBlock(parent)
         -- Capture frame (hidden, only shown during binding)
         local captureFrame = CreateFrame("Frame", nil, kbBtn)
         captureFrame:SetAllPoints()
-        captureFrame:EnableKeyboard(true)
-        captureFrame:SetPropagateKeyboardInput(false)
+        captureFrame:EnableKeyboard(false)
         captureFrame:Hide()
 
         local capturing = false
@@ -1122,6 +1121,7 @@ local function CreateSettingsBlock(parent)
         end
 
         captureFrame:SetScript("OnKeyDown", function(self, key)
+            if InCombatLockdown() then return end
             self:SetPropagateKeyboardInput(false)
             if key == "ESCAPE" then
                 StopCapture()
@@ -1152,6 +1152,8 @@ local function CreateSettingsBlock(parent)
                 StopCapture()
                 return
             end
+            -- Cannot capture keybinds during combat
+            if InCombatLockdown() then return end
             -- Cancel any other active capture
             if activeKeybindCapture then activeKeybindCapture() end
             capturing = true
@@ -1159,6 +1161,7 @@ local function CreateSettingsBlock(parent)
             kbBtn:SetBackdropBorderColor(ACCENT_R, ACCENT_G, ACCENT_B, 1)
             kbText:SetText("|cffffcc00" .. (L["CFG_KEY_PRESS"] or "Press a key...") .. "|r")
             captureFrame:EnableKeyboard(true)
+            captureFrame:SetPropagateKeyboardInput(false)
             captureFrame:Show()
         end)
         kbBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
