@@ -232,6 +232,19 @@ end
 local shortcutFrame = CreateFrame("Frame", "HideAnythingShortcuts", UIParent)
 shortcutFrame:EnableKeyboard(true)
 shortcutFrame:SetPropagateKeyboardInput(true)
+
+-- Disable keyboard capture during combat to avoid protected-function taint
+shortcutFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+shortcutFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+shortcutFrame:SetScript("OnEvent", function(self, event)
+    if event == "PLAYER_REGEN_DISABLED" then
+        self:EnableKeyboard(false)
+    elseif event == "PLAYER_REGEN_ENABLED" then
+        self:EnableKeyboard(true)
+        self:SetPropagateKeyboardInput(true)
+    end
+end)
+
 shortcutFrame:SetScript("OnKeyDown", function(self, key)
     -- Don't steal input from edit boxes / chat
     local focus = GetCurrentKeyBoardFocus()
