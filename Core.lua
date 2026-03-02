@@ -663,6 +663,70 @@ function HA:ReapplyHiddenFrames()
 end
 
 ---------------------------------------------------------------------------
+-- Mouseover reveal system: show hidden frames at reduced alpha on hover
+---------------------------------------------------------------------------
+HA._mouseoverHovered = {}    -- frameName -> true while mouse is over it
+HA._mouseoverHooked = {}     -- frameName -> true once OnEnter/OnLeave are hooked
+
+function HA:SetupMouseoverReveal(frame, frameName)
+    if self._mouseoverHooked[frameName] then return end
+
+    -- Frame must be mouse-enabled for OnEnter/OnLeave to fire
+    if frame.EnableMouse and not frame:IsMouseEnabled() then
+        pcall(function() frame:EnableMouse(true) end)
+    end
+
+    pcall(function()
+        frame:HookScript("OnEnter", function(f)
+            if not HA:GetSetting("mouseoverReveal") then return end
+            if not (HA.db and HA.db.hiddenFrames and HA.db.hiddenFrames[frameName]) then return end
+            HA._mouseoverHovered[frameName] = true
+            local alpha = HA:GetSetting("mouseoverAlpha") or 0.4
+            pcall(function() f:SetAlpha(alpha) end)
+        end)
+
+        frame:HookScript("OnLeave", function(f)
+            if not HA:GetSetting("mouseoverReveal") then return end
+            HA._mouseoverHovered[frameName] = nil
+            if HA.db and HA.db.hiddenFrames and HA.db.hiddenFrames[frameName] then
+                pcall(function() f:SetAlpha(0) end)
+            end
+        end)
+    end)
+
+    self._mouseoverHooked[frameName] = true
+end
+
+-- Re-apply hiding mode for all hidden frames (called when mouseoverReveal changes)
+function HA:ApplyMouseoverRevealMode()
+    if not self.db or not self.db.hiddenFrames then return end
+    if InCombatLockdown() then return end
+
+    local reveal = self:GetSetting("mouseoverReveal")
+
+    for frameName, _ in pairs(self.db.hiddenFrames) do
+        local frame = self:GetFrameByName(frameName)
+        if frame then
+            if reveal then
+                -- Mouseover mode: Show frame at alpha 0 so it receives mouse events
+                pcall(function()
+                    frame:SetAlpha(0)
+                    frame:Show()
+                end)
+                self:SetupMouseoverReveal(frame, frameName)
+            else
+                -- Normal mode: fully hide the frame
+                self._mouseoverHovered[frameName] = nil
+                pcall(function()
+                    frame:Hide()
+                    frame:SetAlpha(0)
+                end)
+            end
+        end
+    end
+end
+
+---------------------------------------------------------------------------
 -- Securely hide a frame (with hook to prevent it from re-showing)
 ---------------------------------------------------------------------------
 HA.hookedFrames = {}
@@ -670,9 +734,17 @@ HA.hookedFrames = {}
 function HA:SecureHideFrame(frame, frameName)
     if not frame then return false end
 
+    local reveal = self:GetSetting("mouseoverReveal")
+
     local success, err = pcall(function()
-        frame:Hide()
-        frame:SetAlpha(0)
+        if reveal then
+            -- Mouseover mode: only set alpha to 0, keep frame shown for mouse events
+            frame:SetAlpha(0)
+            frame:Show()
+        else
+            frame:Hide()
+            frame:SetAlpha(0)
+        end
     end)
 
     if not success then
@@ -681,17 +753,25 @@ function HA:SecureHideFrame(frame, frameName)
     end
 
     -- Also try to unregister events so the frame doesn't re-trigger itself
-    pcall(function()
-        if frame.UnregisterAllEvents then
-            -- Store original events so we can re-register on show
-            if not self._savedEvents then self._savedEvents = {} end
-            -- Only unregister if we haven't already saved events for this frame
-            if not self._savedEvents[frameName] then
-                self._savedEvents[frameName] = true
+    -- (skip when mouseover reveal is on - frame needs to process mouse events)
+    if not reveal then
+        pcall(function()
+            if frame.UnregisterAllEvents then
+                -- Store original events so we can re-register on show
+                if not self._savedEvents then self._savedEvents = {} end
+                -- Only unregister if we haven't already saved events for this frame
+                if not self._savedEvents[frameName] then
+                    self._savedEvents[frameName] = true
+                end
+                frame:UnregisterAllEvents()
             end
-            frame:UnregisterAllEvents()
-        end
-    end)
+        end)
+    end
+
+    -- Set up mouseover hooks if enabled
+    if reveal then
+        self:SetupMouseoverReveal(frame, frameName)
+    end
 
     -- Hook Show(), SetShown(), and SetAlpha() to prevent re-appearing
     if not self.hookedFrames[frameName] then
@@ -700,8 +780,15 @@ function HA:SecureHideFrame(frame, frameName)
                 if HA:IsFading(frameName) then return end
                 if HA.db and HA.db.hiddenFrames and HA.db.hiddenFrames[frameName] then
                     if not InCombatLockdown() then
-                        f:Hide()
-                        f:SetAlpha(0)
+                        if HA:GetSetting("mouseoverReveal") then
+                            -- Keep shown but ensure alpha stays correct
+                            if not HA._mouseoverHovered[frameName] then
+                                f:SetAlpha(0)
+                            end
+                        else
+                            f:Hide()
+                            f:SetAlpha(0)
+                        end
                     end
                 end
             end)
@@ -709,14 +796,21 @@ function HA:SecureHideFrame(frame, frameName)
                 if HA:IsFading(frameName) then return end
                 if shown and HA.db and HA.db.hiddenFrames and HA.db.hiddenFrames[frameName] then
                     if not InCombatLockdown() then
-                        f:Hide()
-                        f:SetAlpha(0)
+                        if HA:GetSetting("mouseoverReveal") then
+                            if not HA._mouseoverHovered[frameName] then
+                                f:SetAlpha(0)
+                            end
+                        else
+                            f:Hide()
+                            f:SetAlpha(0)
+                        end
                     end
                 end
             end)
             -- Hook SetAlpha so Blizzard's layout system can't reset opacity
             hooksecurefunc(frame, "SetAlpha", function(f, alpha)
                 if HA:IsFading(frameName) then return end
+                if HA._mouseoverHovered and HA._mouseoverHovered[frameName] then return end
                 if alpha and alpha > 0 and HA.db and HA.db.hiddenFrames and HA.db.hiddenFrames[frameName] then
                     if not InCombatLockdown() then
                         f:SetAlpha(0)
@@ -742,6 +836,9 @@ end
 ---------------------------------------------------------------------------
 function HA:SecureShowFrame(frame, frameName)
     if not frame then return end
+
+    -- Clear mouseover hover state
+    self._mouseoverHovered[frameName] = nil
 
     -- Restore alpha: use saved alpha if exists, otherwise 1.0
     local alpha = 1.0

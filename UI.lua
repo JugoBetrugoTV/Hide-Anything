@@ -1192,6 +1192,13 @@ local function CreateSettingsBlock(parent)
         function() return HA:GetSetting("fadeEnabled") end,
         function() HA:SetSetting("fadeEnabled", not HA:GetSetting("fadeEnabled")) end)
 
+    y = MakeSettingsToggle(y, L["CFG_MOUSEOVER_REVEAL"], L["CFG_MOUSEOVER_REVEAL_TT"],
+        function() return HA:GetSetting("mouseoverReveal") end,
+        function()
+            HA:SetSetting("mouseoverReveal", not HA:GetSetting("mouseoverReveal"))
+            HA:ApplyMouseoverRevealMode()
+        end)
+
     -- Search bar with styled background
     y = y - 6
     local searchBg = CreateFrame("Frame", nil, block, "BackdropTemplate")
