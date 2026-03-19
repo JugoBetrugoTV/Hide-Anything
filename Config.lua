@@ -17,7 +17,8 @@ local function DetectEdition()
     if pid then
         if pid == (WOW_PROJECT_MAINLINE or 1) then return "retail", 1 end
         if pid == (WOW_PROJECT_CLASSIC or 2) then return "classic", 2 end
-        if pid == 5 then return "tbc", 4 end  -- TBC Anniversary
+        if pid == (WOW_PROJECT_BURNING_CRUSADE_CLASSIC or 5) then return "tbc", 4 end
+        if pid == (WOW_PROJECT_MISTS_CLASSIC or 19) then return "mop", 8 end
     end
     -- Fallback: interface version
     local _, _, _, tocVer = GetBuildInfo()

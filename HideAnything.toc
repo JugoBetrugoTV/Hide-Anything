@@ -1,11 +1,12 @@
 ## Interface: 120001
-## Interface-Classic: 11506
-## Interface-BCC: 20504
+## Interface-Classic: 11508
+## Interface-BCC: 20505
+## Interface-Mists: 50503
 ## Title: |cff00cc66Hide|r |cffffffffAnything|r
 ## Notes: Hide any UI element with a simple toggle. Frame list, profiles, combat protection.
 ## Notes-deDE: Verstecke jedes UI-Element per einfachem Toggle. Frame-Liste, Profile, Kampfschutz.
 ## Author: JugoBetrugoTV
-## Version: 1.2.0
+## Version: 1.3.0
 ## SavedVariables: HideAnythingDB
 ## DefaultState: enabled
 ## IconTexture: Interface\Icons\INV_Misc_Eye_02
