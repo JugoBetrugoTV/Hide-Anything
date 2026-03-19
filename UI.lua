@@ -2319,9 +2319,10 @@ function HA:ShowPresetEditDialog(presetId)
         frameSet[f] = true
     end
 
-    -- Reuse or create dialog
+    -- Destroy previous dialog to prevent memory leak
     if presetEditDialog then
         presetEditDialog:Hide()
+        presetEditDialog:SetParent(nil)
     end
 
     local dialog = CreateFrame("Frame", "HideAnythingPresetEditFrame", UIParent, "BackdropTemplate")
@@ -2443,6 +2444,7 @@ function HA:ShowPresetEditDialog(presetId)
     end
 
     dialog:SetScript("OnKeyDown", function(self, key)
+        if InCombatLockdown() then return end
         if key == "ESCAPE" then
             self:SetPropagateKeyboardInput(false)
             self:Hide()
@@ -2912,6 +2914,9 @@ end
 -- Export dialog
 ---------------------------------------------------------------------------
 function HA:ShowExportDialog(data)
+    -- Destroy previous export dialog to prevent memory leak
+    local old = _G["HideAnythingExportFrame"]
+    if old then old:Hide(); old:SetParent(nil) end
     local dialog = CreateFrame("Frame", "HideAnythingExportFrame", UIParent, "BackdropTemplate")
     dialog:SetSize(440, 280)
     dialog:SetPoint("CENTER")
@@ -2966,6 +2971,9 @@ end
 -- Import dialog
 ---------------------------------------------------------------------------
 function HA:ShowImportDialog()
+    -- Destroy previous import dialog to prevent memory leak
+    local old = _G["HideAnythingImportFrame"]
+    if old then old:Hide(); old:SetParent(nil) end
     local dialog = CreateFrame("Frame", "HideAnythingImportFrame", UIParent, "BackdropTemplate")
     dialog:SetSize(440, 280)
     dialog:SetPoint("CENTER")
@@ -3020,9 +3028,12 @@ tinsert(UISpecialFrames, "HideAnythingOptionsFrame")
 -- Keyboard navigation
 ---------------------------------------------------------------------------
 panel:EnableKeyboard(true)
-panel:SetPropagateKeyboardInput(true)
+if not InCombatLockdown() then
+    panel:SetPropagateKeyboardInput(true)
+end
 
 panel:SetScript("OnKeyDown", function(self, key)
+    if InCombatLockdown() then return end
     -- Only handle when panel is shown and no editbox is focused
     if not self:IsShown() then return end
     local focus = GetCurrentKeyBoardFocus()

@@ -503,6 +503,7 @@ function HA:ShowCVar(cvarName)
     local ok = pcall(SetCVar, cvarName, "1")
     if not ok then
         self:FeedbackError("ERROR_CVAR_FAILED", cvarName)
+        return false
     end
     self.db.hiddenCVars[cvarName] = nil
 

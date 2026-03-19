@@ -102,6 +102,13 @@ HA.DEFAULTS = {
     profiles = {},
     activeProfile = nil,
 
+    floatingButton = {
+        point    = "TOP",
+        relPoint = "TOP",
+        x        = 0,
+        y        = -20,
+    },
+
     minimap = {
         minimapPos = 220,
         hide = false,
@@ -500,6 +507,9 @@ function HA:InitDB()
     end
     if type(db.customPresets) ~= "table" then
         db.customPresets = {}
+    end
+    if type(db.floatingButton) ~= "table" then
+        db.floatingButton = self:DeepCopy(self.DEFAULTS.floatingButton)
     end
 
     self.db = db

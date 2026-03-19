@@ -1,4 +1,6 @@
 ## Interface: 120001
+## Interface-Classic: 11506
+## Interface-BCC: 20504
 ## Title: |cff00cc66Hide|r |cffffffffAnything|r
 ## Notes: Hide any UI element with a simple toggle. Frame list, profiles, combat protection.
 ## Notes-deDE: Verstecke jedes UI-Element per einfachem Toggle. Frame-Liste, Profile, Kampfschutz.
@@ -22,6 +24,7 @@ Config.lua
 Feedback.lua
 Core.lua
 Highlight.lua
+FrameSelector.lua
 
 Tooltips.lua
 Minimap.lua
