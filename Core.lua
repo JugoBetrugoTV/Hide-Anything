@@ -96,7 +96,6 @@ HA.eventFrame:SetScript("OnEvent", function(self, event, ...)
             HA:ReapplyFrameAlphas()
             HA:ReapplyHiddenTextures()
             HA:ReapplyCombatStateDrivers()
-            HA:ApplyChatEditBoxHide()
         end)
     elseif event == "PLAYER_REGEN_DISABLED" then
         HA.inCombat = true
@@ -176,9 +175,6 @@ function HA:OnInitialize()
             self:DiscoverEditModeFrames()
         end
 
-        -- Setup chat show-on-Enter hooks
-        self:SetupChatShowOnEnter()
-
         -- Start auto-save timer (improvement #24)
         self:StartAutoSave()
 
@@ -196,7 +192,7 @@ end
 ---------------------------------------------------------------------------
 -- Fade animation system
 ---------------------------------------------------------------------------
-HA.FADE_DURATION = 0.3  -- default, overridden by settings.fadeDuration
+HA.FADE_DURATION = 0.3
 HA._activeFades = {}
 
 local fadeFrame = CreateFrame("Frame")
@@ -242,13 +238,12 @@ function HA:FadeOutAndHide(frame, frameName)
         return
     end
 
-    local dur = (self:GetSetting and self:GetSetting("fadeDuration")) or self.FADE_DURATION
     self._activeFades[frameName] = {
         frame      = frame,
         startAlpha = startAlpha,
         endAlpha   = 0,
         elapsed    = 0,
-        duration   = dur,
+        duration   = self.FADE_DURATION,
         onFinish   = function()
             HA:SecureHideFrame(frame, frameName)
             if HA.db then HA.db.hiddenFrames[frameName] = true end
@@ -268,13 +263,12 @@ function HA:FadeInAndShow(frame, frameName)
         frame:Show()
     end)
 
-    local dur = (self:GetSetting and self:GetSetting("fadeDuration")) or self.FADE_DURATION
     self._activeFades[frameName] = {
         frame      = frame,
         startAlpha = 0,
         endAlpha   = targetAlpha,
         elapsed    = 0,
-        duration   = dur,
+        duration   = self.FADE_DURATION,
         onFinish   = function()
             pcall(function() frame:SetAlpha(targetAlpha) end)
         end,
@@ -697,22 +691,7 @@ function HA:SetupMouseoverReveal(frame, frameName)
             if not HA:GetSetting("mouseoverReveal") then return end
             HA._mouseoverHovered[frameName] = nil
             if HA.db and HA.db.hiddenFrames and HA.db.hiddenFrames[frameName] then
-                local dur = HA:GetSetting("fadeDuration") or 0.3
-                if HA:GetSetting("fadeEnabled") and dur > 0 then
-                    -- Fade out smoothly instead of instant hide
-                    HA:CancelFade(frameName)
-                    HA._activeFades[frameName] = {
-                        frame      = f,
-                        startAlpha = f:GetAlpha(),
-                        endAlpha   = 0,
-                        elapsed    = 0,
-                        duration   = dur,
-                        onFinish   = function() pcall(function() f:SetAlpha(0) end) end,
-                    }
-                    RunFadeEngine()
-                else
-                    pcall(function() f:SetAlpha(0) end)
-                end
+                pcall(function() f:SetAlpha(0) end)
             end
         end)
     end)
@@ -747,101 +726,6 @@ function HA:ApplyMouseoverRevealMode()
             end
         end
     end
-end
-
----------------------------------------------------------------------------
--- Chat editbox hiding & show-chat-on-Enter
----------------------------------------------------------------------------
-HA._chatEditBoxHooked = false
-HA._chatEnterHooked = false
-
-function HA:ApplyChatEditBoxHide()
-    if not self:GetSetting("chatHideEditBox") then
-        -- Restore editboxes for hidden chat frames
-        for i = 1, NUM_CHAT_WINDOWS or 7 do
-            local eb = _G["ChatFrame" .. i .. "EditBox"]
-            if eb and self._chatEditBoxHooked then
-                pcall(function() eb:SetAlpha(1) end)
-            end
-        end
-        return
-    end
-
-    -- Hide editboxes for chat frames that are hidden by this addon
-    for i = 1, NUM_CHAT_WINDOWS or 7 do
-        local frameName = "ChatFrame" .. i
-        local eb = _G[frameName .. "EditBox"]
-        if eb and self.db and self.db.hiddenFrames and self.db.hiddenFrames[frameName] then
-            pcall(function() eb:SetAlpha(0) end)
-            if not self._chatEditBoxHooked then
-                pcall(function()
-                    eb:HookScript("OnShow", function(self)
-                        if HA:GetSetting("chatHideEditBox") and HA.db.hiddenFrames[frameName] then
-                            self:SetAlpha(0)
-                        end
-                    end)
-                end)
-            end
-        end
-    end
-    self._chatEditBoxHooked = true
-end
-
-function HA:SetupChatShowOnEnter()
-    if self._chatEnterHooked then return end
-    self._chatEnterHooked = true
-
-    -- Hook the default chat open keybind (Enter key opens ChatFrame1EditBox)
-    hooksecurefunc("ChatEdit_ActivateChat", function(editBox)
-        if not HA:GetSetting("chatShowOnEnter") then return end
-        if not editBox then return end
-
-        -- Find which chat frame this editbox belongs to
-        for i = 1, NUM_CHAT_WINDOWS or 7 do
-            local frameName = "ChatFrame" .. i
-            local eb = _G[frameName .. "EditBox"]
-            if eb == editBox then
-                local chatFrame = _G[frameName]
-                if chatFrame and HA.db and HA.db.hiddenFrames and HA.db.hiddenFrames[frameName] then
-                    -- Temporarily show chat frame while typing
-                    pcall(function()
-                        chatFrame:SetAlpha(HA:GetFrameAlpha(frameName))
-                        chatFrame:Show()
-                        if HA:GetSetting("chatHideEditBox") then
-                            eb:SetAlpha(1)
-                        end
-                    end)
-                end
-                break
-            end
-        end
-    end)
-
-    hooksecurefunc("ChatEdit_DeactivateChat", function(editBox)
-        if not HA:GetSetting("chatShowOnEnter") then return end
-        if not editBox then return end
-
-        for i = 1, NUM_CHAT_WINDOWS or 7 do
-            local frameName = "ChatFrame" .. i
-            local eb = _G[frameName .. "EditBox"]
-            if eb == editBox then
-                local chatFrame = _G[frameName]
-                if chatFrame and HA.db and HA.db.hiddenFrames and HA.db.hiddenFrames[frameName] then
-                    -- Re-hide chat frame after done typing
-                    local dur = HA:GetSetting("fadeDuration") or 0.3
-                    if HA:GetSetting("fadeEnabled") and dur > 0 then
-                        HA:FadeOutAndHide(chatFrame, frameName)
-                    else
-                        HA:SecureHideFrame(chatFrame, frameName)
-                    end
-                    if HA:GetSetting("chatHideEditBox") then
-                        pcall(function() eb:SetAlpha(0) end)
-                    end
-                end
-                break
-            end
-        end
-    end)
 end
 
 ---------------------------------------------------------------------------
