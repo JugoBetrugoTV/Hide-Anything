@@ -542,6 +542,12 @@ end
 -- Reset all settings to defaults
 ---------------------------------------------------------------------------
 function HA:ResetDB()
+    -- Unregister combat state drivers before wiping DB
+    if self._combatStateDrivers then
+        for frameName, _ in pairs(self._combatStateDrivers) do
+            self:UnregisterCombatStateDriver(frameName)
+        end
+    end
     HideAnythingDB = self:DeepCopy(self.DEFAULTS)
     self.db = HideAnythingDB
 end

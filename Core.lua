@@ -95,6 +95,7 @@ HA.eventFrame:SetScript("OnEvent", function(self, event, ...)
             HA:ReapplyHiddenCVars()
             HA:ReapplyFrameAlphas()
             HA:ReapplyHiddenTextures()
+            HA:ReapplyCombatStateDrivers()
         end)
     elseif event == "PLAYER_REGEN_DISABLED" then
         HA.inCombat = true
@@ -916,6 +917,59 @@ function HA:ReapplyFrameAlphas()
 end
 
 ---------------------------------------------------------------------------
+-- Combat auto-hide: secure state drivers (immune to taint)
+---------------------------------------------------------------------------
+HA._combatStateDrivers = {}  -- frameName -> true if RegisterStateDriver active
+
+-- Register a secure state driver for combat visibility (must be called outside combat)
+function HA:RegisterCombatStateDriver(frameName)
+    if InCombatLockdown() then return false end
+    if self._combatStateDrivers[frameName] then return true end
+
+    local frame = self:GetFrameByName(frameName)
+    if not frame then return false end
+
+    local ok = pcall(RegisterStateDriver, frame, "visibility", "[combat] hide; show")
+    if ok then
+        self._combatStateDrivers[frameName] = true
+        self:DebugLog("Registered combat state driver for: " .. frameName)
+        return true
+    end
+    return false
+end
+
+-- Unregister a combat state driver (must be called outside combat)
+function HA:UnregisterCombatStateDriver(frameName)
+    if InCombatLockdown() then return false end
+    if not self._combatStateDrivers[frameName] then return true end
+
+    local frame = self:GetFrameByName(frameName)
+    if frame then
+        pcall(UnregisterStateDriver, frame, "visibility")
+        -- Restore visibility if not permanently hidden
+        if not (self.db and self.db.hiddenFrames and self.db.hiddenFrames[frameName]) then
+            pcall(function() frame:Show() end)
+        end
+    end
+    self._combatStateDrivers[frameName] = nil
+    self:DebugLog("Unregistered combat state driver for: " .. frameName)
+    return true
+end
+
+-- Reapply all combat state drivers (after login/reload)
+function HA:ReapplyCombatStateDrivers()
+    if not self.db or not self.db.combatHideFrames then return end
+    if InCombatLockdown() then return end
+
+    for frameName, _ in pairs(self.db.combatHideFrames) do
+        -- Only register state drivers for frames not permanently hidden
+        if not self.db.hiddenFrames[frameName] then
+            self:RegisterCombatStateDriver(frameName)
+        end
+    end
+end
+
+---------------------------------------------------------------------------
 -- Combat auto-hide: hide tagged frames on combat start
 ---------------------------------------------------------------------------
 HA._combatHiddenNow = nil
@@ -926,10 +980,21 @@ function HA:ApplyCombatHides()
     for frameName, _ in pairs(self.db.combatHideFrames) do
         -- Only hide frames that are currently visible and not already hidden by the user
         if not self.db.hiddenFrames[frameName] then
-            local frame = self:GetFrameByName(frameName)
-            if frame and frame:IsShown() then
-                pcall(function() frame:Hide() end)
-                self._combatHiddenNow[frameName] = true
+            -- If a state driver is registered, it handles hiding automatically
+            if self._combatStateDrivers[frameName] then
+                self._combatHiddenNow[frameName] = "statedriver"
+            else
+                local frame = self:GetFrameByName(frameName)
+                if frame and frame:IsShown() then
+                    local ok = pcall(function() frame:Hide() end)
+                    -- Fallback: if Hide() was blocked by taint, use alpha as backup
+                    if not ok or frame:IsShown() then
+                        pcall(function() frame:SetAlpha(0) end)
+                        self._combatHiddenNow[frameName] = "alpha"
+                    else
+                        self._combatHiddenNow[frameName] = "hide"
+                    end
+                end
             end
         end
     end
@@ -940,16 +1005,20 @@ end
 ---------------------------------------------------------------------------
 function HA:RevertCombatHides()
     if not self._combatHiddenNow then return end
-    for frameName, _ in pairs(self._combatHiddenNow) do
+    for frameName, hideMethod in pairs(self._combatHiddenNow) do
         -- Only restore if the user didn't manually hide it during combat
         if not self.db.hiddenFrames[frameName] then
-            local frame = self:GetFrameByName(frameName)
-            if frame then
-                local alpha = self:GetFrameAlpha(frameName)
-                pcall(function()
-                    frame:SetAlpha(alpha)
-                    frame:Show()
-                end)
+            if hideMethod == "statedriver" then
+                -- State driver handles show automatically, nothing to do
+            else
+                local frame = self:GetFrameByName(frameName)
+                if frame then
+                    local alpha = self:GetFrameAlpha(frameName)
+                    pcall(function()
+                        frame:SetAlpha(alpha)
+                        frame:Show()
+                    end)
+                end
             end
         end
     end

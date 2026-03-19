@@ -209,8 +209,10 @@ local function ShowContextMenu(frameName, anchor)
     AddContextItem((isCombat and "|cff00ff00@|r " or "|cff555560@|r ") .. (L["CFG_COMBAT_HIDE"] or "Combat Auto-Hide"), function()
         if isCombat then
             HA.db.combatHideFrames[frameName] = nil
+            HA:UnregisterCombatStateDriver(frameName)
         else
             HA.db.combatHideFrames[frameName] = true
+            HA:RegisterCombatStateDriver(frameName)
         end
         HA:RefreshFrameList()
     end)
@@ -1622,8 +1624,10 @@ function HA:DoRefreshFrameList()
                     if not HA.db.combatHideFrames then HA.db.combatHideFrames = {} end
                     if HA.db.combatHideFrames[frameName] then
                         HA.db.combatHideFrames[frameName] = nil
+                        HA:UnregisterCombatStateDriver(frameName)
                     else
                         HA.db.combatHideFrames[frameName] = true
+                        HA:RegisterCombatStateDriver(frameName)
                     end
                     HA:RefreshFrameList()
                 end)
